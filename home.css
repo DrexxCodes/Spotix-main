@@ -1,0 +1,202 @@
+/* home */
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.home-header h1 {
+  color: #6b2fa5;
+  font-size: 1.8rem;
+}
+
+.logout-btn {
+  background-color: #6b2fa5;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+}
+
+.search-filter-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.filter-dropdown {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  min-width: 150px;
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+/* Modify the event grid to be responsive with 2 rows for small devices */
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 25px;
+}
+
+/* Small devices (phones) */
+@media (min-width: 480px) {
+  .event-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Medium devices (tablets) */
+@media (min-width: 768px) {
+  .event-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large devices (desktops) */
+@media (min-width: 1024px) {
+  .event-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Extra large devices */
+@media (min-width: 1280px) {
+  .event-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* event */
+.event-container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.event-title {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #6b2fa5;
+  margin-bottom: 20px;
+}
+
+.event-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.ticket-policy,
+.booker-name {
+  font-size: 1.1rem;
+  margin: 15px 0;
+  color: #333;
+}
+
+.loading {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #6b2fa5;
+  margin: 50px 0;
+}
+
+/* Add these styles to fix the event card and date display */
+.event-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.event-card:hover {
+  transform: scale(1.03);
+}
+
+.event-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.event-info {
+  padding: 15px;
+}
+
+.event-title {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.event-date-box {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #6b2fa5;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Add these additional styles to enhance the UI */
+
+/* Event card price tags */
+.event-price-free,
+.event-price-paid {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.event-price-free {
+  background-color: #28a745;
+  color: white;
+}
+
+.event-price-paid {
+  background-color: #f8f9fa;
+  color: #6b2fa5;
+  border: 1px solid #6b2fa5;
+}
+
+.event-type {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}

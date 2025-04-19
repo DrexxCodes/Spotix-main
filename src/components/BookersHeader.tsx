@@ -1,0 +1,80 @@
+"use client";
+
+import React, { useState } from "react";
+import { CloseIcon } from "./Header.styled"; 
+import { Menu, X, CalendarPlus, User, List, House, BrickWall } from "lucide-react"; 
+import {
+    HeaderContainer,
+    LogoSection,
+    Logo,
+    Title,
+    MenuIcon,
+    NavOverlay,
+    Nav,
+    NavList,
+    NavItem,
+    Footer,
+    FooterLink
+  } from "./Header.styled";
+  
+
+const BookersHeader: React.FC = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen((prev) => !prev);
+  };
+
+  return (
+    <>
+      <HeaderContainer>
+        <LogoSection>
+          <Logo src="/logo.svg" alt="Spotix Logo" />
+          <Title>Spotix for Bookers</Title>
+        </LogoSection>
+        <MenuIcon onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <X size={28} /> : <Menu size={28} />}
+        </MenuIcon>
+      </HeaderContainer>
+
+      <NavOverlay menuOpen={menuOpen} onClick={() => setMenuOpen(false)} />
+
+      <Nav menuOpen={menuOpen}>
+        <NavList>
+      <CloseIcon onClick={toggleMenu} /> 
+
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <House size={20} />
+            <a href="/bookerDashboard">Home</a>
+          </NavItem>
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <CalendarPlus size={20} />
+            <a href="/createevent">Create Event</a>
+          </NavItem>
+
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <User size={20} />
+            <a href="/bookerprofile">My Profile</a>
+          </NavItem>
+
+          <NavItem>
+            <List size={20} />
+            <a href="/bookertickets">My Events</a>
+          </NavItem>
+
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <BrickWall size={20} />
+            <a href="/home">Event Home</a>
+          </NavItem>
+        </NavList>
+
+        <Footer>
+          <FooterLink><a href="https://me.spotix.xyz/terms">Terms and Conditions</a></FooterLink>
+          <FooterLink>Contact Us</FooterLink>
+        </Footer>
+      </Nav>
+    </>
+  );
+};
+
+export default BookersHeader;

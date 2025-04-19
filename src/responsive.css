@@ -1,0 +1,1015 @@
+/* Reset and base styles to ensure proper rendering */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Wrapper to ensure proper centering and max width */
+  .event-container-wrapper {
+    width: 100%;
+    max-width: 100vw;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+  
+  /* Main event container */
+  .event-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 15px !important;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid #6b2fa5;
+    overflow-x: hidden !important;
+  }
+  
+  /* Event header with back button and wallet */
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .back-button {
+    background: none;
+    border: none;
+    color: #6b2fa5;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+  }
+  
+  .wallet-display {
+    background-color: #f8f4fd;
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Event marquee */
+  .event-marquee-container {
+    background-color: #6b2fa5;
+    color: white;
+    padding: 8px 0;
+    margin-bottom: 15px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    border-radius: 5px;
+  }
+  
+  .event-marquee {
+    white-space: nowrap;
+    animation: marquee 15s linear infinite;
+    padding-left: 100%;
+  }
+  
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+  /* Event image */
+  .event-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  
+  /* Tabs navigation */
+  .event-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 25px;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .event-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
+  
+  .tab-button {
+    padding: 12px 20px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .tab-button.active {
+    color: #6b2fa5;
+    border-bottom-color: #6b2fa5;
+    font-weight: bold;
+  }
+  
+  /* Tab content container */
+  .tab-content {
+    padding: 20px 0;
+    width: 100%;
+    overflow-x: hidden !important;
+  }
+  
+  /* Event title */
+  .event-title {
+    color: #6b2fa5;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    word-break: break-word;
+    width: 100%;
+  }
+  
+  /* Event actions (share and like) */
+  .event-actions-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .event-share-container {
+    margin-bottom: 0;
+  }
+  
+  .event-like-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .event-like-button {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+  }
+  
+  /* Detail rows for information */
+  .detail-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .detail-label {
+    font-weight: bold;
+    color: #555;
+    width: 140px;
+    min-width: 140px;
+    margin-right: 10px;
+  }
+  
+  .detail-value {
+    color: #333;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    flex-wrap: wrap;
+    word-break: break-word;
+  }
+  
+  /* Event description section */
+  .event-description {
+    margin-top: 20px;
+    width: 100%;
+  }
+  
+  .event-description h3 {
+    color: #6b2fa5;
+    margin-bottom: 10px;
+  }
+  
+  .event-description p {
+    line-height: 1.6;
+    color: #555;
+    word-break: break-word;
+    width: 100%;
+  }
+  
+  /* Tickets and booker section headers */
+  .tickets-tab h2,
+  .booker-tab h2 {
+    color: #6b2fa5;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  
+  /* Free event section */
+  .free-event-section {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f4fd;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+  }
+  
+  /* Ticket prices list */
+  .ticket-prices {
+    width: 100%;
+  }
+  
+  .ticket-prices ul {
+    list-style-type: none;
+    padding: 0;
+    width: 100%;
+  }
+  
+  .ticket-prices li {
+    background: #f8f4fd;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .ticket-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .policy {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #333;
+    word-break: break-word;
+  }
+  
+  .price {
+    color: #6b2fa5;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-top: 5px;
+  }
+  
+  /* Buttons */
+  .buy-ticket-btn,
+  .passed-btn,
+  .get-ticket-btn {
+    background-color: #6b2fa5;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .passed-btn {
+    background-color: #dc3545;
+  }
+  
+  /* Status messages */
+  .sold-out-message,
+  .sale-ended-message,
+  .event-passed-message {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+    width: 100%;
+  }
+  
+  .event-passed-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+  }
+  
+  .ticket-sale-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  
+  /* Verification badges */
+  .verification-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+  }
+  
+  .verification-status.verified {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .verification-status.unverified {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  /* Passed event dialog */
+  .passed-event-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 0 15px;
+  }
+  
+  .passed-event-dialog {
+    background-color: white;
+    border-radius: 8px;
+    padding: 25px;
+    width: 90%;
+    max-width: 450px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .passed-event-dialog h3 {
+    color: #dc3545;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    padding-right: 30px;
+  }
+  
+  .passed-event-dialog p {
+    margin-bottom: 20px;
+    line-height: 1.5;
+    color: #495057;
+  }
+  
+  .close-dialog-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 5px;
+  }
+  
+  .browse-events-btn {
+    background-color: #6b2fa5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .event-container {
+      margin: 0 auto !important;
+      padding: 12px !important;
+      border-radius: 8px;
+      max-width: 100% !important;
+    }
+  
+    .event-header {
+      margin-bottom: 15px;
+    }
+  
+    .wallet-display {
+      font-size: 0.9rem;
+      padding: 6px 12px;
+    }
+  
+    .event-title {
+      font-size: 1.5rem !important;
+      margin-bottom: 15px;
+    }
+  
+    .event-actions-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .event-share-container,
+    .event-like-container {
+      width: 100%;
+    }
+  
+    .event-like-button {
+      width: 100%;
+      justify-content: center;
+      margin-top: 10px;
+    }
+  
+    .detail-row {
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px 0;
+    }
+  
+    .detail-label {
+      width: 100% !important;
+      margin-right: 0;
+    }
+  
+    .detail-value {
+      width: 100% !important;
+    }
+  
+    .ticket-prices li {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .buy-ticket-btn,
+    .passed-btn,
+    .get-ticket-btn {
+      width: 100% !important;
+      margin-top: 10px;
+    }
+  
+    .free-event-section {
+      padding: 15px;
+    }
+  
+    .passed-event-dialog {
+      padding: 20px 15px;
+      width: 95%;
+    }
+  }
+  
+  /* Additional fixes for extremely small screens */
+  @media (max-width: 480px) {
+    .event-container-wrapper {
+      padding: 5px;
+    }
+  
+    .event-container {
+      padding: 10px !important;
+    }
+  
+    .event-title {
+      font-size: 1.3rem !important;
+    }
+  
+    .tab-button {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+  
+    .wallet-display {
+      font-size: 0.8rem;
+      padding: 5px 10px;
+    }
+  
+    .ticket-info .price,
+    .ticket-info .policy {
+      font-size: 1rem;
+    }
+  
+    .event-description p {
+      font-size: 0.95rem;
+    }
+  }
+  
+  /* Responsive Verification Page Styles */
+
+/* Base container styles */
+.verification-container {
+  max-width: 100%;
+  padding: 20px 15px;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+}
+
+@media (min-width: 768px) {
+  .verification-container {
+    max-width: 90%;
+    padding: 30px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .verification-container {
+    max-width: 1140px;
+  }
+}
+
+/* Header styles */
+.verification-header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.verification-image {
+  max-width: 100px;
+  height: auto;
+  margin-bottom: 15px;
+}
+
+.verification-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #6b2fa5;
+}
+
+.verification-disclaimer {
+  font-size: 0.9rem;
+  color: #666;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  .verification-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .verification-disclaimer {
+    font-size: 0.8rem;
+  }
+
+  .verification-image {
+    max-width: 80px;
+  }
+}
+
+/* Section styles */
+.verification-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.verification-section h2 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+@media (max-width: 767px) {
+  .verification-section {
+    padding: 15px;
+  }
+
+  .verification-section h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Form styles */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 15px;
+}
+
+@media (min-width: 576px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .form-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.readonly-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #6b2fa5;
+  box-shadow: 0 0 0 2px rgba(107, 47, 165, 0.1);
+}
+
+.readonly-input {
+  background-color: #f9f9f9;
+  cursor: not-allowed;
+}
+
+.address-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+@media (max-width: 767px) {
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .readonly-input {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Documents table styles */
+.documents-table-container {
+  overflow-x: auto;
+  margin: 0 -15px;
+}
+
+.documents-table {
+  width: 100%;
+  min-width: 600px;
+  margin: 0 auto;
+}
+
+.documents-table table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background-color: white;
+}
+
+.documents-table th,
+.documents-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.documents-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+  position: sticky;
+  top: 0;
+}
+
+.documents-table tr:last-child td {
+  border-bottom: none;
+}
+
+.upload-button {
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-button:hover {
+  background-color: #5a2589;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-completed {
+  background-color: #e3f7ea;
+  color: #28a745;
+}
+
+.status-pending {
+  background-color: #fff8e6;
+  color: #ffc107;
+}
+
+@media (max-width: 767px) {
+  .documents-table {
+    min-width: 100%;
+  }
+
+  .documents-table table {
+    border: 0;
+  }
+
+  .documents-table thead {
+    display: none;
+  }
+
+  .documents-table tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+  }
+
+  .documents-table td {
+    display: flex;
+    justify-content: space-between;
+    text-align: right;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .documents-table td:last-child {
+    border-bottom: none;
+  }
+
+  .documents-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    color: #555;
+  }
+}
+
+/* Verification state styles */
+.verification-state-container {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.verification-state {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.not-verified {
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+
+.awaiting-verification {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.verified {
+  background-color: #d4edda;
+  color: #28a745;
+}
+
+/* Action buttons */
+.verification-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.save-button,
+.cancel-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-button {
+  background-color: #6b2fa5;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #5a2589;
+}
+
+.cancel-button {
+  background-color: #f8f9fa;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.cancel-button:hover {
+  background-color: #e9ecef;
+}
+
+@media (max-width: 576px) {
+  .verification-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .save-button,
+  .cancel-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Upload dialog styles */
+.upload-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 15px;
+}
+
+.upload-dialog {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.upload-dialog h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 30px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.upload-security-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 15px;
+}
+
+.upload-progress-container {
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  margin: 20px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.upload-progress-bar {
+  height: 100%;
+  background-color: #6b2fa5;
+  transition: width 0.3s ease;
+}
+
+.upload-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.upload-dialog-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.cancel-upload-button {
+  background-color: #f8f9fa;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-upload-button:hover {
+  background-color: #e9ecef;
+}
+
+@media (max-width: 576px) {
+  .upload-dialog {
+    width: 95%;
+    padding: 15px;
+  }
+
+  .upload-area {
+    padding: 20px 15px;
+  }
+
+  .upload-icon {
+    font-size: 2rem;
+  }
+}
+
+/* Error message styles */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px auto;
+  max-width: 600px;
+  text-align: center;
+}
