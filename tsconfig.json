@@ -14,7 +14,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "outDir": "dist-ts",
+    "noEmit": true
+
   },
   "include": ["src"]
 }

@@ -10,6 +10,8 @@
   font-family: Arial, sans-serif;
 }
 
+
+
 .preloader-overlay {
   position: fixed;
   top: 0;
@@ -32,14 +34,14 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100;
+  height: 100svh;
   background-color: #f4f4f4;
-  padding-top: 70px;
+  padding-top: 1700px;
 }
 
 /* Apply padding only to pages that need it, not globally */
 body:not(.landing-page) {
-  padding-top: 70px; 
+  padding-top: 1700px; 
 }
 
 

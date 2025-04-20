@@ -1,6 +1,7 @@
 /* Landing Page Specific Styles */
 .landing-page {
-  padding-top: 0 !important;
+  padding-top: 3860px !important;
+  min-height: 800vh;
   background-color: #f9f9f9;
   overflow-x: hidden;
 }
