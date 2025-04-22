@@ -1,0 +1,361 @@
+/* AGGRESSIVE BOOKER DASHBOARD OVERRIDES
+   These styles use high specificity and !important to override any conflicting styles */
+
+/* Reset container */
+html body .booker-dashboard-container,
+body .booker-dashboard-container,
+.booker-dashboard-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+/* Force content wrapper to behave */
+html body .dashboard-content,
+body .dashboard-content,
+.dashboard-content {
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  overflow-x: visible !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Header container */
+html body .dashboard-header-container,
+body .dashboard-header-container,
+.dashboard-header-container {
+  position: relative !important;
+  background-color: #f8f4fd !important;
+  padding: 2rem 1rem !important;
+  margin-bottom: 1.5rem !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+/* Header content */
+html body .dashboard-header,
+body .dashboard-header,
+.dashboard-header, tickets-header {
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  flex-wrap: wrap !important;
+  gap: 1rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Stats grid - CRITICAL FIX */
+html body .stats-grid,
+body .stats-grid,
+.stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+  gap: 1rem !important;
+  margin-bottom: 2rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+/* Stat cards - CRITICAL FIX */
+html body .stat-card,
+body .stat-card,
+.stat-card {
+  background-color: white !important;
+  border-radius: 0.75rem !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+  max-width: 100% !important;
+}
+
+/* Stat card content */
+html body .stat-content,
+body .stat-content,
+.stat-content {
+  flex: 1 !important;
+  min-width: 0 !important; /* Prevents overflow on small screens */
+  overflow: hidden !important;
+  width: auto !important;
+  max-width: calc(100% - 3.5rem) !important;
+}
+
+/* Stat values - prevent overflow */
+html body .stat-value,
+body .stat-value,
+.stat-value {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: #333 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+/* Recent events section */
+html body .recent-events-section,
+body .recent-events-section,
+.recent-events-section {
+  background-color: white !important;
+  border-radius: 0.75rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 2rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Quick actions */
+html body .quick-actions,
+body .quick-actions,
+.quick-actions {
+  background-color: white !important;
+  border-radius: 0.75rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 2rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Actions grid */
+html body .actions-grid,
+body .actions-grid,
+.actions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+  gap: 1rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Action cards */
+html body .action-card,
+body .action-card,
+.action-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #f8f4fd !important;
+  border: none !important;
+  border-radius: 0.75rem !important;
+  padding: 1.5rem 1rem !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, background-color 0.2s !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+/* Mobile event cards */
+html body .mobile-events-cards,
+body .mobile-events-cards,
+.mobile-events-cards {
+  display: none !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body .mobile-event-card,
+body .mobile-event-card,
+.mobile-event-card {
+  background-color: #f8f9fa !important;
+  border-radius: 0.75rem !important;
+  padding: 1rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+/* SUPER AGGRESSIVE RESPONSIVE OVERRIDES */
+@media (max-width: 1200px) {
+  html body .stats-grid,
+  body .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 992px) {
+  html body .stats-grid,
+  body .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+  }
+
+  html body .hide-md,
+  body .hide-md,
+  .hide-md {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body .dashboard-header,
+  body .dashboard-header,
+  .dashboard-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  html body .stats-grid,
+  body .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)) !important;
+  }
+
+  html body .events-table,
+  body .events-table,
+  .events-table {
+    display: none !important;
+  }
+
+  html body .mobile-events-cards,
+  body .mobile-events-cards,
+  .mobile-events-cards {
+    display: flex !important;
+  }
+
+  html body .hide-sm,
+  body .hide-sm,
+  .hide-sm {
+    display: none !important;
+  }
+
+  html body .actions-grid,
+  body .actions-grid,
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body .dashboard-content,
+  body .dashboard-content,
+  .dashboard-content {
+    padding: 0 12px !important;
+  }
+
+  html body .dashboard-header-container,
+  body .dashboard-header-container,
+  .dashboard-header-container {
+    padding: 1.5rem 1rem !important;
+  }
+
+  html body .create-event-button,
+  body .create-event-button,
+  .create-event-button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  html body .mobile-event-details,
+  body .mobile-event-details,
+  .mobile-event-details {
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .actions-grid,
+  body .actions-grid,
+  .actions-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .section-header,
+  body .section-header,
+  .section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  html body .view-all-button,
+  body .view-all-button,
+  .view-all-button {
+    width: 100% !important;
+  }
+}
+
+/* Force scrollbar to appear to prevent layout shifts */
+html,
+body {
+  overflow-y: auto !important;
+}
+
+/* Reset any potential problematic inherited styles */
+html body .booker-dashboard-container *,
+body .booker-dashboard-container *,
+.booker-dashboard-container * {
+  float: none;
+  position: static;
+  transform: none;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Exception for positioned elements */
+html body .dashboard-header-container,
+body .dashboard-header-container,
+.dashboard-header-container,
+html body .dashboard-particles,
+body .dashboard-particles,
+.dashboard-particles {
+  position: relative !important;
+}
+
+/* Fix for any potential z-index issues */
+html body .booker-dashboard-container,
+body .booker-dashboard-container,
+.booker-dashboard-container {
+  z-index: 1 !important;
+}
+
+/* Fix for any potential transform issues */
+html body .stat-card:hover,
+body .stat-card:hover,
+.stat-card:hover {
+  transform: translateY(-3px) !important;
+}
+
+html body .action-card:hover,
+body .action-card:hover,
+.action-card:hover {
+  transform: translateY(-3px) !important;
+}

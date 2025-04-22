@@ -1,422 +1,385 @@
-/* ======================================
-   REFINED RESPONSIVE TABLES - PREVENTS OVERFLOW
-   ====================================== */
+/* SUPER AGGRESSIVE BOOKER TICKETS RESPONSIVE OVERRIDES
+   These styles use maximum specificity and !important to override any conflicting styles */
 
-/* Base table styles with !important to override any conflicting styles */
-.events-table-container {
+/* Container reset */
+html body .booker-tickets-container,
+body .booker-tickets-container,
+.booker-tickets-container {
   width: 100% !important;
   max-width: 100% !important;
-  overflow-x: hidden !important; /* Changed from visible to hidden to prevent horizontal scrolling */
-  display: block !important;
+  margin: 0 auto !important;
+  padding: 16px !important;
+  overflow-x: hidden !important;
   position: relative !important;
-  margin: 0 !important;
-  padding: 0 !important;
   box-sizing: border-box !important;
+  display: block !important;
+  isolation: isolate !important;
+  z-index: 1 !important;
 }
 
+/* Header styling */
+html body .tickets-header,
+body .tickets-header,
+.tickets-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+}
+
+html body .tickets-header h1,
+body .tickets-header h1,
+.tickets-header h1 {
+  margin: 0 !important;
+  font-size: 1.75rem !important;
+}
+
+html body .create-event-button,
+body .create-event-button,
+.create-event-button {
+  background-color: #6b2fa5 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 10px 16px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+  white-space: nowrap !important;
+}
+
+/* Filters container */
+html body .filters-container,
+body .filters-container,
+.filters-container {
+  display: flex !important;
+  gap: 16px !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+  flex-wrap: wrap !important;
+}
+
+html body .search-input,
+body .search-input,
+.search-input {
+  flex: 1 !important;
+  min-width: 200px !important;
+  padding: 10px 16px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+}
+
+html body .status-filter,
+body .status-filter,
+.status-filter {
+  padding: 10px 16px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  background-color: white !important;
+  min-width: 150px !important;
+}
+
+/* Table container */
+html body .events-table-container,
+body .events-table-container,
+.events-table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Table styling */
+html body .events-table,
+body .events-table,
 .events-table {
   width: 100% !important;
   border-collapse: collapse !important;
-  table-layout: fixed !important; /* Fixed layout ensures better control over column widths */
-  display: table !important;
-  margin-bottom: 20px !important;
-  font-size: 14px !important; /* Slightly smaller base font size for better fit */
+  font-size: 14px !important;
+  min-width: 800px !important; /* Ensures horizontal scroll on small screens */
 }
 
-/* Ensure table headers are visible on desktop with controlled widths */
-@media (min-width: 769px) {
-  .events-table th {
-    background-color: #f8f4fd !important;
-    color: #6b2fa5 !important;
-    font-weight: bold !important;
-    padding: 12px 10px !important; /* Reduced horizontal padding */
-    text-align: left !important;
-    border-bottom: 1px solid #eee !important;
-    display: table-cell !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  /* Set specific widths for each column to prevent overflow */
-  .events-table th:nth-child(1),
-  .events-table td:nth-child(1) {
-    width: 20% !important;
-  } /* Event Name */
-
-  .events-table th:nth-child(2),
-  .events-table td:nth-child(2) {
-    width: 10% !important;
-  } /* Date */
-
-  .events-table th:nth-child(3),
-  .events-table td:nth-child(3) {
-    width: 15% !important;
-  } /* Venue */
-
-  .events-table th:nth-child(4),
-  .events-table td:nth-child(4) {
-    width: 10% !important;
-  } /* Type */
-
-  .events-table th:nth-child(5),
-  .events-table td:nth-child(5) {
-    width: 15% !important;
-  } /* Tickets Sold */
-
-  .events-table th:nth-child(6),
-  .events-table td:nth-child(6) {
-    width: 10% !important;
-  } /* Revenue */
-
-  .events-table th:nth-child(7),
-  .events-table td:nth-child(7) {
-    width: 10% !important;
-  } /* Status */
-
-  .events-table th:nth-child(8),
-  .events-table td:nth-child(8) {
-    width: 10% !important;
-  } /* Actions */
-
-  .events-table td {
-    padding: 12px 10px !important; /* Reduced horizontal padding */
-    text-align: left !important;
-    border-bottom: 1px solid #eee !important;
-    display: table-cell !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important; /* Add ellipsis for text overflow */
-    white-space: normal !important; /* Allow text wrapping */
-    word-break: break-word !important; /* Break words to prevent overflow */
-  }
-
-  .events-table tr {
-    display: table-row !important;
-  }
-
-  .events-table thead {
-    display: table-header-group !important;
-  }
-
-  .events-table tbody {
-    display: table-row-group !important;
-  }
+html body .events-table th,
+body .events-table th,
+.events-table th {
+  background-color: #f8f9fa !important;
+  padding: 12px 16px !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  border-bottom: 1px solid #eee !important;
 }
 
-/* MOBILE STYLES - CARD LAYOUT */
-@media (max-width: 768px) {
-  /* Force all table elements to display as blocks */
-  .events-table {
-    display: block !important;
-    width: 100% !important;
-    border: none !important;
-    font-size: 13px !important; /* Even smaller font for mobile */
-  }
-
-  .events-table thead,
-  .events-table tbody,
-  .events-table th,
-  .events-table td,
-  .events-table tr {
-    display: block !important;
-    width: 100% !important;
-    clear: both !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Completely hide the table headers */
-  .events-table thead {
-    display: none !important;
-    visibility: hidden !important;
-  }
-
-  /* Style each row as a card */
-  .events-table tbody tr {
-    margin-bottom: 20px !important;
-    border: 1px solid #ddd !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
-    background-color: white !important;
-    overflow: hidden !important;
-    position: relative !important;
-    width: 100% !important;
-    float: left !important; /* Force proper containment */
-    clear: both !important;
-    box-sizing: border-box !important;
-    max-width: calc(100vw - 20px) !important; /* Account for container padding */
-  }
-
-  /* Style each cell */
-  .events-table td {
-    position: relative !important;
-    padding: 12px 15px 12px 45% !important; /* Reduced left padding for label */
-    text-align: right !important;
-    min-height: 30px !important;
-    border-bottom: 1px solid #eee !important;
-    box-sizing: border-box !important;
-    width: 100% !important;
-    float: left !important; /* Force proper containment */
-    clear: both !important;
-    word-wrap: break-word !important; /* Ensure text wraps */
-    overflow: visible !important;
-    line-height: 1.4 !important; /* Improved line height for readability */
-  }
-
-  .events-table td:last-child {
-    border-bottom: none !important;
-  }
-
-  /* Create labels for each cell using pseudo-elements with improved positioning */
-  .events-table td:before {
-    content: attr(data-label) !important; /* Use data attributes for labels */
-    position: absolute !important;
-    top: 12px !important;
-    left: 10px !important; /* Reduced left margin */
-    width: 40% !important; /* Reduced width to prevent overflow */
-    padding-right: 5px !important; /* Reduced padding */
-    white-space: normal !important; /* Allow label text to wrap */
-    text-align: left !important;
-    font-weight: bold !important;
-    color: #6b2fa5 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    font-size: 12px !important; /* Smaller font size for labels */
-    line-height: 1.3 !important;
-  }
-
-  /* Fallback labels if data attributes aren't used */
-  .events-table td:nth-of-type(1):before {
-    content: "Event Name" !important;
-  }
-  .events-table td:nth-of-type(2):before {
-    content: "Date" !important;
-  }
-  .events-table td:nth-of-type(3):before {
-    content: "Venue" !important;
-  }
-  .events-table td:nth-of-type(4):before {
-    content: "Type" !important;
-  }
-  .events-table td:nth-of-type(5):before {
-    content: "Tickets Sold" !important;
-  }
-  .events-table td:nth-of-type(6):before {
-    content: "Revenue" !important;
-  }
-  .events-table td:nth-of-type(7):before {
-    content: "Status" !important;
-  }
-  .events-table td:nth-of-type(8):before {
-    content: "Actions" !important;
-  }
-
-  /* Special styling for the action button cell */
-  .events-table td:nth-of-type(8) {
-    text-align: center !important;
-    padding: 15px !important; /* Equal padding all around */
-  }
-
-  /* Hide the label for the action button */
-  .events-table td:nth-of-type(8):before {
-    display: none !important;
-  }
-
-  /* Make the action button full width */
-  .view-event-button {
-    width: 100% !important;
-    padding: 10px !important;
-    text-align: center !important;
-    display: block !important;
-    font-size: 13px !important; /* Ensure button text is not too large */
-  }
-
-  /* Ensure progress bar displays correctly */
-  .progress-bar {
-    margin-top: 10px !important;
-    width: 100% !important;
-    height: 6px !important; /* Slightly smaller height */
-    background-color: #eee !important;
-    border-radius: 3px !important;
-    overflow: hidden !important;
-    display: block !important;
-    clear: both !important;
-  }
-
-  .progress {
-    height: 100% !important;
-    background-color: #6b2fa5 !important;
-    border-radius: 3px !important;
-  }
-
-  /* Style for no events message */
-  .no-events-message {
-    text-align: center !important;
-    padding: 20px 15px !important;
-    display: block !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
+html body .events-table td,
+body .events-table td,
+.events-table td {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #eee !important;
+  color: #333 !important;
 }
 
-/* EXTRA SMALL SCREENS - EVEN MORE COMPACT */
-@media (max-width: 480px) {
-  .booker-tickets-container {
-    padding: 10px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-    padding-left: env(safe-area-inset-left) !important; /* Support for notched devices */
-    padding-right: env(safe-area-inset-right) !important;
-  }
-
-  .tickets-header {
-    flex-direction: column !important;
-    gap: 15px !important;
-    align-items: flex-start !important;
-    width: 100% !important;
-  }
-
-  .tickets-header h1 {
-    font-size: 1.5rem !important;
-    width: 100% !important;
-    margin-bottom: 10px !important;
-  }
-
-  .create-event-button {
-    width: 100% !important;
-    padding: 12px !important;
-    text-align: center !important;
-    display: block !important;
-  }
-
-  .filters-container {
-    flex-direction: column !important;
-    gap: 10px !important;
-    width: 100% !important;
-    margin-bottom: 20px !important;
-  }
-
-  .search-input,
-  .status-filter {
-    width: 100% !important;
-    padding: 12px !important;
-    box-sizing: border-box !important;
-    display: block !important;
-  }
-
-  /* Ultra-compact cell styling for very small screens */
-  .events-table td {
-    padding: 12px 10px 12px 42% !important; /* Further reduced padding */
-    font-size: 12px !important; /* Smaller font size */
-  }
-
-  .events-table td:before {
-    width: 38% !important; /* Smaller label width */
-    font-size: 11px !important; /* Smaller label font */
-  }
-
-  /* Ensure status badges are visible but compact */
-  .status-badge {
-    display: inline-block !important;
-    padding: 4px 8px !important; /* Smaller padding */
-    border-radius: 12px !important; /* Smaller radius */
-    font-size: 0.7rem !important; /* Smaller font */
-    font-weight: bold !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-  }
-
-  /* Make ticket count more compact */
-  .events-table td:nth-of-type(5) {
-    line-height: 1.2 !important;
-  }
+/* Progress bar */
+html body .progress-bar,
+body .progress-bar,
+.progress-bar {
+  height: 6px !important;
+  background-color: #f0f0f0 !important;
+  border-radius: 3px !important;
+  margin-top: 4px !important;
+  overflow: hidden !important;
+  width: 100% !important;
 }
 
-/* TINY SCREENS - MAXIMUM COMPRESSION */
-@media (max-width: 320px) {
-  .events-table td {
-    padding: 10px 8px 10px 40% !important; /* Minimal padding */
-    font-size: 11px !important; /* Smallest readable font */
-  }
-
-  .events-table td:before {
-    width: 36% !important; /* Even smaller label width */
-    font-size: 10px !important; /* Smallest readable label font */
-  }
-
-  /* Extremely compact status badges */
-  .status-badge {
-    padding: 3px 6px !important;
-    font-size: 0.65rem !important;
-  }
+html body .progress,
+body .progress,
+.progress {
+  height: 100% !important;
+  background-color: #6b2fa5 !important;
+  border-radius: 3px !important;
 }
 
-/* Ensure status badges have proper colors */
-.status-badge.status-active {
-  background-color: #e6f7ff !important;
-  color: #0070f3 !important;
+/* Status badges */
+html body .status-badge,
+body .status-badge,
+.status-badge {
+  display: inline-block !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  text-transform: capitalize !important;
 }
 
-.status-badge.status-past {
-  background-color: #f5f5f5 !important;
+html body .status-active,
+body .status-active,
+.status-active {
+  background-color: #e6f7ed !important;
+  color: #00875a !important;
+}
+
+html body .status-past,
+body .status-past,
+.status-past {
+  background-color: #f0f0f0 !important;
   color: #666 !important;
 }
 
-.status-badge.status-draft {
+html body .status-draft,
+body .status-draft,
+.status-draft {
   background-color: #fff7e6 !important;
-  color: #fa8c16 !important;
+  color: #ff8c00 !important;
 }
 
-/* Force visibility for all elements */
-.events-table,
-.events-table-container,
-.events-table tr,
-.events-table td,
-.events-table th,
-.events-table thead,
-.events-table tbody {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Ensure text doesn't overflow */
-.events-table td,
-.events-table th,
-.status-badge,
+/* Action buttons */
+html body .view-event-button,
+body .view-event-button,
 .view-event-button {
-  max-width: 100% !important;
-  overflow-wrap: break-word !important;
-  word-wrap: break-word !important;
-  -ms-word-break: break-all !important;
-  word-break: break-word !important;
-  -ms-hyphens: auto !important;
-  -moz-hyphens: auto !important;
-  -webkit-hyphens: auto !important;
-  hyphens: auto !important;
+  background-color: transparent !important;
+  color: #6b2fa5 !important;
+  border: 1px solid #6b2fa5 !important;
+  border-radius: 4px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s, color 0.2s !important;
 }
 
-/* Add styles for the ticket count to ensure it doesn't overflow */
-.ticket-count {
-  display: inline-block !important;
+/* No events message */
+html body .no-events-message,
+body .no-events-message,
+.no-events-message {
+  text-align: center !important;
+  padding: 32px !important;
+  color: #666 !important;
+  font-style: italic !important;
+}
+
+/* MOBILE CARDS - Hidden by default */
+html body .mobile-events-cards,
+body .mobile-events-cards,
+.mobile-events-cards {
+  display: none !important;
+  flex-direction: column !important;
+  gap: 16px !important;
   width: 100% !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  margin-bottom: 5px !important;
 }
 
-/* Ensure the table container doesn't cause horizontal scrolling */
+html body .mobile-event-card,
+body .mobile-event-card,
+.mobile-event-card {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body .mobile-event-header,
+body .mobile-event-header,
+.mobile-event-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+}
+
+html body .mobile-event-title,
+body .mobile-event-title,
+.mobile-event-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: #333 !important;
+}
+
+html body .mobile-event-details,
+body .mobile-event-details,
+.mobile-event-details {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+html body .mobile-event-detail,
+body .mobile-event-detail,
+.mobile-event-detail {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+html body .detail-label,
+body .detail-label,
+.detail-label {
+  font-size: 12px !important;
+  color: #666 !important;
+  font-weight: 500 !important;
+}
+
+html body .detail-value,
+body .detail-value,
+.detail-value {
+  font-size: 14px !important;
+  color: #333 !important;
+  font-weight: 400 !important;
+}
+
+html body .mobile-event-footer,
+body .mobile-event-footer,
+.mobile-event-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 8px !important;
+  width: 100% !important;
+}
+
+html body .mobile-view-button,
+body .mobile-view-button,
+.mobile-view-button {
+  background-color: #6b2fa5 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+}
+
+/* SUPER AGGRESSIVE RESPONSIVE OVERRIDES */
+@media (max-width: 768px) {
+  html body .events-table-container,
+  body .events-table-container,
+  .events-table-container {
+    display: none !important;
+  }
+
+  html body .mobile-events-cards,
+  body .mobile-events-cards,
+  .mobile-events-cards {
+    display: flex !important;
+  }
+
+  html body .tickets-header,
+  body .tickets-header,
+  .tickets-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  html body .create-event-button,
+  body .create-event-button,
+  .create-event-button {
+    width: 100% !important;
+  }
+
+  html body .filters-container,
+  body .filters-container,
+  .filters-container {
+    flex-direction: column !important;
+  }
+
+  html body .search-input,
+  body .search-input,
+  .search-input,
+  html body .status-filter,
+  body .status-filter,
+  .status-filter {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body .mobile-event-details,
+  body .mobile-event-details,
+  .mobile-event-details {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Force scrollbar to appear to prevent layout shifts */
+html,
+body {
+  overflow-y: auto !important;
+}
+
+/* Reset any potential problematic inherited styles */
+html body .booker-tickets-container *,
+body .booker-tickets-container *,
+.booker-tickets-container * {
+  float: none !important;
+  position: static !important;
+  transform: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Exception for positioned elements */
+html body .tickets-header,
+body .tickets-header,
+.tickets-header {
+  position: relative !important;
+}
+
+/* Fix for any potential z-index issues */
+html body .booker-tickets-container,
+body .booker-tickets-container,
 .booker-tickets-container {
-  max-width: 100vw !important;
-  overflow-x: hidden !important;
-  box-sizing: border-box !important;
-  padding-left: env(safe-area-inset-left) !important; /* Support for notched devices */
-  padding-right: env(safe-area-inset-right) !important;
-}
-
-/* Ensure the table doesn't cause horizontal scrolling */
-.events-table-container {
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-  box-sizing: border-box !important;
+  z-index: 1 !important;
 }

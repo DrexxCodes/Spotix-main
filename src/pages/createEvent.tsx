@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom"
 import { Plus, HelpCircle, Wand2, Check } from "lucide-react"
 import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
+import "../styles/create.css"
 
 const CreateEvent = () => {
   const [eventName, setEventName] = useState("")

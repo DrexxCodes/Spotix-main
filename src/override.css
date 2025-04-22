@@ -1,0 +1,29 @@
+html body {
+    padding-top: 0 !important
+}
+
+html body {
+    padding-top: 800px !important;
+}
+
+/* ===== HOME PAGE ===== */
+/* Small screens */
+@media (max-width: 576px) {
+    html body {
+        padding-top: 1700px !important;
+    }
+}
+
+/* Medium screens (around 540px by 720px) */
+@media (min-width: 577px) and (max-width: 991px) {
+    html body {
+        padding-top: 1300px !important;
+    }
+}
+
+/* Slightly larger screens (around 1024px by 1366px) */
+@media (min-width: 992px) and (max-width: 1366px) {
+    html body {
+        padding-top: 800px !important;
+    }
+}

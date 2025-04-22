@@ -12,6 +12,7 @@ import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, MapPin } from "lucide
 import html2pdf from "html2pdf.js"
 import QRCode from "react-qr-code"
 import "boxicons/css/boxicons.min.css"
+import "../styles/ticket-info.css"
 
 interface TicketDetails {
   id: string

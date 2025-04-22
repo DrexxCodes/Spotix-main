@@ -10,6 +10,7 @@ import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import "boxicons/css/boxicons.min.css"
+import "../styles/payment-override.css"
 
 const PaystackSuccess = () => {
   const location = useLocation()

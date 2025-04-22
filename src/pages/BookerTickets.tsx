@@ -7,7 +7,9 @@ import { collection, getDocs } from "firebase/firestore"
 import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
-import "../tables.css" 
+import "../tables.css"
+import "../styles/bookerTickets.css"
+
 
 interface EventData {
   id: string
@@ -105,6 +107,10 @@ const BookerTickets = () => {
     return <Preloader />
   }
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+  }
+
   return (
     <>
       <BookersHeader />
@@ -133,6 +139,7 @@ const BookerTickets = () => {
           </select>
         </div>
 
+        {/* Desktop Table View */}
         <div className="events-table-container">
           <table className="events-table">
             <thead>
@@ -152,7 +159,7 @@ const BookerTickets = () => {
                 filteredEvents.map((event) => (
                   <tr key={event.id}>
                     <td data-label="Event Name">{event.eventName}</td>
-                    <td data-label="Date">{new Date(event.eventDate).toLocaleDateString()}</td>
+                    <td data-label="Date">{formatDate(event.eventDate)}</td>
                     <td data-label="Venue">{event.eventVenue}</td>
                     <td data-label="Type">{event.eventType}</td>
                     <td data-label="Tickets Sold">
@@ -195,6 +202,67 @@ const BookerTickets = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View - This will only show on mobile */}
+        <div className="mobile-events-cards">
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => (
+              <div key={event.id} className="mobile-event-card">
+                <div className="mobile-event-header">
+                  <h3 className="mobile-event-title">{event.eventName}</h3>
+                  <span className={`status-badge status-${event.status}`}>
+                    {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                  </span>
+                </div>
+
+                <div className="mobile-event-details">
+                  <div className="mobile-event-detail">
+                    <span className="detail-label">Date</span>
+                    <span className="detail-value">{formatDate(event.eventDate)}</span>
+                  </div>
+                  <div className="mobile-event-detail">
+                    <span className="detail-label">Venue</span>
+                    <span className="detail-value">{event.eventVenue}</span>
+                  </div>
+                  <div className="mobile-event-detail">
+                    <span className="detail-label">Type</span>
+                    <span className="detail-value">{event.eventType}</span>
+                  </div>
+                  <div className="mobile-event-detail">
+                    <span className="detail-label">Tickets Sold</span>
+                    <span className="detail-value">
+                      {event.hasMaxSize ? (
+                        <>
+                          {event.ticketsSold} / {event.totalCapacity}
+                          <div className="progress-bar">
+                            <div
+                              className="progress"
+                              style={{ width: `${(event.ticketsSold / event.totalCapacity) * 100}%` }}
+                            ></div>
+                          </div>
+                        </>
+                      ) : (
+                        event.ticketsSold
+                      )}
+                    </span>
+                  </div>
+                  <div className="mobile-event-detail">
+                    <span className="detail-label">Revenue</span>
+                    <span className="detail-value">${event.revenue.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="mobile-event-footer">
+                  <button className="mobile-view-button" onClick={() => handleViewEvent(event.id)}>
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-events-message">No events found. Create your first event!</div>
+          )}
         </div>
       </div>
       <Footer />

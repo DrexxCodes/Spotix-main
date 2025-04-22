@@ -1,0 +1,648 @@
+/* ULTRA-AGGRESSIVE BOOKER TICKET INFO RESPONSIVE OVERRIDES
+   Maximum specificity with !important on everything to override any possible conflicting styles */
+
+/* ===== GLOBAL CONTAINER RESET ===== */
+html body .ticket-info-container,
+body .ticket-info-container,
+.ticket-info-container,
+div.ticket-info-container,
+section.ticket-info-container,
+main .ticket-info-container,
+#root .ticket-info-container,
+[class*="container"] .ticket-info-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 16px !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  isolation: isolate !important;
+  z-index: 1 !important;
+  height: auto !important;
+}
+
+/* ===== FIXED HEIGHT TAB CONTENT CONTAINER ===== */
+html body .ticket-info-content,
+body .ticket-info-content,
+.ticket-info-content,
+div.ticket-info-content,
+section.ticket-info-content,
+main .ticket-info-content,
+#root .ticket-info-content,
+[class*="content"] .ticket-info-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  position: relative !important;
+  height: calc(100vh - 250px) !important; /* Fixed height container */
+  min-height: 500px !important; /* Minimum height */
+  overflow-y: auto !important; /* Enable vertical scrolling */
+  -webkit-overflow-scrolling: touch !important;
+  border-radius: 8px !important;
+  background-color: #f9f9f9 !important;
+  border: 1px solid #eaeaea !important;
+}
+
+/* Custom scrollbar for the content area */
+html body .ticket-info-content::-webkit-scrollbar,
+body .ticket-info-content::-webkit-scrollbar,
+.ticket-info-content::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+html body .ticket-info-content::-webkit-scrollbar-track,
+body .ticket-info-content::-webkit-scrollbar-track,
+.ticket-info-content::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 4px !important;
+}
+
+html body .ticket-info-content::-webkit-scrollbar-thumb,
+body .ticket-info-content::-webkit-scrollbar-thumb,
+.ticket-info-content::-webkit-scrollbar-thumb {
+  background: #6b2fa5 !important;
+  border-radius: 4px !important;
+}
+
+/* ===== STICKY TAB BUTTONS ===== */
+html body .ticket-info-tabs,
+body .ticket-info-tabs,
+.ticket-info-tabs,
+div.ticket-info-tabs,
+section.ticket-info-tabs,
+main .ticket-info-tabs,
+#root .ticket-info-tabs,
+[class*="tabs"] .ticket-info-tabs {
+  display: flex !important;
+  flex-wrap: nowrap !important; /* Prevent wrapping */
+  gap: 4px !important;
+  width: 100% !important;
+  margin-bottom: 20px !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important; /* Firefox */
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: white !important;
+  padding: 8px 0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+html body .ticket-info-tabs::-webkit-scrollbar,
+body .ticket-info-tabs::-webkit-scrollbar,
+.ticket-info-tabs::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Edge */
+}
+
+/* ===== ULTRA-AGGRESSIVE DISCOUNT TAB FIXES ===== */
+html body .discounts-tab,
+body .discounts-tab,
+.discounts-tab,
+div.discounts-tab,
+section.discounts-tab,
+main .discounts-tab,
+#root .discounts-tab,
+[class*="tab"] .discounts-tab {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 16px !important;
+  position: relative !important;
+}
+
+html body .discount-form,
+body .discount-form,
+.discount-form,
+div.discount-form,
+form.discount-form,
+[class*="form"] .discount-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+html body .form-section,
+body .form-section,
+.form-section,
+div.form-section,
+section.form-section,
+[class*="section"] .form-section {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+html body .form-group,
+body .form-group,
+.form-group,
+div.form-group,
+[class*="group"] .form-group {
+  margin-bottom: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body .form-group label,
+body .form-group label,
+.form-group label {
+  display: block !important;
+  margin-bottom: 8px !important;
+  font-weight: 500 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+html body .form-group input,
+body .form-group input,
+.form-group input,
+html body .form-group select,
+body .form-group select,
+.form-group select,
+input[type="text"],
+input[type="number"],
+select {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 10px 12px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+html body .discount-value-input,
+body .discount-value-input,
+.discount-value-input,
+div.discount-value-input {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body .add-discount-button,
+body .add-discount-button,
+.add-discount-button,
+button.add-discount-button {
+  background-color: #6b2fa5 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 12px 16px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE ATTENDEES TAB FIXES ===== */
+html body .attendees-tab,
+body .attendees-tab,
+.attendees-tab,
+div.attendees-tab,
+section.attendees-tab,
+main .attendees-tab,
+#root .attendees-tab,
+[class*="tab"] .attendees-tab {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 16px !important;
+  position: relative !important;
+}
+
+html body .attendees-table-container,
+body .attendees-table-container,
+.attendees-table-container,
+div.attendees-table-container,
+[class*="container"] .attendees-table-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin-bottom: 24px !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  border: 1px solid #eaeaea !important;
+}
+
+html body .attendees-table,
+body .attendees-table,
+.attendees-table,
+table.attendees-table {
+  width: 100% !important;
+  min-width: 800px !important; /* Ensures horizontal scroll on small screens */
+  border-collapse: collapse !important;
+  font-size: 14px !important;
+  table-layout: fixed !important; /* Force table layout */
+}
+
+html body .attendees-table th,
+body .attendees-table th,
+.attendees-table th {
+  background-color: #f8f9fa !important;
+  padding: 12px 16px !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  border-bottom: 1px solid #eee !important;
+  white-space: nowrap !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+}
+
+html body .attendees-table td,
+body .attendees-table td,
+.attendees-table td {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #eee !important;
+  color: #333 !important;
+  word-break: break-word !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE TABLE SCROLL INDICATORS ===== */
+html body .attendees-table-container::before,
+body .attendees-table-container::before,
+.attendees-table-container::before,
+html body .payouts-table-container::before,
+body .payouts-table-container::before,
+.payouts-table-container::before,
+html body .discounts-table-container::before,
+body .discounts-table-container::before,
+.discounts-table-container::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 40px !important;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.8)) !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+}
+
+html body .attendees-table-container::after,
+body .attendees-table-container::after,
+.attendees-table-container::after,
+html body .payouts-table-container::after,
+body .payouts-table-container::after,
+.payouts-table-container::after,
+html body .discounts-table-container::after,
+body .discounts-table-container::after,
+.discounts-table-container::after {
+  content: "→ Scroll" !important;
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  background-color: rgba(98, 0, 238, 0.9) !important;
+  color: white !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  pointer-events: none !important;
+  z-index: 4 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE PAYOUTS TAB FIXES ===== */
+html body .payouts-tab,
+body .payouts-tab,
+.payouts-tab,
+div.payouts-tab,
+section.payouts-tab,
+main .payouts-tab,
+#root .payouts-tab,
+[class*="tab"] .payouts-tab {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 16px !important;
+  position: relative !important;
+}
+
+html body .balance-summary,
+body .balance-summary,
+.balance-summary,
+div.balance-summary {
+  display: grid !important;
+  grid-template-columns: repeat(1, 1fr) !important;
+  gap: 16px !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body .balance-card,
+body .balance-card,
+.balance-card,
+div.balance-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE EDIT TAB FIXES ===== */
+html body .edit-tab,
+body .edit-tab,
+.edit-tab,
+div.edit-tab,
+section.edit-tab,
+main .edit-tab,
+#root .edit-tab,
+[class*="tab"] .edit-tab {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 16px !important;
+  position: relative !important;
+}
+
+html body .event-section,
+body .event-section,
+.event-section,
+div.event-section,
+section.event-section {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE OVERVIEW TAB FIXES ===== */
+html body .overview-tab,
+body .overview-tab,
+.overview-tab,
+div.overview-tab,
+section.overview-tab,
+main .overview-tab,
+#root .overview-tab,
+[class*="tab"] .overview-tab {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 16px !important;
+  position: relative !important;
+}
+
+html body .stats-grid,
+body .stats-grid,
+.stats-grid,
+div.stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(1, 1fr) !important;
+  gap: 16px !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body .stat-card,
+body .stat-card,
+.stat-card,
+div.stat-card {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE RESPONSIVE OVERRIDES ===== */
+@media (min-width: 768px) {
+  html body .stats-grid,
+  body .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  html body .balance-summary,
+  body .balance-summary,
+  .balance-summary {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  html body .discount-form,
+  body .discount-form,
+  .discount-form {
+    flex-direction: row !important;
+  }
+
+  html body .form-section,
+  body .form-section,
+  .form-section {
+    flex: 1 !important;
+    max-width: calc(50% - 12px) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  html body .stats-grid,
+  body .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  html body .ticket-info-content,
+  body .ticket-info-content,
+  .ticket-info-content {
+    height: calc(100vh - 200px) !important; /* Taller on desktop */
+    min-height: 600px !important;
+  }
+}
+
+/* ===== ULTRA-AGGRESSIVE MOBILE CARD VIEW FOR TABLES ===== */
+@media (max-width: 767px) {
+  /* Mobile card view for attendees */
+  html body .attendees-table-mobile-card,
+  body .attendees-table-mobile-card,
+  .attendees-table-mobile-card {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 16px !important;
+    background-color: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .attendees-table-mobile-card-row,
+  body .attendees-table-mobile-card-row,
+  .attendees-table-mobile-card-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid #eee !important;
+  }
+
+  html body .attendees-table-mobile-card-label,
+  body .attendees-table-mobile-card-label,
+  .attendees-table-mobile-card-label {
+    font-weight: 600 !important;
+    color: #666 !important;
+  }
+
+  html body .attendees-table-mobile-card-value,
+  body .attendees-table-mobile-card-value,
+  .attendees-table-mobile-card-value {
+    text-align: right !important;
+    word-break: break-word !important;
+  }
+}
+
+/* ===== ULTRA-AGGRESSIVE DISCOUNT FORM MOBILE FIXES ===== */
+@media (max-width: 767px) {
+  html body .discount-form,
+  body .discount-form,
+  .discount-form {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .form-section,
+  body .form-section,
+  .form-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 16px 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .form-section h4,
+  body .form-section h4,
+  .form-section h4 {
+    font-size: 16px !important;
+    margin-top: 0 !important;
+    margin-bottom: 16px !important;
+  }
+
+  html body .form-group,
+  body .form-group,
+  .form-group {
+    margin-bottom: 16px !important;
+  }
+
+  html body .form-group label,
+  body .form-group label,
+  .form-group label {
+    font-size: 14px !important;
+  }
+
+  html body .form-group input,
+  body .form-group input,
+  .form-group input,
+  html body .form-group select,
+  body .form-group select,
+  .form-group select {
+    font-size: 14px !important;
+    height: 40px !important;
+  }
+
+  html body .add-discount-button,
+  body .add-discount-button,
+  .add-discount-button {
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* ===== ULTRA-AGGRESSIVE FORCE CONTENT VISIBILITY ===== */
+html body *,
+body *,
+* {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE FORCE SCROLLBARS ===== */
+html body .ticket-info-content::-webkit-scrollbar,
+body .ticket-info-content::-webkit-scrollbar,
+.ticket-info-content::-webkit-scrollbar,
+html body .attendees-table-container::-webkit-scrollbar,
+body .attendees-table-container::-webkit-scrollbar,
+.attendees-table-container::-webkit-scrollbar,
+html body .payouts-table-container::-webkit-scrollbar,
+body .payouts-table-container::-webkit-scrollbar,
+.payouts-table-container::-webkit-scrollbar,
+html body .discounts-table-container::-webkit-scrollbar,
+body .discounts-table-container::-webkit-scrollbar,
+.discounts-table-container::-webkit-scrollbar {
+  -webkit-appearance: none !important;
+  width: 7px !important;
+  height: 7px !important;
+}
+
+html body .ticket-info-content::-webkit-scrollbar-thumb,
+body .ticket-info-content::-webkit-scrollbar-thumb,
+.ticket-info-content::-webkit-scrollbar-thumb,
+html body .attendees-table-container::-webkit-scrollbar-thumb,
+body .attendees-table-container::-webkit-scrollbar-thumb,
+.attendees-table-container::-webkit-scrollbar-thumb,
+html body .payouts-table-container::-webkit-scrollbar-thumb,
+body .payouts-table-container::-webkit-scrollbar-thumb,
+.payouts-table-container::-webkit-scrollbar-thumb,
+html body .discounts-table-container::-webkit-scrollbar-thumb,
+body .discounts-table-container::-webkit-scrollbar-thumb,
+.discounts-table-container::-webkit-scrollbar-thumb {
+  border-radius: 4px !important;
+  background-color: rgba(98, 0, 238, 0.5) !important;
+  box-shadow: 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ===== ULTRA-AGGRESSIVE MOBILE CARD TRANSFORMATION ===== */
+@media (max-width: 767px) {
+  /* Add this JavaScript to transform tables into mobile cards */
+  html body .js-transform-tables,
+  body .js-transform-tables,
+  .js-transform-tables {
+    display: none !important;
+  }
+}

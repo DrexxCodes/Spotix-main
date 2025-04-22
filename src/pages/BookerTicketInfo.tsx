@@ -9,6 +9,7 @@ import { doc, getDoc, collection, getDocs, updateDoc, addDoc, query, orderBy } f
 import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
+import "../booker-ticket-info-override.css"
 import { Copy, Check, AlertCircle, Shield, Eye, EyeOff, Wallet, ArrowUpRight } from "lucide-react"
 import {
   AreaChart,
@@ -22,6 +23,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+import "../booker-ticket-info-override.css"
+
 
 // Add this utility function at the top of the file, after the imports
 const formatFirestoreTimestamp = (timestamp: any): string => {
@@ -401,7 +404,7 @@ const BookerTicketInfo = () => {
   }, [id, navigate])
 
   const handleVerifyTicket = () => {
-    navigate("/verify-ticket", { state: { eventId: id, eventName: eventData?.eventName } })
+    navigate("/verifyticket", { state: { eventId: id, eventName: eventData?.eventName } })
   }
 
   const handleEditEvent = () => {

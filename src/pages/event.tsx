@@ -11,6 +11,7 @@ import { ArrowLeft, User, Ticket, Info, X } from "lucide-react"
 import ShareBtn from "../components/shareBtn"
 import "boxicons/css/boxicons.min.css"
 import "../responsive.css"
+import "../styles/event-override.css"
 
 interface EventType {
   id: string

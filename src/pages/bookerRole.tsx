@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
+import "../styles/role.css"
 
 const BookerRole = () => {
   const navigate = useNavigate()

@@ -2,6 +2,7 @@
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import { useNavigate } from "react-router-dom"
+import "../styles/404.css"
 
 const NotFound = () => {
   const navigate = useNavigate()

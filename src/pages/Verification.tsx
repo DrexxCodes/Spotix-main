@@ -9,6 +9,7 @@ import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } fro
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
+import "../styles/verification.css"
 
 interface UserData {
   uid: string

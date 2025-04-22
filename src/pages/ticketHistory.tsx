@@ -9,6 +9,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { Search, Ticket, Calendar, Clock, CheckCircle, XCircle } from "lucide-react"
 import { getWithExpiry, setWithExpiry } from "../utils/cacheUtils"
+import "../styles/ticket.css"
 
 interface TicketHistoryItem {
   id: string

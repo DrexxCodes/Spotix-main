@@ -5,11 +5,12 @@ import { useState, useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore"
-import UserHeader from "../components/UserHeader"
+import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { CheckCircle, XCircle, AlertTriangle, Camera } from "lucide-react"
 import { Html5Qrcode } from "html5-qrcode"
+import "../styles/verify.css"
 
 interface TicketData {
   id: string
@@ -323,7 +324,7 @@ const VerifyTicket = () => {
 
   return (
     <>
-      <UserHeader />
+      <BookersHeader />
       <div className="verify-ticket-container">
         <h1>Verify Ticket</h1>
 

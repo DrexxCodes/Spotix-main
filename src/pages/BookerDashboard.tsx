@@ -8,7 +8,8 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock } from "lucide-react"
 import BookersHeader from "../components/BookersHeader"
-import "../responsive.css"
+import "../booker-dashboard-override.css" 
+import "../styles/dashboard.css"
 
 interface DashboardStats {
   totalEvents: number
@@ -190,11 +191,11 @@ const BookerDashboard = () => {
   }
 
   const handleViewAllEvents = () => {
-    navigate("/booker-tickets")
+    navigate("/bookertickets")
   }
 
   const handleViewEvent = (eventId: string) => {
-    navigate(`/booker-ticket-info/${eventId}`)
+    navigate(`/bookerticketinfo/${eventId}`)
   }
 
   const getTimeBasedGreeting = () => {
@@ -308,7 +309,7 @@ const BookerDashboard = () => {
           <div className="dashboard-header">
             <div className="greeting-container">
               <h1>
-                {getTimeBasedGreeting()}, {bookerName}
+                {getTimeBasedGreeting()}, {bookerName}! Wagwan?
               </h1>
             </div>
             <button className="create-event-button" onClick={handleCreateEvent}>
@@ -318,6 +319,7 @@ const BookerDashboard = () => {
           </div>
         </div>
 
+        {/* Dashboard content wrapper for proper containment */}
         <div className="dashboard-content">
           <div className="stats-grid">
             <div className="stat-card">
@@ -491,11 +493,11 @@ const BookerDashboard = () => {
           <div className="quick-actions">
             <h2>Quick Actions</h2>
             <div className="actions-grid">
-              <button className="action-card" onClick={() => navigate("/verify-ticket")}>
+              <button className="action-card" onClick={() => navigate("/verifyticket")}>
                 <Ticket className="action-icon" size={24} />
                 <span className="action-text">Verify Ticket</span>
               </button>
-              <button className="action-card" onClick={() => navigate("/booker-profile")}>
+              <button className="action-card" onClick={() => navigate("/bookerprofile")}>
                 <User className="action-icon" size={24} />
                 <span className="action-text">View Profile</span>
               </button>
@@ -503,7 +505,7 @@ const BookerDashboard = () => {
                 <PlusCircle className="action-icon" size={24} />
                 <span className="action-text">Create Event</span>
               </button>
-              <button className="action-card" onClick={() => navigate("/booker-tickets")}>
+              <button className="action-card" onClick={() => navigate("/bookertickets")}>
                 <BarChart2 className="action-icon" size={24} />
                 <span className="action-text">All Events</span>
               </button>

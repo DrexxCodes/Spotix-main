@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Preloader from "../components/preloader";
+import "../wrapper.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -58,7 +59,8 @@ const Login = () => {
 
   return (
     <>
-      <Preloader loading={loading || loggingIn} />
+    <div className="fix-login">  
+          <Preloader loading={loading || loggingIn} />
       <div className="auth-container">
         <div className="auth-form">
           <img src="/logo.svg" alt="Logo" className="auth-logo" />
@@ -85,6 +87,8 @@ const Login = () => {
           Use Spotix to Book That <span id="animated-text">Event</span>
         </div>
       </div>
+      </div>
+
     </>
   );
 };

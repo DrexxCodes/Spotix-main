@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import "../styles/role.css";
 
 const Success = () => {
   const navigate = useNavigate();
@@ -9,13 +10,13 @@ const Success = () => {
   useEffect(() => {
     // If no state was passed, redirect to home
     if (!state) {
-      navigate("/");
+      navigate("/home");
     }
   }, [state, navigate]);
 
   // Handle the button click to go to home
   const goToHome = () => {
-    navigate("/");
+    navigate("/home");
   };
 
   if (!state) {

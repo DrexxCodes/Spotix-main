@@ -22,6 +22,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import WalletDisplay from "../components/WalletDisplay"
 import "boxicons/css/boxicons.min.css"
+import "../override.css"
 
 interface EventType {
   id: string
