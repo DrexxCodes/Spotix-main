@@ -1013,3 +1013,67 @@
   max-width: 600px;
   text-align: center;
 }
+
+/* Add these styles to your responsive.css file */
+
+/* Tab content wrapper with fixed height */
+.tab-content-wrapper {
+  position: relative;
+  height: 30rem; /* Fixed height container - adjust as needed */
+  max-height: 80vh; /* Responsive max height */
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Make the tab content scrollable */
+.tab-content {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.5rem; /* Add some padding for the scrollbar */
+  scrollbar-width: thin; /* Firefox */
+}
+
+/* Styling for webkit scrollbars */
+.tab-content::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0.625rem;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: #6b2fa5;
+  border-radius: 0.625rem;
+}
+
+/* Ensure tab content children take full width */
+.event-details-tab,
+.tickets-tab,
+.booker-tab {
+  width: 100%;
+  padding-bottom: 2rem; /* Add padding at the bottom for better scrolling experience */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-content-wrapper {
+    height: 25rem; /* Smaller height on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-content-wrapper {
+    height: 22rem; /* Even smaller height on very small screens */
+  }
+}
+
+/* For larger screens */
+@media (min-width: 1200px) {
+  .tab-content-wrapper {
+    height: 35rem; /* Larger height on big screens */
+  }
+}
+
+

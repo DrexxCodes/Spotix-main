@@ -361,8 +361,6 @@ const Profile = () => {
   return (
     <div className="profile-container">
       <UserHeader />
-      <h1 className="profile-title">My Profile</h1>
-
       <form onSubmit={handleSubmit} className="profile-form">
         {/* Profile Picture Section with Role Tag */}
         <div className="profile-picture-section">

@@ -156,7 +156,6 @@ const TicketHistoryInfo = () => {
 
         if (eventDoc.exists()) {
           const eventData = eventDoc.data() as EventDetails
-          console.log("Event data fetched:", eventData)
           setEventDetails(eventData)
 
           // Update ticket details with event info
@@ -228,7 +227,6 @@ const TicketHistoryInfo = () => {
 
               if (eventDoc.exists()) {
                 const eventData = eventDoc.data()
-                console.log("Event data from Firestore:", eventData)
 
                 // Store event details for calendar functionality
                 setEventDetails(eventData as EventDetails)

@@ -723,9 +723,7 @@ const Payment = () => {
                 className={`payment-method ${paymentMethod === "bitcoin" ? "selected" : ""}`}
                 onClick={() => setPaymentMethod("bitcoin")}
               >
-                <div className="payment-method-icon">
-                  <Bitcoin size={24} />
-                </div>
+                <div className="payment-method-icon">₿</div>
                 <div className="payment-method-name">Bitcoin</div>
                 <div className="payment-method-description">Crypto Payment</div>
               </div>

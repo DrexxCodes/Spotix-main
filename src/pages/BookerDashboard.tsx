@@ -8,6 +8,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock } from "lucide-react"
 import BookersHeader from "../components/BookersHeader"
+import "../responsive.css"
 
 interface DashboardStats {
   totalEvents: number
@@ -317,194 +318,196 @@ const BookerDashboard = () => {
           </div>
         </div>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Calendar size={20} />
+        <div className="dashboard-content">
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Calendar size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Total Events</h3>
+                <p className="stat-value">{stats.totalEvents}</p>
+              </div>
             </div>
-            <div className="stat-content">
-              <h3>Total Events</h3>
-              <p className="stat-value">{stats.totalEvents}</p>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Clock size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Active Events</h3>
+                <p className="stat-value">{stats.activeEvents}</p>
+              </div>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Clock size={20} />
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Calendar size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Past Events</h3>
+                <p className="stat-value">{stats.pastEvents}</p>
+              </div>
             </div>
-            <div className="stat-content">
-              <h3>Active Events</h3>
-              <p className="stat-value">{stats.activeEvents}</p>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <DollarSign size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Total Revenue</h3>
+                <p className="stat-value">₦{stats.totalRevenue.toFixed(2)}</p>
+              </div>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Calendar size={20} />
+            <div className="stat-card highlight">
+              <div className="stat-icon">
+                <DollarSign size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Available Balance</h3>
+                <p className="stat-value">₦{stats.availableBalance.toFixed(2)}</p>
+              </div>
             </div>
-            <div className="stat-content">
-              <h3>Past Events</h3>
-              <p className="stat-value">{stats.pastEvents}</p>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <DollarSign size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Total Paid Out</h3>
+                <p className="stat-value">₦{stats.totalPaidOut.toFixed(2)}</p>
+              </div>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <DollarSign size={20} />
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Tag size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Tickets Sold</h3>
+                <p className="stat-value">{stats.totalTicketsSold}</p>
+              </div>
             </div>
-            <div className="stat-content">
-              <h3>Total Revenue</h3>
-              <p className="stat-value">₦{stats.totalRevenue.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="stat-card highlight">
-            <div className="stat-icon">
-              <DollarSign size={20} />
-            </div>
-            <div className="stat-content">
-              <h3>Available Balance</h3>
-              <p className="stat-value">₦{stats.availableBalance.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <DollarSign size={20} />
-            </div>
-            <div className="stat-content">
-              <h3>Total Paid Out</h3>
-              <p className="stat-value">₦{stats.totalPaidOut.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <Tag size={20} />
-            </div>
-            <div className="stat-content">
-              <h3>Tickets Sold</h3>
-              <p className="stat-value">{stats.totalTicketsSold}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="recent-events-section">
-          <div className="section-header">
-            <h2>Recent Events</h2>
-            <button className="view-all-button" onClick={handleViewAllEvents}>
-              View All
-            </button>
           </div>
 
-          <div className="events-table-container">
-            <table className="events-table">
-              <thead>
-                <tr>
-                  <th>Event Name</th>
-                  <th className="hide-sm">Date</th>
-                  <th className="hide-md">Tickets</th>
-                  <th className="hide-md">Revenue</th>
-                  <th className="hide-sm">Balance</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentEvents.length > 0 ? (
-                  recentEvents.map((event) => (
-                    <tr key={event.id}>
-                      <td data-label="Event">{event.eventName}</td>
-                      <td data-label="Date" className="hide-sm">
-                        {new Date(event.eventDate).toLocaleDateString()}
-                      </td>
-                      <td data-label="Tickets" className="hide-md">
-                        {event.ticketsSold}
-                      </td>
-                      <td data-label="Revenue" className="hide-md">
-                        ₦{event.revenue.toFixed(2)}
-                      </td>
-                      <td data-label="Balance" className="hide-sm">
-                        ₦{event.availableBalance.toFixed(2)}
-                      </td>
-                      <td data-label="Status">
-                        <span className={`status-badge status-${event.status}`}>
-                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                        </span>
-                      </td>
-                      <td data-label="Actions">
-                        <button className="view-event-button" onClick={() => handleViewEvent(event.id)}>
-                          View
-                        </button>
+          <div className="recent-events-section">
+            <div className="section-header">
+              <h2>Recent Events</h2>
+              <button className="view-all-button" onClick={handleViewAllEvents}>
+                View All
+              </button>
+            </div>
+
+            <div className="events-table-container">
+              <table className="events-table">
+                <thead>
+                  <tr>
+                    <th>Event Name</th>
+                    <th className="hide-sm">Date</th>
+                    <th className="hide-md">Tickets</th>
+                    <th className="hide-md">Revenue</th>
+                    <th className="hide-sm">Balance</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentEvents.length > 0 ? (
+                    recentEvents.map((event) => (
+                      <tr key={event.id}>
+                        <td data-label="Event">{event.eventName}</td>
+                        <td data-label="Date" className="hide-sm">
+                          {new Date(event.eventDate).toLocaleDateString()}
+                        </td>
+                        <td data-label="Tickets" className="hide-md">
+                          {event.ticketsSold}
+                        </td>
+                        <td data-label="Revenue" className="hide-md">
+                          ₦{event.revenue.toFixed(2)}
+                        </td>
+                        <td data-label="Balance" className="hide-sm">
+                          ₦{event.availableBalance.toFixed(2)}
+                        </td>
+                        <td data-label="Status">
+                          <span className={`status-badge status-${event.status}`}>
+                            {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                          </span>
+                        </td>
+                        <td data-label="Actions">
+                          <button className="view-event-button" onClick={() => handleViewEvent(event.id)}>
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="no-events-message">
+                        No events found. Create your first event!
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="no-events-message">
-                      No events found. Create your first event!
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Mobile event cards - only shown on small screens */}
-          <div className="mobile-events-cards">
-            {recentEvents.length > 0 ? (
-              recentEvents.map((event) => (
-                <div key={event.id} className="mobile-event-card">
-                  <div className="mobile-event-header">
-                    <h3>{event.eventName}</h3>
-                    <span className={`status-badge status-${event.status}`}>
-                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                    </span>
+            {/* Mobile event cards - only shown on small screens */}
+            <div className="mobile-events-cards">
+              {recentEvents.length > 0 ? (
+                recentEvents.map((event) => (
+                  <div key={event.id} className="mobile-event-card">
+                    <div className="mobile-event-header">
+                      <h3>{event.eventName}</h3>
+                      <span className={`status-badge status-${event.status}`}>
+                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="mobile-event-details">
+                      <div className="mobile-event-detail">
+                        <span className="detail-label">Date:</span>
+                        <span className="detail-value">{new Date(event.eventDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="mobile-event-detail">
+                        <span className="detail-label">Tickets:</span>
+                        <span className="detail-value">{event.ticketsSold}</span>
+                      </div>
+                      <div className="mobile-event-detail">
+                        <span className="detail-label">Revenue:</span>
+                        <span className="detail-value">₦{event.revenue.toFixed(2)}</span>
+                      </div>
+                      <div className="mobile-event-detail">
+                        <span className="detail-label">Balance:</span>
+                        <span className="detail-value">₦{event.availableBalance.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <button className="mobile-view-button" onClick={() => handleViewEvent(event.id)}>
+                      View Details
+                    </button>
                   </div>
-                  <div className="mobile-event-details">
-                    <div className="mobile-event-detail">
-                      <span className="detail-label">Date:</span>
-                      <span className="detail-value">{new Date(event.eventDate).toLocaleDateString()}</span>
-                    </div>
-                    <div className="mobile-event-detail">
-                      <span className="detail-label">Tickets:</span>
-                      <span className="detail-value">{event.ticketsSold}</span>
-                    </div>
-                    <div className="mobile-event-detail">
-                      <span className="detail-label">Revenue:</span>
-                      <span className="detail-value">₦{event.revenue.toFixed(2)}</span>
-                    </div>
-                    <div className="mobile-event-detail">
-                      <span className="detail-label">Balance:</span>
-                      <span className="detail-value">₦{event.availableBalance.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  <button className="mobile-view-button" onClick={() => handleViewEvent(event.id)}>
-                    View Details
-                  </button>
+                ))
+              ) : (
+                <div className="no-events-card">
+                  <p>No events found. Create your first event!</p>
                 </div>
-              ))
-            ) : (
-              <div className="no-events-card">
-                <p>No events found. Create your first event!</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="quick-actions">
-          <h2>Quick Actions</h2>
-          <div className="actions-grid">
-            <button className="action-card" onClick={() => navigate("/verify-ticket")}>
-              <Ticket className="action-icon" size={24} />
-              <span className="action-text">Verify Ticket</span>
-            </button>
-            <button className="action-card" onClick={() => navigate("/booker-profile")}>
-              <User className="action-icon" size={24} />
-              <span className="action-text">View Profile</span>
-            </button>
-            <button className="action-card" onClick={() => navigate("/createEvent")}>
-              <PlusCircle className="action-icon" size={24} />
-              <span className="action-text">Create Event</span>
-            </button>
-            <button className="action-card" onClick={() => navigate("/booker-tickets")}>
-              <BarChart2 className="action-icon" size={24} />
-              <span className="action-text">All Events</span>
-            </button>
+          <div className="quick-actions">
+            <h2>Quick Actions</h2>
+            <div className="actions-grid">
+              <button className="action-card" onClick={() => navigate("/verify-ticket")}>
+                <Ticket className="action-icon" size={24} />
+                <span className="action-text">Verify Ticket</span>
+              </button>
+              <button className="action-card" onClick={() => navigate("/booker-profile")}>
+                <User className="action-icon" size={24} />
+                <span className="action-text">View Profile</span>
+              </button>
+              <button className="action-card" onClick={() => navigate("/createEvent")}>
+                <PlusCircle className="action-icon" size={24} />
+                <span className="action-text">Create Event</span>
+              </button>
+              <button className="action-card" onClick={() => navigate("/booker-tickets")}>
+                <BarChart2 className="action-icon" size={24} />
+                <span className="action-text">All Events</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { collection, getDocs } from "firebase/firestore"
 import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
+import "../tables.css" 
 
 interface EventData {
   id: string
@@ -19,6 +20,7 @@ interface EventData {
   revenue: number
   status: "active" | "past" | "draft"
   eventVenue: string
+  hasMaxSize: boolean
 }
 
 const BookerTickets = () => {
@@ -56,6 +58,7 @@ const BookerTickets = () => {
             revenue: data.totalRevenue || 0,
             status: isPast ? "past" : "active",
             eventVenue: data.eventVenue || "No venue specified",
+            hasMaxSize: data.enableMaxSize || false,
           })
         })
 
@@ -91,7 +94,7 @@ const BookerTickets = () => {
   }, [searchQuery, statusFilter, events])
 
   const handleViewEvent = (eventId: string) => {
-    navigate(`/booker-ticket-info/${eventId}`)
+    navigate(`/bookerticketinfo/${eventId}`)
   }
 
   const handleCreateEvent = () => {
@@ -148,26 +151,35 @@ const BookerTickets = () => {
               {filteredEvents.length > 0 ? (
                 filteredEvents.map((event) => (
                   <tr key={event.id}>
-                    <td>{event.eventName}</td>
-                    <td>{new Date(event.eventDate).toLocaleDateString()}</td>
-                    <td>{event.eventVenue}</td>
-                    <td>{event.eventType}</td>
-                    <td>
-                      {event.ticketsSold} / {event.totalCapacity}
-                      <div className="progress-bar">
-                        <div
-                          className="progress"
-                          style={{ width: `${(event.ticketsSold / event.totalCapacity) * 100}%` }}
-                        ></div>
-                      </div>
+                    <td data-label="Event Name">{event.eventName}</td>
+                    <td data-label="Date">{new Date(event.eventDate).toLocaleDateString()}</td>
+                    <td data-label="Venue">{event.eventVenue}</td>
+                    <td data-label="Type">{event.eventType}</td>
+                    <td data-label="Tickets Sold">
+                      {event.hasMaxSize ? (
+                        <>
+                          {event.ticketsSold} / {event.totalCapacity}
+                          <div className="progress-bar">
+                            <div
+                              className="progress"
+                              style={{ width: `${(event.ticketsSold / event.totalCapacity) * 100}%` }}
+                            ></div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {event.ticketsSold}
+                          {/* Hide progress bar completely when no max size */}
+                        </>
+                      )}
                     </td>
-                    <td>${event.revenue.toFixed(2)}</td>
-                    <td>
+                    <td data-label="Revenue">${event.revenue.toFixed(2)}</td>
+                    <td data-label="Status">
                       <span className={`status-badge status-${event.status}`}>
                         {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <button className="view-event-button" onClick={() => handleViewEvent(event.id)}>
                         View
                       </button>
@@ -191,4 +203,3 @@ const BookerTickets = () => {
 }
 
 export default BookerTickets
-

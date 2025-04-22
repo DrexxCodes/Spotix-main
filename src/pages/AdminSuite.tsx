@@ -20,7 +20,18 @@ import {
 import { checkCurrentUserIsAdmin } from "../services/admin"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
-import { UserPlus, UserCheck, Search, DollarSign, Shield, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import {
+  UserPlus,
+  UserCheck,
+  Search,
+  DollarSign,
+  Shield,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Menu,
+  X,
+} from "lucide-react"
 import Preloader from "../components/preloader"
 import { generateBVT, generateActionCode } from "../utils/generators"
 
@@ -31,6 +42,11 @@ interface AdminUser {
   name: string
   addedAt: any
   addedBy: string
+  permissions?: {
+    addNewAdmin: boolean
+    verifyBooker: boolean
+    initiatePayout: boolean
+  }
 }
 
 interface UserData {
@@ -144,6 +160,8 @@ const AdminSuite = () => {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("users")
   const [message, setMessage] = useState({ text: "", type: "" })
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [currentUserIsRoot, setCurrentUserIsRoot] = useState(false)
 
   // Admin management states
   const [newAdminUid, setNewAdminUid] = useState("")
@@ -183,6 +201,23 @@ const AdminSuite = () => {
         return
       }
 
+      // Check if current user is root admin (has permission to add admins)
+      const currentUser = auth.currentUser
+      if (currentUser) {
+        const adminDocRef = doc(db, "admins", currentUser.uid)
+        const adminDoc = await getDoc(adminDocRef)
+
+        if (adminDoc.exists()) {
+          const adminData = adminDoc.data()
+          // If permissions field doesn't exist or addNewAdmin is true, consider as root
+          const isRoot = !adminData.permissions || adminData.permissions.addNewAdmin !== false
+          setCurrentUserIsRoot(isRoot)
+        } else {
+          // If admin doc exists but no permissions field, consider as root (legacy support)
+          setCurrentUserIsRoot(true)
+        }
+      }
+
       // Load pending verifications
       await loadPendingVerifications()
 
@@ -215,6 +250,7 @@ const AdminSuite = () => {
               name: userData.fullName || userData.username || adminData.name || "Unknown",
               addedAt: adminData.addedAt || null,
               addedBy: adminData.addedBy || "Unknown",
+              permissions: adminData.permissions,
             })
           } else {
             adminsList.push({
@@ -223,6 +259,7 @@ const AdminSuite = () => {
               name: adminData.name || "Unknown",
               addedAt: adminData.addedAt || null,
               addedBy: adminData.addedBy || "Unknown",
+              permissions: adminData.permissions,
             })
           }
         } catch (error) {
@@ -233,6 +270,7 @@ const AdminSuite = () => {
             name: adminData.name || "Unknown",
             addedAt: adminData.addedAt || null,
             addedBy: adminData.addedBy || "Unknown",
+            permissions: adminData.permissions,
           })
         }
       }
@@ -325,12 +363,17 @@ const AdminSuite = () => {
         return
       }
 
-      // Add to admins collection
+      // Add to admins collection with default permissions
       await setDoc(adminDocRef, {
         email: searchedUser.email,
         name: searchedUser.name,
         addedAt: new Date(),
         addedBy: auth.currentUser?.uid || "Unknown",
+        permissions: {
+          addNewAdmin: false,
+          verifyBooker: true,
+          initiatePayout: false,
+        },
       })
 
       setMessage({ text: "Admin added successfully", type: "success" })
@@ -635,21 +678,21 @@ const AdminSuite = () => {
 
       // Set state with all the data
       setEventData({
-              id: eventDoc.id,
-              eventName: eventData.eventName || "Unknown Event",
-              eventDate: eventData.eventDate || "Unknown Date",
-              payId: eventData.payId || "",
-              ticketsSold: eventData.ticketsSold || 0,
-              userId,
-              userName: userData.fullName || userData.username || "Unknown",
-              // Add ticket prices from the event data
-              ticketPrices: eventData.ticketPrices || [],
-              isFree: eventData.isFree || false,
-              // Add financial tracking fields
-              totalRevenue: eventData.totalRevenue || 0,
-              availableRevenue: storedAvailableRevenue,
-              totalPaidOut: storedTotalPaidOut,
-            })
+        id: eventDoc.id,
+        eventName: eventData.eventName || "Unknown Event",
+        eventDate: eventData.eventDate || "Unknown Date",
+        payId: eventData.payId || "",
+        ticketsSold: eventData.ticketsSold || 0,
+        userId,
+        userName: userData.fullName || userData.username || "Unknown",
+        // Add ticket prices from the event data
+        ticketPrices: eventData.ticketPrices || [],
+        isFree: eventData.isFree || false,
+        // Add financial tracking fields
+        totalRevenue: eventData.totalRevenue || 0,
+        availableRevenue: storedAvailableRevenue,
+        totalPaidOut: storedTotalPaidOut,
+      })
       setPayouts(payoutsList)
       setTicketSales(salesList)
     } catch (error) {
@@ -679,8 +722,8 @@ const AdminSuite = () => {
       return
     }
 
-    // Calculate payable amount (80% of payout amount)
-    const payable = amount * 0.8
+    // Calculate payable amount (5% of payout amount)
+    const payable = amount * 0.05
     setPayableAmount(payable.toFixed(2))
   }
 
@@ -857,33 +900,63 @@ const AdminSuite = () => {
       <div className="admin-dashboard-container">
         <div className="admin-header">
           <h1>Admin Dashboard</h1>
-          <div className="admin-tabs">
+
+          {/* Mobile menu toggle button */}
+          <button
+            className="menu-toggle-btn md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+
+          {/* Desktop tabs */}
+          <div className={`admin-tabs ${mobileMenuOpen ? "mobile-menu-open" : "hidden md:flex"}`}>
             <button
               className={`admin-tab ${activeTab === "users" ? "active" : ""}`}
-              onClick={() => setActiveTab("users")}
+              onClick={() => {
+                setActiveTab("users")
+                setMobileMenuOpen(false)
+              }}
             >
               <Shield size={18} />
               Admin Users
             </button>
             <button
               className={`admin-tab ${activeTab === "verification" ? "active" : ""}`}
-              onClick={() => setActiveTab("verification")}
+              onClick={() => {
+                setActiveTab("verification")
+                setMobileMenuOpen(false)
+              }}
             >
               <UserCheck size={18} />
               Verify Bookers
             </button>
             <button
               className={`admin-tab ${activeTab === "payout" ? "active" : ""}`}
-              onClick={() => setActiveTab("payout")}
+              onClick={() => {
+                setActiveTab("payout")
+                setMobileMenuOpen(false)
+              }}
             >
               <DollarSign size={18} />
               Create Payout
             </button>
+
+            {/* Admin permissions button - only show if user is root admin */}
+            {currentUserIsRoot && (
+              <button
+                className="admin-permissions-btn"
+                onClick={() => {
+                  window.location.href = "/admin-permissions"
+                  setMobileMenuOpen(false)
+                }}
+              >
+                <Shield size={18} />
+                Manage Admin Permissions
+              </button>
+            )}
           </div>
-          <button className="admin-permissions-btn" onClick={() => (window.location.href = "/admin-permissions")}>
-            <Shield size={18} />
-            Manage Admin Permissions
-          </button>
         </div>
 
         {message.text && (
@@ -938,7 +1011,7 @@ const AdminSuite = () => {
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Added On</th>
+                    <th className="hidden md:table-cell">Added On</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -948,14 +1021,14 @@ const AdminSuite = () => {
                       <tr key={admin.uid}>
                         <td>{admin.name}</td>
                         <td>{admin.email}</td>
-                        <td>{formatTimestamp(admin.addedAt)}</td>
+                        <td className="hidden md:table-cell">{formatTimestamp(admin.addedAt)}</td>
                         <td>
                           <button
                             className="remove-admin-btn"
                             onClick={() => removeAdmin(admin.uid)}
                             disabled={admin.uid === auth.currentUser?.uid}
                           >
-                            Remove Admin
+                            Remove
                           </button>
                         </td>
                       </tr>
@@ -1231,7 +1304,7 @@ const AdminSuite = () => {
                         <div className="payable-amount">
                           <label>Payable Amount (₦)</label>
                           <input type="text" value={payableAmount} readOnly />
-                          <p className="fee-info">20% platform fee applied</p>
+                          <p className="fee-info">5% platform fee applied</p>
                         </div>
                       )}
 
@@ -1286,10 +1359,10 @@ const AdminSuite = () => {
                         <thead>
                           <tr>
                             <th>Date</th>
-                            <th>Payout Amount</th>
-                            <th>Payable Amount</th>
+                            <th className="hidden md:table-cell">Payout Amount</th>
+                            <th className="hidden md:table-cell">Payable Amount</th>
                             <th>Action Code</th>
-                            <th>Agent</th>
+                            <th className="hidden md:table-cell">Agent</th>
                             <th>Status</th>
                             <th>Actions</th>
                           </tr>
@@ -1299,10 +1372,10 @@ const AdminSuite = () => {
                             payouts.map((payout) => (
                               <tr key={payout.id}>
                                 <td>{formatTimestamp(payout.createdAt)}</td>
-                                <td>₦{Number(payout.payoutAmount).toFixed(2)}</td>
-                                <td>₦{Number(payout.payableAmount).toFixed(2)}</td>
+                                <td className="hidden md:table-cell">₦{Number(payout.payoutAmount).toFixed(2)}</td>
+                                <td className="hidden md:table-cell">₦{Number(payout.payableAmount).toFixed(2)}</td>
                                 <td>{payout.actionCode}</td>
-                                <td>{payout.agentName || "Unknown"}</td>
+                                <td className="hidden md:table-cell">{payout.agentName || "Unknown"}</td>
                                 <td>
                                   <span className={`status ${payout.status}`}>
                                     {payout.status === "completed" ? (
@@ -1327,7 +1400,7 @@ const AdminSuite = () => {
                                         setActionCode("")
                                       }}
                                     >
-                                      Verify Code
+                                      Verify
                                     </button>
                                   )}
                                 </td>

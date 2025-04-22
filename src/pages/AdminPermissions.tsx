@@ -18,6 +18,7 @@ import {
   Edit,
   Save,
   X,
+  Menu,
 } from "lucide-react"
 import Preloader from "../components/preloader"
 
@@ -39,6 +40,8 @@ const AdminPermissions = () => {
   const [message, setMessage] = useState({ text: "", type: "" })
   const [admins, setAdmins] = useState<AdminUser[]>([])
   const [currentUserIsRoot, setCurrentUserIsRoot] = useState(false)
+  const [currentUserAddedBySetup, setCurrentUserAddedBySetup] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Add admin states
   const [newAdminUid, setNewAdminUid] = useState("")
@@ -85,9 +88,20 @@ const AdminPermissions = () => {
             const isRoot = !adminData.permissions || adminData.permissions.addNewAdmin !== false
             setCurrentUserIsRoot(isRoot)
 
+            // Check if user was added by "setup"
+            const wasAddedBySetup = adminData.addedBy === "setup"
+            setCurrentUserAddedBySetup(wasAddedBySetup)
+
             if (!isRoot) {
               setMessage({
                 text: "You don't have permission to manage admins",
+                type: "error",
+              })
+            }
+
+            if (!wasAddedBySetup) {
+              setMessage({
+                text: "Only administrators added by setup can modify permissions",
                 type: "error",
               })
             }
@@ -223,6 +237,11 @@ const AdminPermissions = () => {
       return
     }
 
+    if (!currentUserAddedBySetup) {
+      setMessage({ text: "Only administrators added by setup can add new admins", type: "error" })
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -270,6 +289,11 @@ const AdminPermissions = () => {
       return
     }
 
+    if (!currentUserAddedBySetup) {
+      setMessage({ text: "Only administrators added by setup can modify permissions", type: "error" })
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -311,13 +335,54 @@ const AdminPermissions = () => {
     return <Preloader loading={true} />
   }
 
+  // If user is not added by setup, show access denied message
+  if (!currentUserAddedBySetup && !loading) {
+    return (
+      <>
+        <UserHeader />
+        <div className="admin-permissions-container">
+          <div className="admin-header">
+            <h1>Admin Permissions Management</h1>
+            <div className="admin-header-actions">
+              <button className="back-to-dashboard" onClick={() => (window.location.href = "/AdminSuite")}>
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-message error">
+            <AlertTriangle size={18} />
+            Access Denied: Only administrators added by setup can access this page
+            <button onClick={() => setMessage({ text: "", type: "" })}>×</button>
+          </div>
+
+          <div className="permission-warning">
+            <AlertTriangle size={20} />
+            <p>You don't have permission to view or modify admin permissions. Please contact a system administrator.</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    )
+  }
+
   return (
     <>
       <UserHeader />
       <div className="admin-permissions-container">
         <div className="admin-header">
           <h1>Admin Permissions Management</h1>
-          <div className="admin-header-actions">
+
+          {/* Mobile menu toggle */}
+          <button
+            className="menu-toggle-btn md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+
+          <div className={`admin-header-actions ${mobileMenuOpen ? "mobile-menu-open" : "hidden md:block"}`}>
             <button className="back-to-dashboard" onClick={() => (window.location.href = "/AdminSuite")}>
               Back to Dashboard
             </button>
@@ -470,10 +535,10 @@ const AdminPermissions = () => {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Added On</th>
-                  <th>Added By</th>
+                  <th className="hidden md:table-cell">Added On</th>
+                  <th className="hidden md:table-cell">Added By</th>
                   <th>Permissions</th>
-                  {currentUserIsRoot && <th>Actions</th>}
+                  {currentUserIsRoot && currentUserAddedBySetup && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -482,8 +547,10 @@ const AdminPermissions = () => {
                     <tr key={admin.uid} className={admin.uid === auth.currentUser?.uid ? "current-user" : ""}>
                       <td>{admin.name}</td>
                       <td>{admin.email}</td>
-                      <td>{admin.addedAt ? new Date(admin.addedAt.seconds * 1000).toLocaleDateString() : "Unknown"}</td>
-                      <td>{admin.addedBy}</td>
+                      <td className="hidden md:table-cell">
+                        {admin.addedAt ? new Date(admin.addedAt.seconds * 1000).toLocaleDateString() : "Unknown"}
+                      </td>
+                      <td className="hidden md:table-cell">{admin.addedBy}</td>
                       <td>
                         {editingAdminId === admin.uid ? (
                           <div className="edit-permissions">
@@ -541,7 +608,7 @@ const AdminPermissions = () => {
                           </div>
                         )}
                       </td>
-                      {currentUserIsRoot && (
+                      {currentUserIsRoot && currentUserAddedBySetup && (
                         <td>
                           {editingAdminId === admin.uid ? (
                             <div className="edit-actions">
@@ -561,7 +628,7 @@ const AdminPermissions = () => {
                               disabled={admin.uid === auth.currentUser?.uid}
                             >
                               <Edit size={14} />
-                              Edit Permissions
+                              Edit
                             </button>
                           )}
                         </td>
@@ -570,7 +637,7 @@ const AdminPermissions = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={currentUserIsRoot ? 6 : 5} className="no-data">
+                    <td colSpan={currentUserIsRoot && currentUserAddedBySetup ? 6 : 5} className="no-data">
                       No admin users found
                     </td>
                   </tr>

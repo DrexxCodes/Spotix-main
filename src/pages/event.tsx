@@ -330,7 +330,10 @@ const Event = () => {
           {/* Scrolling Marquee */}
           <div className="event-marquee-container">
             <div className="event-marquee">
-              <span>Grab your tickets for this event today🎉! Events block color will change in response to the color code of event set by booker. Got any report about this event⛔? Use Spotix Telegram Bot to make reports</span>
+              <span>
+                Grab your tickets for this event today🎉! Events block color will change in response to the color code
+                of event set by booker. Got any report about this event⛔? Use Spotix Telegram Bot to make reports
+              </span>
             </div>
           </div>
 
@@ -360,217 +363,223 @@ const Event = () => {
             </button>
           </div>
 
-          <div className="tab-content">
-            {activeTab === "details" && (
-              <div className="event-details-tab">
-                <h1 className="event-title">{eventData.eventName}</h1>
+          <div className="tab-content-wrapper">
+            <div className="tab-content">
+              {activeTab === "details" && (
+                <div className="event-details-tab">
+                  <h1 className="event-title">{eventData.eventName}</h1>
 
-                <div className="event-actions-container">
-                  <div className="event-share-container">
-                    <ShareBtn url={eventUrl} title={`Join me at ${eventData.eventName}`} />
-                  </div>
+                  <div className="event-actions-container">
+                    <div className="event-share-container">
+                      <ShareBtn url={eventUrl} title={`Join me at ${eventData.eventName}`} />
+                    </div>
 
-                  <div className="event-like-container">
-                    <button
-                      className={`event-like-button ${isLiked ? "liked" : ""}`}
-                      onClick={handleToggleLike}
-                      disabled={isLiking}
-                    >
-                      {isLiked ? <i className="bx bxs-heart like-icon"></i> : <i className="bx bx-heart like-icon"></i>}
-                      <span className="like-count">{likeCount}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Event Type:</span>
-                  <span className="detail-value">{eventData.eventType}</span>
-                </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Start Date:</span>
-                  <span className="detail-value">
-                    {new Date(eventData.eventDate).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Start Time:</span>
-                  <span className="detail-value">{eventData.eventStart || "Not specified"}</span>
-                </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">End Date:</span>
-                  <span className="detail-value">
-                    {eventData.eventEndDate
-                      ? new Date(eventData.eventEndDate).toLocaleDateString("en-US", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "Not specified"}
-                  </span>
-                </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">End Time:</span>
-                  <span className="detail-value">{eventData.eventEnd || "Not specified"}</span>
-                </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Venue:</span>
-                  <span className="detail-value">{eventData.eventVenue}</span>
-                </div>
-
-                {eventData.enableMaxSize && eventData.maxSize && (
-                  <div className="detail-row">
-                    <span className="detail-label">Maximum Attendees:</span>
-                    <span className="detail-value">
-                      {eventData.ticketsSold || 0} / {eventData.maxSize}
-                      {isSoldOut && <span className="sold-out-badge">SOLD OUT</span>}
-                    </span>
-                  </div>
-                )}
-
-                {eventData.enableColorCode && eventData.colorCode && (
-                  <div className="detail-row">
-                    <span className="detail-label">Event Color:</span>
-                    <span className="detail-value">
-                      <span className="color-preview" style={{ backgroundColor: eventData.colorCode }}></span>
-                      {eventData.colorCode}
-                    </span>
-                  </div>
-                )}
-
-                {eventData.eventDescription && (
-                  <div className="event-description">
-                    <h3>Description</h3>
-                    <p>{eventData.eventDescription}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "tickets" && (
-              <div className="tickets-tab">
-                <h2>Ticket Information</h2>
-
-                {isSoldOut && (
-                  <div className="sold-out-message">This event is sold out! No more tickets are available.</div>
-                )}
-
-                {isSaleEnded && <div className="sale-ended-message">Ticket sales have ended for this event.</div>}
-
-                {isEventPassed && <div className="event-passed-message">This event has already taken place.</div>}
-
-                {eventData.enableStopDate && eventData.stopDate && !isSaleEnded && (
-                  <div className="ticket-sale-info">
-                    <p>Ticket sales end on: {new Date(eventData.stopDate).toLocaleString()}</p>
-                  </div>
-                )}
-
-                {eventData.isFree ? (
-                  <div className="free-event-section">
-                    <p className="free-tag">This is a free event</p>
-                    {isEventPassed ? (
-                      <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
-                        Passed
-                      </button>
-                    ) : (
+                    <div className="event-like-container">
                       <button
-                        className="get-ticket-btn"
-                        onClick={() => handleBuyTicket("Free Admission", 0)}
-                        disabled={isSoldOut || isSaleEnded}
+                        className={`event-like-button ${isLiked ? "liked" : ""}`}
+                        onClick={handleToggleLike}
+                        disabled={isLiking}
                       >
-                        Get Free Ticket
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="ticket-prices">
-                    <h3>Available Tickets:</h3>
-                    {Array.isArray(eventData.ticketPrices) && eventData.ticketPrices.length > 0 ? (
-                      <ul>
-                        {eventData.ticketPrices.map((ticket, index) => (
-                          <li key={index}>
-                            <div className="ticket-info">
-                              <span className="policy">{ticket.policy}</span>
-                              <span className="price">₦{Number.parseFloat(String(ticket.price)).toFixed(2)}</span>
-                            </div>
-                            {isEventPassed ? (
-                              <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
-                                Passed
-                              </button>
-                            ) : (
-                              <button
-                                className="buy-ticket-btn"
-                                onClick={() => handleBuyTicket(ticket.policy, ticket.price)}
-                                disabled={isSoldOut || isSaleEnded}
-                              >
-                                Buy
-                              </button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>No ticket pricing information available for this event.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "booker" && (
-              <div className="booker-tab">
-                <h2>Event Organizer</h2>
-
-                {bookerDetails ? (
-                  <div className="booker-details">
-                    <div className="detail-row">
-                      <span className="detail-label">Organizer:</span>
-                      <span className="detail-value">
-                        {bookerDetails.username}
-                        {bookerDetails.isVerified && (
-                          <span className="verified-badge" title="Verified Organizer">
-                            ✓
-                          </span>
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="detail-row">
-                      <span className="detail-label">Email:</span>
-                      <span className="detail-value">{bookerDetails.email}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <span className="detail-label">Phone:</span>
-                      <span className="detail-value">{bookerDetails.phone}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <span className="detail-label">Verification Status:</span>
-                      <span className="detail-value">
-                        {bookerDetails.isVerified ? (
-                          <span className="verification-status verified">Verified</span>
+                        {isLiked ? (
+                          <i className="bx bxs-heart like-icon"></i>
                         ) : (
-                          <span className="verification-status unverified">Unverified</span>
+                          <i className="bx bx-heart like-icon"></i>
                         )}
-                      </span>
+                        <span className="like-count">{likeCount}</span>
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  <p>Loading organizer details...</p>
-                )}
-              </div>
-            )}
+
+                  <div className="detail-row">
+                    <span className="detail-label">Event Type:</span>
+                    <span className="detail-value">{eventData.eventType}</span>
+                  </div>
+
+                  <div className="detail-row">
+                    <span className="detail-label">Start Date:</span>
+                    <span className="detail-value">
+                      {new Date(eventData.eventDate).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="detail-row">
+                    <span className="detail-label">Start Time:</span>
+                    <span className="detail-value">{eventData.eventStart || "Not specified"}</span>
+                  </div>
+
+                  <div className="detail-row">
+                    <span className="detail-label">End Date:</span>
+                    <span className="detail-value">
+                      {eventData.eventEndDate
+                        ? new Date(eventData.eventEndDate).toLocaleDateString("en-US", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "Not specified"}
+                    </span>
+                  </div>
+
+                  <div className="detail-row">
+                    <span className="detail-label">End Time:</span>
+                    <span className="detail-value">{eventData.eventEnd || "Not specified"}</span>
+                  </div>
+
+                  <div className="detail-row">
+                    <span className="detail-label">Venue:</span>
+                    <span className="detail-value">{eventData.eventVenue}</span>
+                  </div>
+
+                  {eventData.enableMaxSize && eventData.maxSize && (
+                    <div className="detail-row">
+                      <span className="detail-label">Maximum Attendees:</span>
+                      <span className="detail-value">
+                        {eventData.ticketsSold || 0} / {eventData.maxSize}
+                        {isSoldOut && <span className="sold-out-badge">SOLD OUT</span>}
+                      </span>
+                    </div>
+                  )}
+
+                  {eventData.enableColorCode && eventData.colorCode && (
+                    <div className="detail-row">
+                      <span className="detail-label">Event Color:</span>
+                      <span className="detail-value">
+                        <span className="color-preview" style={{ backgroundColor: eventData.colorCode }}></span>
+                        {eventData.colorCode}
+                      </span>
+                    </div>
+                  )}
+
+                  {eventData.eventDescription && (
+                    <div className="event-description">
+                      <h3>Description</h3>
+                      <p>{eventData.eventDescription}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "tickets" && (
+                <div className="tickets-tab">
+                  <h2>Ticket Information</h2>
+
+                  {isSoldOut && (
+                    <div className="sold-out-message">This event is sold out! No more tickets are available.</div>
+                  )}
+
+                  {isSaleEnded && <div className="sale-ended-message">Ticket sales have ended for this event.</div>}
+
+                  {isEventPassed && <div className="event-passed-message">This event has already taken place.</div>}
+
+                  {eventData.enableStopDate && eventData.stopDate && !isSaleEnded && (
+                    <div className="ticket-sale-info">
+                      <p>Ticket sales end on: {new Date(eventData.stopDate).toLocaleString()}</p>
+                    </div>
+                  )}
+
+                  {eventData.isFree ? (
+                    <div className="free-event-section">
+                      <p className="free-tag">This is a free event</p>
+                      {isEventPassed ? (
+                        <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
+                          Passed
+                        </button>
+                      ) : (
+                        <button
+                          className="get-ticket-btn"
+                          onClick={() => handleBuyTicket("Free Admission", 0)}
+                          disabled={isSoldOut || isSaleEnded}
+                        >
+                          Get Free Ticket
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="ticket-prices">
+                      <h3>Available Tickets:</h3>
+                      {Array.isArray(eventData.ticketPrices) && eventData.ticketPrices.length > 0 ? (
+                        <ul>
+                          {eventData.ticketPrices.map((ticket, index) => (
+                            <li key={index}>
+                              <div className="ticket-info">
+                                <span className="policy">{ticket.policy}</span>
+                                <span className="price">₦{Number.parseFloat(String(ticket.price)).toFixed(2)}</span>
+                              </div>
+                              {isEventPassed ? (
+                                <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
+                                  Passed
+                                </button>
+                              ) : (
+                                <button
+                                  className="buy-ticket-btn"
+                                  onClick={() => handleBuyTicket(ticket.policy, ticket.price)}
+                                  disabled={isSoldOut || isSaleEnded}
+                                >
+                                  Buy
+                                </button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>No ticket pricing information available for this event.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "booker" && (
+                <div className="booker-tab">
+                  <h2>Event Organizer</h2>
+
+                  {bookerDetails ? (
+                    <div className="booker-details">
+                      <div className="detail-row">
+                        <span className="detail-label">Organizer:</span>
+                        <span className="detail-value">
+                          {bookerDetails.username}
+                          {bookerDetails.isVerified && (
+                            <span className="verified-badge" title="Verified Organizer">
+                              ✓
+                            </span>
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="detail-row">
+                        <span className="detail-label">Email:</span>
+                        <span className="detail-value">{bookerDetails.email}</span>
+                      </div>
+
+                      <div className="detail-row">
+                        <span className="detail-label">Phone:</span>
+                        <span className="detail-value">{bookerDetails.phone}</span>
+                      </div>
+
+                      <div className="detail-row">
+                        <span className="detail-label">Verification Status:</span>
+                        <span className="detail-value">
+                          {bookerDetails.isVerified ? (
+                            <span className="verification-status verified">Verified</span>
+                          ) : (
+                            <span className="verification-status unverified">Unverified</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>Loading organizer details...</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Passed Event Dialog */}
