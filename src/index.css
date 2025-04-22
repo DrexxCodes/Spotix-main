@@ -1,6 +1,5 @@
 /* Import landing page specific styles */
 @import url("./App.css");
-@import url(./wrapper.css);
 @import "tailwindcss";
 
 /* General reset */
