@@ -51,7 +51,7 @@ const PaystackSuccess = () => {
         setEventData(paymentData)
 
         // Verify payment on the server
-        const response = await axios.get(`/api/payment/verify?reference=${reference}`)
+        const response = await axios.get(`https://spotix-backend.onrender.com/payment/verify?reference=${reference}`)
         const data = response.data
 
         if (data.status && data.data && data.data.status === "success") {
@@ -87,7 +87,7 @@ const PaystackSuccess = () => {
             verified: false,
             paymentMethod: "Paystack",
             originalPrice: paymentData.originalPrice || paymentData.ticketPrice,
-            finalPrice: paymentData.ticketPrice,
+            ticketPrice: paymentData.ticketPrice,
             discountApplied: paymentData.discountApplied || false,
             discountCode: paymentData.discountCode || null,
             // Add event details with null checks to avoid undefined values

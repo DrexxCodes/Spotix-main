@@ -138,7 +138,7 @@ const CreateEvent = () => {
         eventType,
       })
 
-      const response = await fetch("/api/gemini/enhance", {
+      const response = await fetch("https://spotix-backend.onrender.com/gemini/enhance", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
