@@ -9,7 +9,7 @@ html body {
 /* Small screens */
 @media (max-width: 576px) {
     html body {
-        padding-top: 1460px !important;
+        padding-top: 1760px !important;
     }
 }
 
