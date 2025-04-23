@@ -3,13 +3,13 @@ html body {
 }
 
 html body {
-    padding-top: 1450px !important;
+    padding-top: 1300px !important;
 }
 
 /* Small screens */
 @media (max-width: 576px) {
     html body {
-        padding-top: 1450px !important;
+        padding-top: 1300px !important;
     }
 }
 

@@ -64,7 +64,7 @@ body {
 
 /* Apply padding only to pages that need it, not globally */
 body:not(.landing-page) {
-  padding-top: 800px; 
+  padding-top: 20px; 
 }
 
 
