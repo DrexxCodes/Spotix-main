@@ -9,7 +9,7 @@ import Preloader from "../components/preloader"
 import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
-import "styles/profile.css"
+import '../styles/profile.css'; 
 
 interface UserProfile {
   uid: string

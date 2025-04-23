@@ -4,7 +4,6 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Preloader from "../components/preloader";
-import "../wrapper.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");

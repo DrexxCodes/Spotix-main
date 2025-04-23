@@ -10,6 +10,7 @@ import Preloader from "../components/preloader"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import { Tooltip } from "../components/Tooltip"
+import "../styles/confirm.css"
 
 interface UserProfile {
   uid: string

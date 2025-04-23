@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../styles/role.css";
+import "../components/payment-override.css"
+
 
 const Success = () => {
   const navigate = useNavigate();

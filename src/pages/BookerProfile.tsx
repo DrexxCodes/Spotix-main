@@ -8,6 +8,7 @@ import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import Valid from "../components/valid"
+import "../styles/bookerProfile.css"
 
 interface BookerProfileData {
   uid: string
