@@ -754,6 +754,8 @@ input:checked+.slider:before {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+    padding-top: 350px;
+    position: static;
 }
 
 .home-header {
