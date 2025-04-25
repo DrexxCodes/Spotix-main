@@ -25,7 +25,7 @@ interface BookerProfileData {
   totalRevenue: number
   joinDate: string
   isVerified: boolean
-  bvt?: string // Added BVT field
+  bvt?: string 
 }
 
 const BookerProfile = () => {
