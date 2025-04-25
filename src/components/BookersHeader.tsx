@@ -16,7 +16,7 @@ import {
     Footer,
     FooterLink
   } from "./Header.styled";
-  
+  import {Link} from "react-router-dom"; 
 
 const BookersHeader: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -29,7 +29,9 @@ const BookersHeader: React.FC = () => {
     <>
       <HeaderContainer>
         <LogoSection>
-          <Logo src="/logo.svg" alt="Spotix Logo" />
+          <Link to="/bookerDashboard">
+            <Logo src="/logo.svg" alt="Spotix Logo" />
+          </Link>
           <Title>Spotix for Bookers</Title>
         </LogoSection>
         <MenuIcon onClick={() => setMenuOpen(!menuOpen)}>

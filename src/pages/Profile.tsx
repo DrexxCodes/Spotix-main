@@ -9,7 +9,8 @@ import Preloader from "../components/preloader"
 import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
-import '../styles/profile.css'; 
+import { uploadImage } from "../utils/imageUploader"
+import "../styles/profile.css"
 
 interface UserProfile {
   uid: string
@@ -64,6 +65,7 @@ const Profile = () => {
   const [showBankSuggestions, setShowBankSuggestions] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
+  const [uploadProvider, setUploadProvider] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const banks = [
@@ -159,37 +161,6 @@ const Profile = () => {
     }
   }
 
-  const uploadImageToCloudinary = async (file: File) => {
-    setUploadingImage(true)
-
-    // Access environment variables the Vite way
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", uploadPreset)
-
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      })
-
-      const data = await response.json()
-      if (data.secure_url) {
-        return data.secure_url
-      } else {
-        throw new Error("Failed to upload image")
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error)
-      throw error
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
@@ -198,9 +169,24 @@ const Profile = () => {
     try {
       let profilePictureUrl = user.profilePicture
 
-      // Upload new image if selected
+      // Upload new image if selected using the tiered upload system
       if (imageFile) {
-        profilePictureUrl = await uploadImageToCloudinary(imageFile)
+        setUploadingImage(true)
+
+        const { url, provider } = await uploadImage(imageFile, {
+          cloudinaryFolder: "ProfilePictures",
+          supabasePath: "profiles",
+          showAlert: true,
+        })
+
+        if (url) {
+          profilePictureUrl = url
+          setUploadProvider(provider)
+        } else {
+          throw new Error("Failed to upload profile picture")
+        }
+
+        setUploadingImage(false)
       }
 
       // Update user profile in Firestore
@@ -212,6 +198,7 @@ const Profile = () => {
         accountName: user.accountName,
         accountNumber: user.accountNumber,
         bankName: user.bankName,
+        imageProvider: uploadProvider,
       })
 
       // Update local state
@@ -521,10 +508,9 @@ const Profile = () => {
         onConfirm={toggleBookerStatus}
         onCancel={() => setShowDialog(false)}
       />
-<Footer />
+      <Footer />
     </div>
   )
 }
 
 export default Profile
-

@@ -6,9 +6,10 @@ import { useState, useEffect } from "react"
 import { db, auth } from "../services/firebase"
 import { collection, addDoc, doc, getDoc, setDoc } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
-import { Plus, HelpCircle, Wand2, Check } from "lucide-react"
+import { Plus, HelpCircle, Wand2, Check } from 'lucide-react'
 import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
+import { uploadImage } from "../utils/imageUploader"
 import "../styles/create.css"
 
 const CreateEvent = () => {
@@ -24,6 +25,7 @@ const CreateEvent = () => {
 
   const [eventImage, setEventImage] = useState<File | null>(null)
   const [eventImageUrl, setEventImageUrl] = useState("")
+  const [uploadProvider, setUploadProvider] = useState<string | null>(null)
 
   const [enablePricing, setEnablePricing] = useState(false)
   const [ticketPrices, setTicketPrices] = useState([{ policy: "", price: "" }])
@@ -168,42 +170,6 @@ const CreateEvent = () => {
     }
   }
 
-  const uploadToCloudinary = async () => {
-    if (!eventImage) return null
-
-    // Access environment variables the Vite way
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-
-    if (!uploadPreset || !cloudName) {
-      throw new Error("Cloudinary configuration missing. Please check your environment variables.")
-    }
-
-    const formData = new FormData()
-    formData.append("file", eventImage)
-    formData.append("upload_preset", uploadPreset)
-    formData.append("cloud_name", cloudName)
-
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error("Cloudinary error details:", errorData)
-        throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      return data.secure_url
-    } catch (error: any) {
-      console.error("Error uploading image:", error)
-      throw new Error(`Image upload failed: ${error.message}`)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -234,11 +200,21 @@ const CreateEvent = () => {
       const { eventId, payId } = generateUniqueId()
       const isFree = !enablePricing
 
-      // Upload image to Cloudinary
-      const uploadedImageUrl = await uploadToCloudinary()
-      if (!uploadedImageUrl) throw new Error("Image upload failed")
+      // Upload image using the tiered upload system
+      const { url: uploadedImageUrl, provider } = await uploadImage(eventImage, {
+        cloudinaryFolder: "Events",
+        supabasePath: "events",
+        showAlert: true,
+      })
+
+      if (!uploadedImageUrl) {
+        throw new Error("Image upload failed on all providers")
+      }
+
+      setUploadProvider(provider)
 
       // Get user data for booker name
+
       const userDoc = await getDoc(doc(db, "users", user.uid))
       const userData = userDoc.exists() ? userDoc.data() : {}
       const bookerName = userData.username || userData.fullName || "Unknown Booker"
@@ -253,6 +229,7 @@ const CreateEvent = () => {
         eventEnd,
         eventType,
         eventImage: uploadedImageUrl,
+        imageProvider: provider,
         ticketPrices: isFree ? [] : ticketPrices,
         enableStopDate,
         stopDate: enableStopDate ? stopDate : null,
@@ -325,7 +302,8 @@ const CreateEvent = () => {
 
             <label>Event Description</label>
             <div className="description-container">
-              <textarea style={{height: '200px'}}
+              <textarea
+                style={{ height: "200px" }}
                 value={eventDescription}
                 onChange={(e) => setEventDescription(e.target.value)}
                 required

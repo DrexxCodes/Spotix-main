@@ -9,14 +9,14 @@ html body {
 /* Small screens */
 @media (max-width: 576px) {
     html body {
-        padding-top: 1700px !important;
+        padding-top: 600px !important;
     }
 }
 
 /* Medium screens (around 540px by 720px) */
 @media (min-width: 577px) and (max-width: 991px) {
     html body {
-        padding-top: 1300px !important;
+        padding-top: 500px !important;
     }
 }
 

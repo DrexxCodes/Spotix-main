@@ -9,20 +9,20 @@ html body {
 /* Small screens */
 @media (max-width: 576px) {
     html body {
-        padding-top: 950px !important;
+        padding-top: 1400px !important;
     }
 }
 
 /* Medium screens (around 540px by 720px) */
 @media (min-width: 577px) and (max-width: 991px) {
     html body {
-        padding-top: 950px !important;
+        padding-top: 1300px !important;
     }
 }
 
 /* Slightly larger screens (around 1024px by 1366px) */
 @media (min-width: 992px) and (max-width: 1366px) {
     html body {
-        padding-top: 950px !important;
+        padding-top: 1300px !important;
     }
 }

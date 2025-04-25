@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
@@ -9,6 +8,7 @@ import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } fro
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
+import { uploadImage } from "../utils/imageUploader"
 import "../styles/verification.css"
 
 interface UserData {
@@ -29,6 +29,7 @@ interface DocumentStatus {
   dateUploaded: string
   timeUploaded: string
   fileUrl: string
+  provider?: string
 }
 
 interface VerificationData {
@@ -60,6 +61,15 @@ const Verification = () => {
   const [showUploadDialog, setShowUploadDialog] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [verificationId, setVerificationId] = useState<string>("")
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false)
+  const [allRequirementsMet, setAllRequirementsMet] = useState(false)
+
+  // Prevent file input dialog issues
+  const resetFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -137,6 +147,18 @@ const Verification = () => {
     fetchUserData()
   }, [navigate])
 
+  // Check if all requirements are met
+  useEffect(() => {
+    const allDocumentsUploaded =
+      verificationData.nin.status === "completed" &&
+      verificationData.selfie.status === "completed" &&
+      verificationData.proofOfAddress.status === "completed"
+
+    const addressFilled = verificationData.address.trim() !== ""
+
+    setAllRequirementsMet(allDocumentsUploaded && addressFilled && verificationId !== "")
+  }, [verificationData, verificationId])
+
   const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setVerificationData({
       ...verificationData,
@@ -150,9 +172,14 @@ const Verification = () => {
 
   const handleUploadClick = (documentType: string) => {
     setShowUploadDialog(documentType)
-    if (fileInputRef.current) {
-      fileInputRef.current.click()
-    }
+    resetFileInput() // Reset file input to ensure onChange fires even if same file is selected
+
+    // Use setTimeout to ensure the file picker dialog opens after state updates
+    setTimeout(() => {
+      if (fileInputRef.current) {
+        fileInputRef.current.click()
+      }
+    }, 100)
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,20 +210,6 @@ const Verification = () => {
       // Start upload
       setUploadProgress({ ...uploadProgress, [documentType]: 10 })
 
-      // Upload to Cloudinary
-      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
-      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-
-      if (!uploadPreset || !cloudName) {
-        throw new Error("Cloudinary configuration missing. Please check your environment variables.")
-      }
-
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", uploadPreset)
-      formData.append("cloud_name", cloudName)
-      formData.append("folder", "Verification")
-
       // Simulate upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
@@ -208,18 +221,19 @@ const Verification = () => {
         })
       }, 500)
 
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-        method: "POST",
-        body: formData,
+      // Use the tiered upload system
+      const { url: fileUrl, provider } = await uploadImage(file, {
+        cloudinaryFolder: "Verification",
+        supabasePath: "verification",
+        showAlert: true,
       })
 
       clearInterval(progressInterval)
 
-      if (!response.ok) {
-        throw new Error("Upload failed")
+      if (!fileUrl) {
+        throw new Error("Upload failed on all providers")
       }
 
-      const data = await response.json()
       setUploadProgress({ ...uploadProgress, [documentType]: 100 })
 
       // Update verification data
@@ -233,9 +247,11 @@ const Verification = () => {
           status: "completed" as const,
           dateUploaded,
           timeUploaded,
-          fileUrl: data.secure_url,
+          fileUrl,
+          provider,
         },
       }
+
 
       // Check if all documents are uploaded and address is filled
       const allDocumentsUploaded =
@@ -257,6 +273,7 @@ const Verification = () => {
         setShowUploadDialog(null)
         setUploadProgress({ ...uploadProgress, [documentType]: 0 })
       }, 1000)
+
     } catch (error) {
       console.error("Error uploading file:", error)
       alert("Failed to upload file. Please try again.")
@@ -274,18 +291,21 @@ const Verification = () => {
           dateUploaded: data.nin.dateUploaded,
           timeUploaded: data.nin.timeUploaded,
           fileUrl: data.nin.fileUrl,
+          provider: data.nin.provider || null,
         },
         selfie: {
           status: data.selfie.status,
           dateUploaded: data.selfie.dateUploaded,
           timeUploaded: data.selfie.timeUploaded,
           fileUrl: data.selfie.fileUrl,
+          provider: data.selfie.provider || null,
         },
         proofOfAddress: {
           status: data.proofOfAddress.status,
           dateUploaded: data.proofOfAddress.dateUploaded,
           timeUploaded: data.proofOfAddress.timeUploaded,
           fileUrl: data.proofOfAddress.fileUrl,
+          provider: data.proofOfAddress.provider || null,
         },
         address: data.address,
         verificationState: data.verificationState,
@@ -325,6 +345,20 @@ const Verification = () => {
     }
   }
 
+  const copyVerificationId = () => {
+    if (verificationId) {
+      navigator.clipboard
+        .writeText(verificationId)
+        .then(() => {
+          setCopiedToClipboard(true)
+          setTimeout(() => setCopiedToClipboard(false), 3000)
+        })
+        .catch((err) => {
+          console.error("Failed to copy verification ID: ", err)
+        })
+    }
+  }
+
   if (loading) {
     return <Preloader loading={loading} />
   }
@@ -344,7 +378,9 @@ const Verification = () => {
       <UserHeader />
       <div className="verification-container">
         <div className="verification-header">
-          <img src="/kyc.svg" alt="KYC Verification" className="verification-image" />
+          <div className="verification-image-container">
+            <img src="/kyc.svg" alt="KYC Verification" className="verification-image" />
+          </div>
           <h1>Booker Verification</h1>
           <p className="verification-disclaimer">
             The verification process is free and we don't publicly share the details that have been uploaded here. Your
@@ -376,16 +412,23 @@ const Verification = () => {
                 className="readonly-input"
               />
             </div>
-            <div className="form-group">
+            <div className="form-group verification-id-group">
               <label>Verification ID</label>
-              <input
-                type="text"
-                value={verificationId}
-                onChange={handleVerificationIdChange}
-                className={verificationId ? "readonly-input" : ""}
-                readOnly={!!verificationId}
-                placeholder="No verification ID yet"
-              />
+              <div className="verification-id-container">
+                <input
+                  type="text"
+                  value={verificationId}
+                  onChange={handleVerificationIdChange}
+                  className="readonly-input verification-id-input"
+                  readOnly
+                  placeholder="No verification ID yet"
+                />
+                {verificationId && (
+                  <button className={`copy-button ${copiedToClipboard ? "copied" : ""}`} onClick={copyVerificationId}>
+                    {copiedToClipboard ? "Copied!" : "Copy"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -424,9 +467,10 @@ const Verification = () => {
 
         <div className="verification-section">
           <h2>Upload Documents</h2>
-          <div className="documents-table-container">
-            <div className="documents-table">
-              <table>
+          <div className="documents-table-responsive">
+            <div className="table-scroll-indicator">Scroll horizontally to see more →</div>
+            <div className="documents-table-container">
+              <table className="documents-table">
                 <thead>
                   <tr>
                     <th>Document</th>
@@ -434,6 +478,7 @@ const Verification = () => {
                     <th>Status</th>
                     <th>Date Uploaded</th>
                     <th>Time Uploaded</th>
+                    <th>Provider</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -451,6 +496,7 @@ const Verification = () => {
                     </td>
                     <td data-label="Date Uploaded">{verificationData.nin.dateUploaded || "-"}</td>
                     <td data-label="Time Uploaded">{verificationData.nin.timeUploaded || "-"}</td>
+                    <td data-label="Provider">{verificationData.nin.provider || "-"}</td>
                   </tr>
                   <tr>
                     <td data-label="Document">Selfie Shot</td>
@@ -466,6 +512,7 @@ const Verification = () => {
                     </td>
                     <td data-label="Date Uploaded">{verificationData.selfie.dateUploaded || "-"}</td>
                     <td data-label="Time Uploaded">{verificationData.selfie.timeUploaded || "-"}</td>
+                    <td data-label="Provider">{verificationData.selfie.provider || "-"}</td>
                   </tr>
                   <tr>
                     <td data-label="Document">Proof of Address</td>
@@ -481,6 +528,7 @@ const Verification = () => {
                     </td>
                     <td data-label="Date Uploaded">{verificationData.proofOfAddress.dateUploaded || "-"}</td>
                     <td data-label="Time Uploaded">{verificationData.proofOfAddress.timeUploaded || "-"}</td>
+                    <td data-label="Provider">{verificationData.proofOfAddress.provider || "-"}</td>
                   </tr>
                 </tbody>
               </table>
@@ -498,6 +546,35 @@ const Verification = () => {
             </div>
           </div>
         </div>
+
+        {/* New section for verification completion message */}
+        {allRequirementsMet && (
+          <div className="verification-section verification-complete-section">
+            <div className="verification-complete-message">
+              <h3>All Verification Requirements Completed!</h3>
+              <p>
+                You have successfully uploaded all required documents and completed all required fields. Please copy
+                your Verification ID and share it with our customer service team to complete your verification process.
+              </p>
+              <div className="verification-id-highlight">
+                <strong>Your Verification ID:</strong>
+                <div className="verification-id-copy-container">
+                  <input type="text" value={verificationId} readOnly className="readonly-input highlight-input" />
+                  <button
+                    className={`copy-button highlight-copy ${copiedToClipboard ? "copied" : ""}`}
+                    onClick={copyVerificationId}
+                  >
+                    {copiedToClipboard ? "Copied!" : "Copy ID"}
+                  </button>
+                </div>
+              </div>
+              <p className="contact-instructions">
+                Contact our customer service team at <strong>support@spotix.com</strong> or through the chat widget at
+                the bottom of the page.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="verification-actions">
           <button className="save-button" onClick={saveVerification}>
@@ -519,10 +596,10 @@ const Verification = () => {
 
         {/* Upload Dialog */}
         {showUploadDialog && (
-          <div className="upload-dialog-overlay">
-            <div className="upload-dialog">
+          <div className="upload-dialog-overlay" onClick={() => setShowUploadDialog(null)}>
+            <div className="upload-dialog" onClick={(e) => e.stopPropagation()}>
               <h3>Upload {getDocumentName(showUploadDialog)}</h3>
-              <div className="upload-area">
+              <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
                 <div className="upload-icon">📁</div>
                 <p>Click to Upload</p>
                 <p className="upload-security-text">Secured by Spotix. All uploads are safe and secure</p>
