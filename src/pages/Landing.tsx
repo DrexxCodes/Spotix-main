@@ -14,17 +14,19 @@ import Footer from "../components/footer"
 const Landing = () => {
 
   return (
+      <body className="land">
     <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <Hero />
-      <HowItWorks />
-      <Features />
-      <Events />
-      <BookerCTA />
-      <Testimonials />
-      <FAQ />
-      <Footer />
+        <Navbar />
+        <Hero />
+        <HowItWorks />
+        <Features />
+        <Events />
+        <BookerCTA />
+        <Testimonials />
+        <FAQ />
+        <Footer />
     </div>
+      </body>
   )
 }
 
