@@ -9,7 +9,7 @@ import { doc, getDoc, collection, getDocs, updateDoc, addDoc, query, orderBy } f
 import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
-import "../styles/Booker-ticket-info.css"
+// import "../styles/Booker-ticket-info.css"
 import { Copy, Check, AlertCircle, Shield, Eye, EyeOff, Wallet, ArrowUpRight } from "lucide-react"
 import {
   AreaChart,

@@ -10,7 +10,7 @@ import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
-import "../styles/profile.css"
+// import "../styles/profile.css"
 import { Check, Copy } from 'lucide-react'
 
 interface UserProfile {

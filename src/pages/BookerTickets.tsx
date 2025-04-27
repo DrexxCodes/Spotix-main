@@ -8,7 +8,7 @@ import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import "../tables.css"
-import "../styles/bookerTickets.css"
+// import "../styles/bookerTickets.css"
 
 
 interface EventData {

@@ -9,7 +9,7 @@ import Preloader from "../components/preloader"
 import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock } from "lucide-react"
 import BookersHeader from "../components/BookersHeader"
 import "../booker-dashboard-override.css" 
-import "../styles/dashboard.css"
+// import "../styles/dashboard.css"
 
 interface DashboardStats {
   totalEvents: number

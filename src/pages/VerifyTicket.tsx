@@ -10,7 +10,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { CheckCircle, XCircle, AlertTriangle, Camera } from "lucide-react"
 import { Html5Qrcode } from "html5-qrcode"
-import "../styles/verify.css"
+// import "../styles/verify.css"
 
 interface TicketData {
   id: string

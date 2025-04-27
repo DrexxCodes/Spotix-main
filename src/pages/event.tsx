@@ -12,7 +12,7 @@ import ShareBtn from "../components/shareBtn"
 import LoginButton from "../components/loginBtn"
 import "boxicons/css/boxicons.min.css"
 import "../responsive.css"
-import "../styles/event-override.css"
+// import "../styles/event-override.css"
 
 interface EventType {
   id: string

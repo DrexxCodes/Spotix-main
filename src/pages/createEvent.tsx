@@ -10,7 +10,7 @@ import { Plus, HelpCircle, Wand2, Check } from 'lucide-react'
 import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
 import { uploadImage } from "../utils/imageUploader"
-import "../styles/create.css"
+// import "../styles/create.css"
 
 const CreateEvent = () => {
   const [eventName, setEventName] = useState("")

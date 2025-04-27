@@ -12,19 +12,9 @@ import BookerCTA from "../components/Landing/BookerCTA"
 import Footer from "../components/footer"
 
 const Landing = () => {
-  // Apply specific padding only to the landing page
-  useEffect(() => {
-    // Add landing-page class to body when component mounts
-    document.body.classList.add("landing-page")
-
-    // Remove the class when component unmounts
-    return () => {
-      document.body.classList.remove("landing-page")
-    }
-  }, [])
 
   return (
-    <div className="landing-container">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
       <Hero />
       <HowItWorks />
