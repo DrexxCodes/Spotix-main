@@ -137,14 +137,16 @@ const TicketHistory = () => {
   const handleTicketClick = (ticketId: string) => {
     navigate(`/ticket-Info/${ticketId}`)
   }
-
+  
   if (loading) {
     return <Preloader loading={loading} />
   }
-
+  
   return (
+
     <div className="flex flex-col min-h-screen bg-gray-50">
       <UserHeader />
+
 
       {/* Fixed header section */}
       <div className="w-full bg-white shadow-sm ticket-history-container">
@@ -168,81 +170,84 @@ const TicketHistory = () => {
         </div>
       </div>
 
-      {/* Scrollable content area */}
-      <div className="flex-grow container mx-auto px-4 py-6 tickets-grid">
-        {filteredTickets.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 tickets-grid">
-            {filteredTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                onClick={() => handleTicketClick(ticket.id)}
-                className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer ticket-card "
-              >
-                <div className="ticket-card-content p-4 border-b border-gray-100">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-[#6b2fa5]/10 rounded-full">
-                      <Ticket className="ticket-icon h-6 w-6 text-[#6b2fa5]" />
-                    </div>
-                    <div className="flex-1 min-w-0 ticket-details">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate ticket-event-name">{ticket.eventName}</h3>
-                      <p className="ticket-type text-sm text-gray-600">{ticket.ticketType}</p>
-                      <p className="ticket-price text-base font-medium text-[#6b2fa5]">₦{ticket.ticketPrice.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ticket-date-time px-4 py-3 bg-gray-50">
-                  <div className="flex flex-col space-y-2">
-                    <div className="ticket-date flex items-center space-x-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span>{ticket.purchaseDate}</span>
-                    </div>
-                    <div className="ticket-time flex items-center space-x-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4" />
-                      <span>{ticket.purchaseTime}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-4 py-3 flex items-center justify-between bg-white border-t border-gray-100">
-                  <div className="flex items-center space-x-1">
-                    {ticket.verified ? (
-                      <>
-                        <CheckCircle className="verified-icon h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium text-green-500 verified-text">Verified</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="unverified-icon h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium text-red-500 unverified-text">Not Verified</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="text-xs ticket-reference text-gray-500">Ref: {ticket.ticketReference}</div>
-                </div>
+     {/* Scrollable content area */}
+<div className="flex-grow container mx-auto px-4 py-6">
+  {filteredTickets.length > 0 ? (
+    <div className="tickets-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {filteredTickets.map((ticket) => (
+        <div
+          key={ticket.id}
+          onClick={() => handleTicketClick(ticket.id)}
+          className="ticket-card bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+        >
+          {/* Ticket Info */}
+          <div className="p-4 border-b border-gray-100 ticket-card-content">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-[#6b2fa5]/10 rounded-full">
+                <Ticket className="ticket-icon h-6 w-6 text-[#6b2fa5]" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="no-tickets-message flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="bg-gray-100 p-4 rounded-full mb-4">
-              <Ticket className="h-12 w-12 text-[#6b2fa5]" />
+              <div className="flex-1 min-w-0 ticket-details">
+                <h3 className="ticket-event-name text-lg font-semibold text-gray-900 truncate">{ticket.eventName}</h3>
+                <p className="ticket-type  text-sm text-gray-600">{ticket.ticketType}</p>
+                <p className="ticket-price text-base font-medium text-[#6b2fa5]">₦{ticket.ticketPrice.toFixed(2)}</p>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No tickets found</h3>
-            {searchQuery ? (
-              <p className="text-gray-600 mb-6">No tickets match your search. Try a different reference.</p>
-            ) : (
-              <p className="text-gray-600 mb-6">You haven't purchased any tickets yet. Browse events to get started!</p>
-            )}
-            <button
-              onClick={() => navigate("/home")}
-              className="browse-events-btn px-6 py-3 bg-[#6b2fa5] text-white rounded-lg font-medium hover:bg-[#6b2fa5]/90 transition-colors"
-            >
-              Browse Events
-            </button>
           </div>
-        )}
+
+          {/* Ticket Date/Time */}
+          <div className="px-4 py-3 bg-gray-50">
+            <div className="flex flex-col space-y-2">
+              <div className=" ticket-date-time flex items-center space-x-2 text-sm text-gray-600">
+                <Calendar className="h-4 w-4 ticket-date" />
+                <span>{ticket.purchaseDate}</span>
+              </div>
+              <div className="ticket-time flex items-center space-x-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                <span>{ticket.purchaseTime}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Ticket Footer */}
+          <div className="px-4 py-3 flex items-center justify-between bg-white border-t border-gray-100">
+            <div className="flex items-center space-x-1">
+              {ticket.verified ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-500">Verified</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-sm font-medium text-red-500">Not Verified</span>
+                </>
+              )}
+            </div>
+            <div className="text-xs text-gray-500">Ref: {ticket.ticketReference}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="bg-gray-100 p-4 rounded-full mb-4">
+        <Ticket className="h-12 w-12 text-[#6b2fa5]" />
       </div>
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">No tickets found</h3>
+      {searchQuery ? (
+        <p className="text-gray-600 mb-6">No tickets match your search. Try a different reference.</p>
+      ) : (
+        <p className="text-gray-600 mb-6">You haven't purchased any tickets yet. Browse events to get started!</p>
+      )}
+      <button
+        onClick={() => navigate("/home")}
+        className="px-6 py-3 bg-[#6b2fa5] text-white rounded-lg font-medium hover:bg-[#6b2fa5]/90 transition-colors"
+      >
+        Browse Events
+      </button>
+    </div>
+  )}
+</div>
 
       <Footer />
     </div>

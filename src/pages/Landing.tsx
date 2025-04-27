@@ -13,6 +13,19 @@ import Footer from "../components/footer"
 
 const Landing = () => {
 
+  useEffect(() => {
+    // Save the original body padding so we can restore it later
+    const originalPadding = document.body.style.padding || ""
+
+    // Set body padding to 0
+    document.body.style.padding = "0"
+
+    // When component unmounts, restore the original padding
+    return () => {
+      document.body.style.padding = originalPadding
+    }
+  }, [])
+
   return (
       <body className="land">
     <div className="flex flex-col min-h-screen">

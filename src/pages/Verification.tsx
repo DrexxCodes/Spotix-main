@@ -9,7 +9,7 @@ import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { uploadImage } from "../utils/imageUploader"
-// import "../styles/verification.css"
+import "../styles/verification.css"
 
 interface UserData {
   uid: string
