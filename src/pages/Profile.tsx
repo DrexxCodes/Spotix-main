@@ -11,6 +11,7 @@ import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
 import "../styles/profile.css"
+import { Check, Copy } from 'lucide-react'
 
 interface UserProfile {
   uid: string
@@ -67,6 +68,11 @@ const Profile = () => {
   const [copySuccess, setCopySuccess] = useState(false)
   const [uploadProvider, setUploadProvider] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  const [accountVerificationLoading, setAccountVerificationLoading] = useState(false)
+  const [accountVerificationError, setAccountVerificationError] = useState<string | null>(null)
+  const [accountVerifiedName, setAccountVerifiedName] = useState("")
+  const [accountVerificationStatus, setAccountVerificationStatus] = useState<"pending" | "verified" | "failed">("pending")
 
   const banks = [
     "Opay",
@@ -342,6 +348,58 @@ const Profile = () => {
     setShowBankSuggestions(false)
   }
 
+  const handleAccountNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); // Allow only numbers and limit to 10 characters
+    if (user) {
+      setUser({
+        ...user,
+        accountNumber: value,
+      });
+    }
+  };
+
+  const verifyAccount = async () => {
+    if (!user?.accountNumber || !user.bankName) {
+      setAccountVerificationError("Please enter both account number and bank name.");
+      return;
+    }
+
+    setAccountVerificationLoading(true);
+    setAccountVerificationError(null);
+    setAccountVerifiedName("");
+    setAccountVerificationStatus("pending");
+
+    try {
+      const response = await fetch(`https://spotix-backend.onrender.com/api/verify?accountNumber=${user.accountNumber}&bankName=${user.bankName}`);
+      if (!response.ok) {
+        throw new Error(`Verification failed: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+
+      if (data.status === true) {
+        setAccountVerifiedName(data.account_name);
+        setAccountVerificationStatus("verified");
+        setUser({
+          ...user,
+          accountName: data.account_name,
+        });
+      } else {
+        setAccountVerificationError(data.message || "Account verification failed.");
+        setAccountVerificationStatus("failed");
+      }
+    } catch (error) {
+      console.error("Error verifying account:", error);
+      setAccountVerificationError("Failed to verify account. Please try again.");
+      setAccountVerificationStatus("failed");
+    } finally {
+      setAccountVerificationLoading(false);
+    }
+  };
+
+  const canSubmitForm = () => {
+    return accountVerificationStatus === "verified" && user?.accountNumber && user?.bankName && user?.accountName;
+  };
+
   if (loading || !user) {
     return <Preloader loading={loading} />
   }
@@ -404,28 +462,6 @@ const Profile = () => {
         {/* Account Details Section */}
         <div className="form-section">
           <h2 className="section-title">Account Details</h2>
-          <div className="form-group">
-            <label htmlFor="accountName">Account Name</label>
-            <input
-              type="text"
-              id="accountName"
-              value={user.accountName}
-              onChange={(e) => setUser({ ...user, accountName: e.target.value })}
-              placeholder="Enter account name"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="accountNumber">Account Number</label>
-            <input
-              type="text"
-              id="accountNumber"
-              value={user.accountNumber}
-              onChange={(e) => setUser({ ...user, accountNumber: e.target.value })}
-              placeholder="Enter account number"
-              maxLength={10}
-            />
-          </div>
 
           <div className="form-group">
             <label htmlFor="bankName">Bank Name</label>
@@ -448,6 +484,48 @@ const Profile = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="accountNumber">Account Number</label>
+            <input
+              type="text"
+              id="accountNumber"
+              value={user.accountNumber}
+              onChange={handleAccountNumberChange}
+              placeholder="Enter account number"
+              maxLength={10}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="accountName">Account Name</label>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <input
+                type="text"
+                id="accountName"
+                value={accountVerifiedName}
+                readOnly
+                placeholder="Verify account to populate name"
+                style={{ flex: 1, marginRight: "10px" }}
+              />
+              <button
+                type="button"
+                onClick={verifyAccount}
+                disabled={!user.accountNumber || !user.bankName || accountVerificationLoading}
+                style={{
+                  padding: "8px 12px",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                {accountVerificationLoading ? "Verifying..." : "Verify"}
+              </button>
+            </div>
+            {accountVerificationError && <p style={{ color: "red" }}>{accountVerificationError}</p>}
           </div>
         </div>
 
@@ -493,7 +571,7 @@ const Profile = () => {
         </div>
 
         {/* Save Button */}
-        <button type="submit" className="save-btn" disabled={uploadingImage}>
+        <button type="submit" className="save-btn" disabled={uploadingImage || !canSubmitForm()}>
           {uploadingImage ? "Uploading..." : "Save Changes"}
         </button>
 

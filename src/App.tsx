@@ -7,6 +7,7 @@ import { onAuthStateChanged, type User } from "firebase/auth"
 import Preloader from "./components/preloader"
 import AdminRoute from "./components/AdminRoute"
 import BookerRoute from "./components/BookerRoute"
+import RouteStyleManager from "./components/RouteStyleManager"
 import "./App.css"
 
 // Lazy load all page components
@@ -35,6 +36,7 @@ const VerifyTicket = lazy(() => import("./pages/VerifyTicket"))
 const Verification = lazy(() => import("./pages/Verification"))
 const TicketHistory = lazy(() => import("./pages/ticketHistory"))
 const TicketHistoryInfo = lazy(() => import("./pages/ticketHistoryInfo"))
+const TailwindTest = lazy(() => import("./pages/TailwindTest"));
 
 declare global {
   interface Window {
@@ -88,152 +90,158 @@ function App() {
   return (
     <Router>
       <Suspense fallback={<Preloader />}>
-        <Routes>
-          {/* Public routes - accessible regardless of authentication state */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={user ? <Navigate to="/home" /> : <Login />} />
-          <Route path="/signup" element={user ? <Navigate to="/home" /> : <Signup />} />
-          <Route path="/forgot-password" element={user ? <Navigate to="/home" /> : <ForgotPassword />} />
-          <Route path="/LoginBooker" element={<LoginBooker />} />
+        <RouteStyleManager>
+          <Routes>
+            {/* Public routes - accessible regardless of authentication state */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={user ? <Navigate to="/home" /> : <Login />} />
+            <Route path="/signup" element={user ? <Navigate to="/home" /> : <Signup />} />
+            <Route path="/forgot-password" element={user ? <Navigate to="/home" /> : <ForgotPassword />} />
+            <Route path="/LoginBooker" element={<LoginBooker />} />
+            <Route path="/tailwind-test" element={<TailwindTest />} />
 
-          {/* Protected routes - require authentication */}
-          <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
-          <Route path="/bookerRole" element={user ? <BookerRole /> : <Navigate to="/login" />} />
-          <Route path="/Profile" element={user ? <UserProfile /> : <Navigate to="/login" />} />
-          <Route path="/event/:uid/:id" element={user ? <Event /> : <Navigate to="/login" />} />
-          <Route path="/booker-confirm" element={user ? <BookerConfirm /> : <Navigate to="/login" />} />
-          <Route path="/payment" element={user ? <Payment /> : <Navigate to="/login" />} />
-          <Route path="/paystack-success" element={user ? <PaystackSuccess /> : <Navigate to="/login" />} />
-          <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
-          <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
 
-          {/* Booker-only routes */}
-          <Route
-            path="/createEvent"
-            element={
-              user ? (
-                <BookerRoute>
-                  <CreateEvent />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/success"
-            element={
-              user ? (
-                <BookerRoute>
-                  <Success />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/bookerprofile"
-            element={
-              user ? (
-                <BookerRoute>
-                  <BookerProfile />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/bookerdashboard"
-            element={
-              user ? (
-                <BookerRoute>
-                  <BookerDashboard />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/bookertickets"
-            element={
-              user ? (
-                <BookerRoute>
-                  <BookerTickets />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/bookerticketinfo/:id"
-            element={
-              user ? (
-                <BookerRoute>
-                  <BookerTicketInfo />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/verifyticket"
-            element={
-              user ? (
-                <BookerRoute>
-                  <VerifyTicket />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/verification"
-            element={
-              user ? (
-                <BookerRoute>
-                  <Verification />
-                </BookerRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+            {/* Modified to be public routes */}
+            <Route path="/home" element={<Home />} />
+            <Route path="/event/:uid/:id" element={<Event />} />
 
-          <Route
-            path="/admin"
-            element={
-              user ? (
-                <AdminRoute>
-                  <AdminSuite />
-                </AdminRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+            {/* Protected routes - require authentication */}
+            <Route path="/bookerRole" element={user ? <BookerRole /> : <Navigate to="/login" />} />
+            <Route path="/Profile" element={user ? <UserProfile /> : <Navigate to="/login" />} />
+            <Route path="/booker-confirm" element={user ? <BookerConfirm /> : <Navigate to="/login" />} />
+            <Route path="/payment" element={user ? <Payment /> : <Navigate to="/login" />} />
+            <Route path="/paystack-success" element={user ? <PaystackSuccess /> : <Navigate to="/login" />} />
+            <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
+            <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
 
-          <Route
-            path="/admin-permissions"
-            element={
-              user ? (
-                <AdminRoute>
-                  <AdminPermissions />
-                </AdminRoute>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+            {/* Booker-only routes */}
+            <Route
+              path="/createEvent"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <CreateEvent />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/success"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <Success />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/bookerprofile"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <BookerProfile />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/bookerdashboard"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <BookerDashboard />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/bookertickets"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <BookerTickets />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/bookerticketinfo/:id"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <BookerTicketInfo />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/verifyticket"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <VerifyTicket />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/verification"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <Verification />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
 
-          {/* 404 route - must be last */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route
+              path="/admin"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AdminSuite />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/admin-permissions"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AdminPermissions />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            {/* 404 route - must be last */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </RouteStyleManager>
       </Suspense>
     </Router>
   )

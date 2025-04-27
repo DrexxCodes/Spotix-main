@@ -266,7 +266,7 @@ const TicketHistoryInfo = () => {
   }, [id, navigate, cacheKey])
 
   const handleBackClick = () => {
-    navigate("/ticketHistory")
+    navigate("/ticket-history")
   }
 
   const handleDownloadTicket = async () => {

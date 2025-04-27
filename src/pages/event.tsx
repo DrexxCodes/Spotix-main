@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
 import { db, auth } from "../services/firebase"
 import UserHeader from "../components/UserHeader"
@@ -9,6 +9,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { ArrowLeft, User, Ticket, Info, X } from "lucide-react"
 import ShareBtn from "../components/shareBtn"
+import LoginButton from "../components/loginBtn"
 import "boxicons/css/boxicons.min.css"
 import "../responsive.css"
 import "../styles/event-override.css"
@@ -63,35 +64,43 @@ const Event = () => {
   const [isLiking, setIsLiking] = useState(false)
   const [showPassedDialog, setShowPassedDialog] = useState(false)
   const [username, setUsername] = useState("")
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Use sessionStorage for caching
   const cacheKey = `event_${id}_${uid}`
 
   useEffect(() => {
+    // Check authentication status
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user)
+
+      if (user) {
+        // Fetch wallet balance and username if authenticated
+        const fetchUserData = async () => {
+          try {
+            const userDocRef = doc(db, "users", user.uid)
+            const userDoc = await getDoc(userDocRef)
+
+            if (userDoc.exists()) {
+              const userData = userDoc.data()
+              setWalletBalance(userData.wallet || 0)
+              setUsername(userData.username || userData.fullName || "User")
+            }
+          } catch (error) {
+            console.error("Error fetching user data:", error)
+          }
+        }
+        fetchUserData()
+      }
+    })
+
     // Set the event URL for sharing
     setEventUrl(window.location.href)
 
-    const fetchWalletBalance = async () => {
-      try {
-        const user = auth.currentUser
-        if (!user) return
-
-        const userDocRef = doc(db, "users", user.uid)
-        const userDoc = await getDoc(userDocRef)
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data()
-          setWalletBalance(userData.wallet || 0)
-          setUsername(userData.username || userData.fullName || "User")
-        }
-      } catch (error) {
-        // Handle error silently
-      }
-    }
-
-    fetchWalletBalance()
+    return () => unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -109,8 +118,13 @@ const Event = () => {
         checkEventStatus(parsedData)
         await fetchBookerDetails(parsedData.createdBy, parsedData.bookerName)
 
+        // Check if current user has like  parsedData.bookerName)
+
         // Check if current user has liked this event
-        checkLikeStatus(parsedData)
+        const user = auth.currentUser
+        if (user) {
+          checkLikeStatus(parsedData)
+        }
 
         setLoading(false)
 
@@ -145,7 +159,10 @@ const Event = () => {
           checkEventStatus(data)
 
           // Check if current user has liked this event
-          checkLikeStatus(data)
+          const user = auth.currentUser
+          if (user) {
+            checkLikeStatus(data)
+          }
 
           // Fetch booker details
           await fetchBookerDetails(data.createdBy, data.bookerName)
@@ -153,7 +170,7 @@ const Event = () => {
           setEventData(null)
         }
       } catch (error) {
-        // Handle error silently
+        console.error("Error fetching event:", error)
       } finally {
         setLoading(false)
       }
@@ -211,7 +228,7 @@ const Event = () => {
           })
         }
       } catch (error) {
-        // Handle error silently
+        console.error("Error fetching booker details:", error)
       }
     }
 
@@ -223,6 +240,8 @@ const Event = () => {
       const user = auth.currentUser
       if (!user || !eventData) {
         // Redirect to login if user is not authenticated
+        // Store current path for redirect after login
+        sessionStorage.setItem("redirectAfterLogin", location.pathname)
         navigate("/login")
         return
       }
@@ -270,6 +289,14 @@ const Event = () => {
 
     if (isSaleEnded) {
       alert("Sorry, ticket sales have ended for this event!")
+      return
+    }
+
+    // Check if user is authenticated
+    if (!auth.currentUser) {
+      // Store current path for redirect after login
+      sessionStorage.setItem("redirectAfterLogin", location.pathname)
+      navigate("/login")
       return
     }
 
@@ -323,8 +350,14 @@ const Event = () => {
               <ArrowLeft size={24} />
             </button>
             <div className="wallet-display">
-              <span className="wallet-label">Balance:</span>
-              <span className="wallet-amount">₦{walletBalance.toFixed(2)}</span>
+              {isAuthenticated ? (
+                <>
+                  <span className="wallet-label">Balance:</span>
+                  <span className="wallet-amount">₦{walletBalance.toFixed(2)}</span>
+                </>
+              ) : (
+                <LoginButton />
+              )}
             </div>
           </div>
 
@@ -592,8 +625,8 @@ const Event = () => {
                 </button>
                 <h3>Event Has Passed</h3>
                 <p>
-                  Dear {username}, this event has already occurred; you can no longer purchase tickets. Please check out
-                  other events on our platform.
+                  Dear {isAuthenticated ? username : "Guest"}, this event has already occurred; you can no longer
+                  purchase tickets. Please check out other events on our platform.
                 </p>
                 <button className="browse-events-btn" onClick={() => navigate("/home")}>
                   Browse Events

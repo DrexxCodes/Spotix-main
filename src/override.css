@@ -10,7 +10,7 @@ html body {
 /* Small screens */
 @media (max-width: 576px) {
     html body {
-        padding-top: 1700px !important;
+        padding-top: 2100px !important;
     }
 }
 
@@ -27,3 +27,33 @@ html body {
         padding-top: 800px !important;
     }
 }
+
+.home-page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* full page scroll */
+  }
+  
+  .home-header {
+    /* position: sticky;
+    top: 0; */
+    background-color: #fff;
+    z-index: 10;
+    padding: 20px 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .search-filter-container {
+    /* position: sticky;
+    top: 80px; assumes .home-header is ~80px tall */
+    background-color: #fff;
+    z-index: 9;
+    padding: 10px 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Remove fixed height and scroll from here */
+  .scrollable-events {
+    padding: 16px;
+  }
+  

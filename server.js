@@ -11,6 +11,7 @@ import dotenv from "dotenv"
 import enhanceRoute from "./api/gemini/enhance.js"
 import paymentRoute from "./api/payment.js"
 import webhookRoute from "./api/webhook.js"
+import verifyRoute from "./api/verify.js"
 
 // Configure dotenv
 dotenv.config()
@@ -54,7 +55,8 @@ fastify.get("/api/test", async (request, reply) => {
 // Register API routes before static file handling
 fastify.register(enhanceRoute, { prefix: "/api/gemini" })
 fastify.register(paymentRoute, { prefix: "/api" })
-fastify.register(webhookRoute, { prefix: "/api/payment" }) // Fixed the prefix for webhook route
+fastify.register(webhookRoute, { prefix: "/api/payment" }) 
+fastify.register(verifyRoute, { prefix: "/api" })
 
 // Check if dist directory exists before registering static plugin
 const distPath = path.join(__dirname, "dist")

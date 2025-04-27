@@ -10,6 +10,13 @@
   font-family: Arial, sans-serif;
 }
 
+.content-anchor {
+  height: 1px; 
+  width: 100%;
+  margin-bottom: 50px; 
+  pointer-events: none;
+}
+
 .preloader-overlay {
   position: fixed;
   top: 0;
@@ -28,43 +35,22 @@
   height: 80px;
 }
 
+
+
 body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100svh;
+  height: fit-content;
   background-color: #f4f4f4;
-  padding-top: 20px;
+  padding: 20px;
 }
 
-  /* ===== HOME PAGE ===== */
-  .fix-home {
-    padding-top: 1700px !important;
-  }
-  /* Small screens */
-  @media (max-width: 576px) {
-    .fix-home {
-      padding-top: 1700px !important;
-    }
-  }
-  
-  /* Medium screens (around 540px by 720px) */
-  @media (min-width: 577px) and (max-width: 991px) {
-    .fix-home {
-      padding-top: 1320px !important;
-    }
-  }
-  
-  /* Slightly larger screens (around 1024px by 1366px) */
-  @media (min-width: 992px) and (max-width: 1366px) {
-    .fix-home {
-      padding-top: 800px !important;
-    }
-  }
+ 
 
 /* Apply padding only to pages that need it, not globally */
 body:not(.landing-page) {
-  padding-top: 20px; 
+  padding-top: 120px; 
 }
 
 
@@ -754,7 +740,6 @@ input:checked+.slider:before {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-    padding-top: 350px;
     position: static;
 }
 
@@ -782,7 +767,7 @@ input:checked+.slider:before {
 .search-filter-container {
   display: flex;
   gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 70px;
   flex-wrap: wrap;
 }
 

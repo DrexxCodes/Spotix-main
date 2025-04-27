@@ -51,7 +51,7 @@ const PaystackSuccess = () => {
         setEventData(paymentData)
 
         // Verify payment on the server
-        const response = await axios.get(`https://spotix-backend.onrender.com/payment/verify?reference=${reference}`)
+        const response = await axios.get(`https://spotix-backend.onrender.com/api/payment/verify?reference=${reference}`)
         const data = response.data
 
         if (data.status && data.data && data.data.status === "success") {

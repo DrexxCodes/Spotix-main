@@ -1,28 +1,14 @@
 "use client"
 
-import type React from "react"
-
 import { useEffect, useState } from "react"
 import { auth, db } from "../services/firebase"
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  collectionGroup,
-  doc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  getDoc,
-} from "firebase/firestore"
+import { collection, getDocs, query, where, collectionGroup, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import WalletDisplay from "../components/WalletDisplay"
-import "boxicons/css/boxicons.min.css"
-import "../override.css"
+import LoginButton from "../components/loginBtn"
 
 interface EventType {
   id: string
@@ -51,161 +37,97 @@ const Home = () => {
   const [priceFilter, setPriceFilter] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [liking, setLiking] = useState<Record<string, boolean>>({})
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = auth.currentUser
-        if (user) {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user)
+      if (user) {
+        const fetchUsername = async () => {
           const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)))
           if (!userDoc.empty) {
             setUsername(userDoc.docs[0].data().username)
           }
         }
-      } catch (error) {
-        console.error("Error fetching user data:", error)
+        fetchUsername()
       }
-    }
+    })
+    return () => unsubscribe()
+  }, [])
 
+  useEffect(() => {
     const fetchEvents = async () => {
       try {
         const user = auth.currentUser
-        // Use collectionGroup to query all "userEvents" subcollections across all UIDs
-        const userEventsQuery = collectionGroup(db, "userEvents")
-        const eventsSnapshot = await getDocs(userEventsQuery)
+        const eventsSnapshot = await getDocs(collectionGroup(db, "userEvents"))
 
-        const eventList: EventType[] = []
-
-        for (const doc of eventsSnapshot.docs) {
-          const eventData = doc.data() as EventType
-          // Process event data and check if current user has liked it
-          const isLiked = user && eventData.likedBy ? eventData.likedBy.includes(user.uid) : false
-
-          eventList.push({
-            ...eventData,
-            id: doc.id,
-            likes: eventData.likes || 0,
-            likedBy: eventData.likedBy || [],
-            isLiked: isLiked,
-          })
-        }
+        const eventList: EventType[] = eventsSnapshot.docs.map(doc => {
+          const event = doc.data() as EventType
+          const isLiked = user && event.likedBy ? event.likedBy.includes(user.uid) : false
+          return { ...event, id: doc.id, likes: event.likes || 0, likedBy: event.likedBy || [], isLiked }
+        })
 
         setEvents(eventList)
 
-        // Sort events chronologically and separate into upcoming and past
         const now = new Date()
-        const upcoming: EventType[] = []
-        const past: EventType[] = []
+        const upcoming = eventList.filter(e => new Date(e.eventDate) >= now)
+        const past = eventList.filter(e => new Date(e.eventDate) < now)
 
-        eventList.forEach((event) => {
-          const eventDate = new Date(event.eventDate)
-          if (eventDate >= now) {
-            upcoming.push(event)
-          } else {
-            past.push(event)
-          }
-        })
-
-        // Sort upcoming events by date (closest first)
-        upcoming.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-
-        // Sort past events by date (most recent first)
-        past.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
-
-        setUpcomingEvents(upcoming)
-        setPassedEvents(past)
-      } catch (error) {
-        console.error("Error fetching events:", error)
+        setUpcomingEvents(upcoming.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()))
+        setPassedEvents(past.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()))
       } finally {
         setLoading(false)
       }
     }
 
-    fetchUserData()
     fetchEvents()
   }, [])
 
-  // Handle liking/unliking events
   const handleLikeEvent = async (event: EventType, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent navigation to event details
-
+    e.stopPropagation()
     try {
       const user = auth.currentUser
       if (!user) {
-        // Redirect to login if user is not authenticated
         navigate("/login")
         return
       }
 
-      // Set liking state for this event to show loading
-      setLiking((prev) => ({ ...prev, [event.id]: true }))
+      setLiking(prev => ({ ...prev, [event.id]: true }))
 
-      const eventDocRef = doc(db, "events", event.createdBy, "userEvents", event.id)
+      const eventRef = doc(db, "events", event.createdBy, "userEvents", event.id)
+      const isLiked = event.isLiked
 
-      // Check if event exists
-      const eventDoc = await getDoc(eventDocRef)
-      if (!eventDoc.exists()) {
-        console.error("Event not found")
-        return
-      }
-
-      // Toggle like status
-      const isCurrentlyLiked = event.isLiked
-
-      if (isCurrentlyLiked) {
-        // Unlike event
-        await updateDoc(eventDocRef, {
+      if (isLiked) {
+        await updateDoc(eventRef, {
           likes: (event.likes || 0) - 1,
           likedBy: arrayRemove(user.uid),
         })
       } else {
-        // Like event
-        await updateDoc(eventDocRef, {
+        await updateDoc(eventRef, {
           likes: (event.likes || 0) + 1,
           likedBy: arrayUnion(user.uid),
         })
       }
 
-      // Update local state
-      const updateEventInList = (eventsList: EventType[]) => {
-        return eventsList.map((e) => {
-          if (e.id === event.id) {
-            return {
-              ...e,
-              isLiked: !isCurrentlyLiked,
-              likes: isCurrentlyLiked ? (e.likes || 0) - 1 : (e.likes || 0) + 1,
-              likedBy: isCurrentlyLiked
-                ? (e.likedBy || []).filter((id) => id !== user.uid)
-                : [...(e.likedBy || []), user.uid],
-            }
-          }
-          return e
-        })
-      }
+      setUpcomingEvents(prev => prev.map(e => e.id === event.id ? { ...e, isLiked: !isLiked, likes: isLiked ? (e.likes || 0) - 1 : (e.likes || 0) + 1 } : e))
+      setPassedEvents(prev => prev.map(e => e.id === event.id ? { ...e, isLiked: !isLiked, likes: isLiked ? (e.likes || 0) - 1 : (e.likes || 0) + 1 } : e))
 
-      setUpcomingEvents(updateEventInList(upcomingEvents))
-      setPassedEvents(updateEventInList(pastEvents))
-    } catch (error) {
-      console.error("Error toggling like status:", error)
     } finally {
-      // Reset liking state for this event
-      setLiking((prev) => ({ ...prev, [event.id]: false }))
+      setLiking(prev => ({ ...prev, [event.id]: false }))
     }
   }
 
-  // Navigate to event details
   const navigateToEvent = (creatorId: string, eventId: string) => {
     navigate(`/event/${creatorId}/${eventId}`)
   }
 
-  // Filter logic
-  const filterEvents = (eventList: EventType[]) => {
-    return eventList.filter((event) => {
+  const filterEvents = (list: EventType[]) => {
+    return list.filter(event => {
       const matchesSearch = searchQuery
         ? event.eventName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (event.eventId && event.eventId.toLowerCase().includes(searchQuery.toLowerCase()))
+          event.eventId?.toLowerCase().includes(searchQuery.toLowerCase())
         : true
 
       const matchesType = filterType ? event.eventType === filterType : true
@@ -215,114 +137,103 @@ const Home = () => {
     })
   }
 
-  const filteredUpcomingEvents = filterEvents(upcomingEvents)
-  const filteredPastEvents = filterEvents(pastEvents)
-
-  // Render event card
   const renderEventCard = (event: EventType, isPast = false) => (
-    <div key={event.id} className="event-card" onClick={() => navigateToEvent(event.createdBy, event.id)}>
-      <div className={`event-date-box ${isPast ? "past-event" : ""}`}>
-        {new Date(event.eventDate).toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-        })}
+    <div
+      key={event.id}
+      onClick={() => navigateToEvent(event.createdBy, event.id)}
+      className="relative bg-white rounded-lg shadow-md hover:shadow-lg transition p-4 flex flex-col cursor-pointer"
+    >
+      <div className={`absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full ${isPast ? "bg-red-500 .event-date-box.past-event" : "bg-[#6b2fa5] event-date-box"} text-white`}>
+        {new Date(event.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </div>
-      <img src={event.eventImage || "/placeholder.svg"} alt={event.eventName} className="event-image" />
-      <div className="event-info">
-        <h2 className="event-title">{event.eventName}</h2>
-        <p className="event-type">{event.eventType}</p>
-        <p className="event-venue">{event.eventVenue}</p>
-        <p className="event-booker">By: {event.bookerName}</p>
+      <img src={event.eventImage || "/placeholder.svg"} alt={event.eventName} className="w-full h-40 object-cover rounded-md mb-4" />
+      <h2 className="text-lg font-bold text-gray-800 mb-1">{event.eventName}</h2>
+      <p className="text-sm text-gray-500 mb-1">{event.eventType}</p>
+      <p className="text-sm text-gray-500 mb-1">{event.eventVenue}</p>
+      <p className="text-sm text-gray-500 mb-4">By: {event.bookerName}</p>
 
-        <div className="event-bottom-row">
-          {event.isFree ? (
-            <span className="event-price-free">Free</span>
-          ) : (
-            <span className="event-price-paid">Paid</span>
-          )}
+      <div className="flex justify-between items-center mt-auto">
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${event.isFree ? "bg-green-100 text-green-700 event-price-free" : "bg-[#6b2fa5] text-white event-price-paid"}`}>
+          {event.isFree ? "Free" : "Paid"}
+        </span>
 
-          <div className="event-likes">
-            <button className="like-button" onClick={(e) => handleLikeEvent(event, e)} disabled={liking[event.id]}>
-              {event.isLiked ? (
-                <i className="bx bxs-heart like-icon liked"></i>
-              ) : (
-                <i className="bx bx-heart like-icon"></i>
-              )}
-              <span className="like-count">{event.likes || 0}</span>
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={(e) => handleLikeEvent(event, e)}
+          className="flex items-center space-x-1 text-[#6b2fa5] text-sm"
+          disabled={liking[event.id]}
+        >
+          {event.isLiked ? <i className="bx bxs-heart text-lg"></i> : <i className="bx bx-heart text-lg"></i>}
+          <span>{event.likes || 0}</span>
+        </button>
       </div>
     </div>
   )
 
+  const filteredUpcomingEvents = filterEvents(upcomingEvents)
+  const filteredPastEvents = filterEvents(pastEvents)
+
   return (
-    <div className="home-container">
+    <div className="flex flex-col min-h-screen">
       {loading ? (
         <Preloader loading={loading} />
       ) : (
         <>
           <UserHeader />
-          <div className="home-header">
-            <h1>Welcome, {username ? username : ""} to Spotix!</h1>
-            <WalletDisplay />
-          </div>
 
-          <div className="search-filter-container">
-            <input
-              type="text"
-              placeholder="Search by Event Name or ID"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-bar"
-            />
+          <div className="p-6 home-container">
+            <div className="text-center mb-8 home-header">
+              <h1 className="text-3xl font-bold text-[#6b2fa5]">Welcome{isAuthenticated ? `, ${username}` : ""} to Spotix!</h1>
+              {isAuthenticated ? <WalletDisplay /> : <LoginButton />}
+            </div>
 
-            <select
-              onChange={(e) => setFilterType(e.target.value)}
-              value={filterType || ""}
-              className="filter-dropdown"
-            >
-              <option value="">All Types</option>
-              <option value="Night party">Night Party</option>
-              <option value="Concert">Concert</option>
-              <option value="Conference">Conference</option>
-              <option value="Workshop">Workshop</option>
-              <option value="Other">Other</option>
-            </select>
+            <div className="flex flex-col md:flex-row gap-4 justify-center mb-40px search-filter-container">
+              <input
+                type="text"
+                placeholder="Search by Event Name or ID"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="border rounded-lg px-4 py-2 w-full md:w-1/3 search-bar"
+              />
+              <select
+                value={filterType || ""}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="border rounded-lg px-4 py-2 w-full md:w-1/4 filter-dropdown"
+              >
+                <option value="">All Types</option>
+                <option value="Night party">Night Party</option>
+                <option value="Concert">Concert</option>
+                <option value="Conference">Conference</option>
+                <option value="Workshop">Workshop</option>
+                <option value="Other">Other</option>
+              </select>
+              <select
+                value={priceFilter || ""}
+                onChange={(e) => setPriceFilter(e.target.value)}
+                className="border rounded-lg px-4 py-2 w-full md:w-1/4 filter-dropdown"
+              >
+                <option value="">All Prices</option>
+                <option value="free">Free Events</option>
+                <option value="paid">Paid Events</option>
+              </select>
+            </div>
 
-            <select
-              onChange={(e) => setPriceFilter(e.target.value)}
-              value={priceFilter || ""}
-              className="filter-dropdown"
-            >
-              <option value="">All Prices</option>
-              <option value="free">Free Events</option>
-              <option value="paid">Paid Events</option>
-            </select>
-          </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Upcoming Events</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+              {filteredUpcomingEvents.length > 0 ? (
+                filteredUpcomingEvents.map(event => renderEventCard(event))
+              ) : (
+                <p className="text-center text-gray-500">No upcoming events found.</p>
+              )}
+            </div>
 
-          {/* Upcoming Events Section */}
-          <h2 className="events-section-title">Upcoming Events</h2>
-          <div className="event-grid">
-            {filteredUpcomingEvents.length > 0 ? (
-              filteredUpcomingEvents.map((event) => renderEventCard(event))
-            ) : (
-              <div className="no-events-message">
-                <p>No upcoming events found matching your criteria.</p>
-              </div>
-            )}
-          </div>
-
-          {/* Past Events Section */}
-          <h2 className="events-section-title past-events-title">Past Events</h2>
-          <div className="event-grid past-events-grid">
-            {filteredPastEvents.length > 0 ? (
-              filteredPastEvents.map((event) => renderEventCard(event, true))
-            ) : (
-              <div className="no-home-events-message">
-                <p>No past events found matching your criteria.</p>
-              </div>
-            )}
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 past-events-title">Past Events</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredPastEvents.length > 0 ? (
+                filteredPastEvents.map(event => renderEventCard(event, true))
+              ) : (
+                <p className="text-center text-gray-500">No past events found.</p>
+              )}
+            </div>
           </div>
 
           <Footer />
