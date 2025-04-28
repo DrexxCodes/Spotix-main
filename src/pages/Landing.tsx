@@ -18,7 +18,7 @@ const Landing = () => {
     const originalPadding = document.body.style.padding || ""
 
     // Set body padding to 0
-    document.body.style.padding = "0"
+    document.body.style.padding = "20"
 
     // When component unmounts, restore the original padding
     return () => {
@@ -27,7 +27,7 @@ const Landing = () => {
   }, [])
 
   return (
-      <body className="land">
+      // <body className="land">
     <div className="flex flex-col min-h-screen">
         <Navbar />
         <Hero />
@@ -39,9 +39,8 @@ const Landing = () => {
         <FAQ />
         <Footer />
     </div>
-      </body>
+      // </body>
   )
 }
 
 export default Landing
-

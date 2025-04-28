@@ -16,10 +16,12 @@ import {
     Footer,
     FooterLink
   } from "./Header.styled";
+  import { useNavigate } from "react-router-dom"
   
 
 const UserHeader: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setMenuOpen((prev) => !prev);
@@ -46,18 +48,18 @@ const UserHeader: React.FC = () => {
       <CloseIcon onClick={toggleMenu} /> 
 
           <NavItem onClick={() => setMenuOpen(false)}>
-            <CalendarPlus size={20} />
+            <CalendarPlus onClick={() => navigate("/home")} size={20} />
             <a href="/home">Home</a>
           </NavItem>
 
           <NavItem onClick={() => setMenuOpen(false)}>
-            <User size={20} />
+            <User onClick={() => navigate("/profile")}  size={20} />
             <a href="/Profile">My Profile</a>
           </NavItem>
 
 
           <NavItem onClick={() => setMenuOpen(false)}>
-            <CreditCard size={20} />
+            <CreditCard onClick={() => navigate("/ticket-history")}  size={20} />
             <a href="/ticket-history">My Tickets</a>
           </NavItem>
           
