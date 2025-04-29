@@ -1,16 +1,32 @@
 {
   "redirects": [
     {
-      "source": "https://spotix.com.ng/:path*",
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "spotix.com.ng"
+        }
+      ],
+      "destination": "https://www.spotix.com.ng",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "spotix.com.ng"
+        }
+      ],
       "destination": "https://www.spotix.com.ng/:path*",
       "permanent": true
     }
   ],
-    "routes": [
-      {
-        "src": "/[^.]+",
-        "dest": "/index.html",
-        "status": 200
-      }
-    ]
-  }
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
