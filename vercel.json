@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "https://spotix.com.ng/:path*",
+      "destination": "https://www.spotix.com.ng/:path*",
+      "permanent": true
+    }
+  ],
     "routes": [
       {
         "src": "/[^.]+",
