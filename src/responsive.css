@@ -76,7 +76,7 @@
   
   .event-marquee {
     white-space: nowrap;
-    animation: marquee 15s linear infinite;
+    animation: marquee 25s linear infinite;
     padding-left: 100%;
   }
   
