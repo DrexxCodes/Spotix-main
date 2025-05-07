@@ -1,31 +1,34 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { CloseIcon } from "./Header.styled"; 
-import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow } from "lucide-react"; 
+import type React from "react"
+import { useState } from "react"
+import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow } from "lucide-react"
 import {
-    HeaderContainer,
-    LogoSection,
-    Logo,
-    Title,
-    MenuIcon,
-    NavOverlay,
-    Nav,
-    NavList,
-    NavItem,
-    Footer,
-    FooterLink
-  } from "./Header.styled";
-  import { useNavigate } from "react-router-dom"
-  
+  HeaderContainer,
+  LogoSection,
+  Logo,
+  Title,
+  MenuIcon,
+  NavOverlay,
+  Nav,
+  NavList,
+  NavItem,
+  Footer,
+  FooterLink,
+  CloseIcon,
+  DesktopNav,
+  DesktopNavList,
+  DesktopNavItem,
+} from "./Header.styled"
+import { useNavigate } from "react-router-dom"
 
 const UserHeader: React.FC = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
   const toggleMenu = () => {
-    setMenuOpen((prev) => !prev);
-  };
+    setMenuOpen((prev) => !prev)
+  }
 
   return (
     <>
@@ -34,41 +37,72 @@ const UserHeader: React.FC = () => {
           <a href="/">
             <Logo src="/logo.svg" alt="Spotix Logo" />
           </a>
-          <Title><a href="/">Spotix</a></Title>
+          <Title>
+            <a href="/">Spotix</a>
+          </Title>
         </LogoSection>
-        <MenuIcon onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X size={28} /> : <Menu size={28} />}
-        </MenuIcon>
+
+        {/* Desktop Navigation */}
+        <DesktopNav>
+          <DesktopNavList>
+            <DesktopNavItem>
+              <a href="/home">
+                <CalendarPlus size={18} />
+                Home
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
+              <a href="/Profile">
+                <User size={18} />
+                My Profile
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
+              <a href="/ticket-history">
+                <CreditCard size={18} />
+                My Tickets
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
+              <a href="/bookerdashboard">
+                <AppWindow size={18} />
+                Dashboard
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
+              <a href="https://t.me/SpotixNG_bot">
+                <Bot size={18} />
+                Telegram Bot
+              </a>
+            </DesktopNavItem>
+          </DesktopNavList>
+        </DesktopNav>
+
+        {/* Mobile Menu Icon */}
+        <MenuIcon onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={28} /> : <Menu size={28} />}</MenuIcon>
       </HeaderContainer>
 
+      {/* Mobile Navigation */}
       <NavOverlay menuOpen={menuOpen} onClick={() => setMenuOpen(false)} />
-
       <Nav menuOpen={menuOpen}>
         <NavList>
-      <CloseIcon onClick={toggleMenu} /> 
-
+          <CloseIcon onClick={toggleMenu} />
           <NavItem onClick={() => setMenuOpen(false)}>
-            <CalendarPlus onClick={() => navigate("/home")} size={20} />
+            <CalendarPlus size={20} />
             <a href="/home">Home</a>
           </NavItem>
-
           <NavItem onClick={() => setMenuOpen(false)}>
-            <User onClick={() => navigate("/profile")}  size={20} />
+            <User size={20} />
             <a href="/Profile">My Profile</a>
           </NavItem>
-
-
           <NavItem onClick={() => setMenuOpen(false)}>
-            <CreditCard onClick={() => navigate("/ticket-history")}  size={20} />
+            <CreditCard size={20} />
             <a href="/ticket-history">My Tickets</a>
           </NavItem>
-          
-
           <NavItem onClick={() => setMenuOpen(false)}>
-            <AppWindow onClick={() => navigate("/bookerdashboard")}  size={20} />
+            <AppWindow size={20} />
             <a href="/bookerdashboard">Dashboard</a>
           </NavItem>
-          
           <NavItem onClick={() => setMenuOpen(false)}>
             <Bot size={20} />
             <a href="https://t.me/SpotixNG_bot">Telegram Bot</a>
@@ -76,12 +110,16 @@ const UserHeader: React.FC = () => {
         </NavList>
 
         <Footer>
-          <FooterLink><a href="https://me.spotix.xyz/terms">Terms and Conditions</a></FooterLink>
-          <FooterLink>Contact Us</FooterLink>
+          <FooterLink>
+            <a href="https://me.spotix.xyz/terms">Terms and Conditions</a>
+          </FooterLink>
+          <FooterLink>
+            <a href="#">Contact Us</a>
+          </FooterLink>
         </Footer>
       </Nav>
     </>
-  );
-};
+  )
+}
 
-export default UserHeader;
+export default UserHeader

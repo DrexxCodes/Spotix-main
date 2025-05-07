@@ -13,6 +13,7 @@ body .booker-dashboard-container,
   position: relative !important;
   box-sizing: border-box !important;
   display: block !important;
+  margin-top: 80px !important;
 }
 
 /* Force content wrapper to behave */
@@ -35,18 +36,20 @@ body .dashboard-header-container,
 .dashboard-header-container {
   position: relative !important;
   background-color: #f8f4fd !important;
-  padding: 2rem 1rem !important;
+  /* padding: 2rem 1rem !important; */
   margin-bottom: 1.5rem !important;
   overflow: hidden !important;
   width: 100% !important;
   box-sizing: border-box !important;
   display: block !important;
+  height: 280px !important; 
+  max-height: 280px !important;
 }
 
 /* Header content */
 html body .dashboard-header,
 body .dashboard-header,
-.dashboard-header, tickets-header {
+.dashboard-header {
   position: relative !important;
   z-index: 2 !important;
   display: flex !important;
@@ -58,6 +61,7 @@ body .dashboard-header,
   gap: 1rem !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  padding-bottom: 10.5rem !important;
 }
 
 /* Stats grid - CRITICAL FIX */

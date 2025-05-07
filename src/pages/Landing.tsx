@@ -10,6 +10,7 @@ import Testimonials from "../components/Landing/Testimonials"
 import FAQ from "../components/Landing/FAQ"
 import BookerCTA from "../components/Landing/BookerCTA"
 import Creators from "../components/Landing/Creators"
+import BackToTop from "../components/BackToTopButton"
 import Footer from "../components/footer"
 
 const Landing = () => {
@@ -37,6 +38,7 @@ const Landing = () => {
       <Creators /> 
       <Testimonials />
       <FAQ />
+      <BackToTop />
       <Footer />
     </div>
   )
