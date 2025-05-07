@@ -110,8 +110,8 @@ const Hero = () => {
           <Link to="/home" className="hero-button primary">
             Get Started
           </Link>
-          <Link to="/home" className="hero-button secondary">
-            Explore Events
+          <Link to="/createevent" className="hero-button secondary">
+            Create Events
           </Link>
         </div>
       </div>

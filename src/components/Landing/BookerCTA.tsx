@@ -62,8 +62,8 @@ const BookerCTA = () => {
           </div>
 
           <div className="booker-cta-buttons">
-            <Link to="/booker-login" className="booker-cta-button primary">
-              Login as Booker
+            <Link to="/createevent" className="booker-cta-button primary">
+              Create Event
             </Link>
             <Link to="/bookerRole" className="booker-cta-button secondary">
               Learn More

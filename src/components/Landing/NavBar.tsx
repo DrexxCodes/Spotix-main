@@ -39,6 +39,9 @@ const Navbar = () => {
           <a href="#events" className="nav-link">
             Events
           </a>
+          <a href="#creators" className="nav-link">
+            Creators
+          </a>
           <a href="#testimonials" className="nav-link">
             Testimonials
           </a>
@@ -69,6 +72,9 @@ const Navbar = () => {
           </a>
           <a href="#events" onClick={() => setMenuOpen(false)}>
             Events
+          </a>
+          <a href="#creators" onClick={() => setMenuOpen(false)}>
+            Creators
           </a>
           <a href="#testimonials" onClick={() => setMenuOpen(false)}>
             Testimonials

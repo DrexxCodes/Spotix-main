@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CloseIcon } from "./Header.styled"; 
-import { Menu, X, CalendarPlus, User, Bot, CreditCard } from "lucide-react"; // Icons
+import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow } from "lucide-react"; 
 import {
     HeaderContainer,
     LogoSection,
@@ -61,6 +61,12 @@ const UserHeader: React.FC = () => {
           <NavItem onClick={() => setMenuOpen(false)}>
             <CreditCard onClick={() => navigate("/ticket-history")}  size={20} />
             <a href="/ticket-history">My Tickets</a>
+          </NavItem>
+          
+
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <AppWindow onClick={() => navigate("/bookerdashboard")}  size={20} />
+            <a href="/bookerdashboard">Dashboard</a>
           </NavItem>
           
           <NavItem onClick={() => setMenuOpen(false)}>

@@ -9,10 +9,10 @@ import Events from "../components/Landing/Events"
 import Testimonials from "../components/Landing/Testimonials"
 import FAQ from "../components/Landing/FAQ"
 import BookerCTA from "../components/Landing/BookerCTA"
+import Creators from "../components/Landing/Creators"
 import Footer from "../components/footer"
 
 const Landing = () => {
-
   useEffect(() => {
     // Save the original body padding so we can restore it later
     const originalPadding = document.body.style.padding || ""
@@ -27,19 +27,18 @@ const Landing = () => {
   }, [])
 
   return (
-      // <body className="land">
     <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <Hero />
-        <HowItWorks />
-        <Features />
-        <Events />
-        <BookerCTA />
-        <Testimonials />
-        <FAQ />
-        <Footer />
+      <Navbar />
+      <Hero />
+      <HowItWorks />
+      <Features />
+      <Events />
+      <BookerCTA />
+      <Creators /> 
+      <Testimonials />
+      <FAQ />
+      <Footer />
     </div>
-      // </body>
   )
 }
 
