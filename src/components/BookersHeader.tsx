@@ -44,31 +44,26 @@ const BookersHeader: React.FC = () => {
           <DesktopNavList>
             <DesktopNavItem>
               <a href="/bookerDashboard">
-                <House size={18} />
                 Home
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/createevent">
-                <CalendarPlus size={18} />
                 Create Event
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/bookerprofile">
-                <User size={18} />
                 My Profile
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/bookertickets">
-                <List size={18} />
                 My Events
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/home">
-                <BrickWall size={18} />
                 Event Home
               </a>
             </DesktopNavItem>

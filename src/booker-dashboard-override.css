@@ -30,26 +30,43 @@ body .dashboard-content,
   display: block !important;
 }
 
-/* Header container */
+/* Header container with animated gradient background */
 html body .dashboard-header-container,
 body .dashboard-header-container,
 .dashboard-header-container {
   position: relative !important;
-  background-color: #f8f4fd !important;
-  /* padding: 2rem 1rem !important; */
   margin-bottom: 1.5rem !important;
   overflow: hidden !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  display: block !important;
-  height: 280px !important; 
-  max-height: 280px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 180px !important;
+  max-height: 180px !important;
+  background: linear-gradient(-45deg, #6b2fa5, #8a4bbd, #9d6dc9, #b08ad4) !important;
+  background-size: 400% 400% !important;
+  animation: gradient-animation 15s ease infinite !important;
+}
+
+/* Animated gradient keyframes */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Header content */
 html body .dashboard-header,
 body .dashboard-header,
-.dashboard-header {
+.dashboard-header,
+.tickets-header {
   position: relative !important;
   z-index: 2 !important;
   display: flex !important;
@@ -61,7 +78,53 @@ body .dashboard-header,
   gap: 1rem !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  padding-bottom: 10.5rem !important;
+  padding: 0 2rem !important;
+}
+
+/* Greeting container */
+html body .greeting-container,
+body .greeting-container,
+.greeting-container {
+  max-width: 70% !important;
+}
+
+html body .greeting-container h1,
+body .greeting-container h1,
+.greeting-container h1 {
+  font-size: 1.8rem !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  font-weight: 600 !important;
+}
+
+/* Create event button */
+html body .create-event-button,
+body .create-event-button,
+.create-event-button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  background-color: white !important;
+  color: #6b2fa5 !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  padding: 0.75rem 1.25rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+html body .create-event-button:hover,
+body .create-event-button:hover,
+.create-event-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Stats grid - CRITICAL FIX */
@@ -232,11 +295,42 @@ body .mobile-event-card,
 }
 
 @media (max-width: 768px) {
+  html body .dashboard-header-container,
+  body .dashboard-header-container,
+  .dashboard-header-container {
+    height: 200px !important; /* Slightly taller on mobile */
+    max-height: 200px !important;
+  }
+
   html body .dashboard-header,
   body .dashboard-header,
   .dashboard-header {
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: center !important; /* Center items on mobile */
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 1rem 1.5rem !important;
+  }
+
+  html body .greeting-container,
+  body .greeting-container,
+  .greeting-container {
+    max-width: 100% !important;
+    margin-bottom: 1rem !important;
+    text-align: center !important;
+  }
+
+  html body .greeting-container h1,
+  body .greeting-container h1,
+  .greeting-container h1 {
+    font-size: 1.5rem !important; /* Smaller font on mobile */
+    text-align: center !important;
+  }
+
+  html body .create-event-button,
+  body .create-event-button,
+  .create-event-button {
+    margin: 0 auto !important; /* Center button */
   }
 
   html body .stats-grid,
@@ -280,7 +374,19 @@ body .mobile-event-card,
   html body .dashboard-header-container,
   body .dashboard-header-container,
   .dashboard-header-container {
-    padding: 1.5rem 1rem !important;
+    padding: 0 !important;
+  }
+
+  html body .dashboard-header,
+  body .dashboard-header,
+  .dashboard-header {
+    padding: 1rem !important;
+  }
+
+  html body .greeting-container h1,
+  body .greeting-container h1,
+  .greeting-container h1 {
+    font-size: 1.3rem !important; /* Even smaller font on very small screens */
   }
 
   html body .create-event-button,
@@ -337,10 +443,7 @@ body .booker-dashboard-container *,
 /* Exception for positioned elements */
 html body .dashboard-header-container,
 body .dashboard-header-container,
-.dashboard-header-container,
-html body .dashboard-particles,
-body .dashboard-particles,
-.dashboard-particles {
+.dashboard-header-container {
   position: relative !important;
 }
 
@@ -362,4 +465,10 @@ html body .action-card:hover,
 body .action-card:hover,
 .action-card:hover {
   transform: translateY(-3px) !important;
+}
+
+html body .create-event-button:hover,
+body .create-event-button:hover,
+.create-event-button:hover {
+  transform: translateY(-2px) !important;
 }

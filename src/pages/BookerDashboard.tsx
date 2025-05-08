@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { collection, getDocs, doc, getDoc } from "firebase/firestore"
@@ -8,7 +8,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock } from "lucide-react"
 import BookersHeader from "../components/BookersHeader"
-import "../booker-dashboard-override.css" 
+import "../booker-dashboard-override.css"
 // import "../styles/dashboard.css"
 
 interface DashboardStats {
@@ -31,15 +31,6 @@ interface RecentEvent {
   status: string
 }
 
-interface Particle {
-  x: number
-  y: number
-  radius: number
-  color: string
-  speedX: number
-  speedY: number
-}
-
 const BookerDashboard = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -54,8 +45,6 @@ const BookerDashboard = () => {
   })
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([])
   const [bookerName, setBookerName] = useState("")
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number | null>(null)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -209,93 +198,6 @@ const BookerDashboard = () => {
     }
   }
 
-  const initParticles = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    // Set canvas dimensions
-    const headerContainer = document.querySelector(".dashboard-header-container")
-    if (headerContainer) {
-      canvas.width = headerContainer.clientWidth
-      canvas.height = headerContainer.clientHeight
-    } else {
-      canvas.width = window.innerWidth
-      canvas.height = 200
-    }
-
-    // Create particles
-    const particles: Particle[] = []
-    const particleCount = Math.min(Math.floor(canvas.width / 15), 40)
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        color: `rgba(107, 47, 165, ${Math.random() * 0.3 + 0.1})`,
-        speedX: Math.random() * 0.5 - 0.25,
-        speedY: Math.random() * 0.5 - 0.25,
-      })
-    }
-
-    // Animation loop
-    const animate = () => {
-      if (!canvas || !ctx) return
-
-      animationRef.current = requestAnimationFrame(animate)
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      particles.forEach((particle) => {
-        // Move particles
-        particle.x += particle.speedX
-        particle.y += particle.speedY
-
-        // Wrap around edges
-        if (particle.x < 0) particle.x = canvas.width
-        if (particle.x > canvas.width) particle.x = 0
-        if (particle.y < 0) particle.y = canvas.height
-        if (particle.y > canvas.height) particle.y = 0
-
-        // Draw particle
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
-        ctx.fillStyle = particle.color
-        ctx.fill()
-      })
-    }
-
-    animate()
-  }
-
-  const handleResize = () => {
-    // Cancel previous animation frame
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-    }
-
-    // Reinitialize particles
-    initParticles()
-  }
-
-  useEffect(() => {
-    // Initialize particle animation
-    initParticles()
-
-    // Add resize listener
-    window.addEventListener("resize", handleResize)
-
-    return () => {
-      // Clean up event listeners and animation frame
-      window.removeEventListener("resize", handleResize)
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-    }
-  }, [])
-
   if (loading) {
     return <Preloader />
   }
@@ -305,7 +207,6 @@ const BookerDashboard = () => {
       <BookersHeader />
       <div className="booker-dashboard-container">
         <div className="dashboard-header-container">
-          <canvas ref={canvasRef} className="dashboard-particles"></canvas>
           <div className="dashboard-header">
             <div className="greeting-container">
               <h1>

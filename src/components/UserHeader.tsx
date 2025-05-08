@@ -47,31 +47,26 @@ const UserHeader: React.FC = () => {
           <DesktopNavList>
             <DesktopNavItem>
               <a href="/home">
-                <CalendarPlus size={18} />
                 Home
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/Profile">
-                <User size={18} />
                 My Profile
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/ticket-history">
-                <CreditCard size={18} />
                 My Tickets
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="/bookerdashboard">
-                <AppWindow size={18} />
                 Dashboard
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
               <a href="https://t.me/SpotixNG_bot">
-                <Bot size={18} />
                 Telegram Bot
               </a>
             </DesktopNavItem>

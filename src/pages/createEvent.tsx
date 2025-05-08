@@ -2,17 +2,18 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { db, auth } from "../services/firebase"
 import { collection, addDoc, doc, getDoc, setDoc } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
-import { Plus, HelpCircle, Wand2, Check } from 'lucide-react'
+import { Plus, HelpCircle, Wand2, Check, Calendar, Clock, Upload, X } from "lucide-react"
 import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
 import { uploadImage } from "../utils/imageUploader"
 // import "../styles/create.css"
 
 const CreateEvent = () => {
+  const [currentDateTime, setCurrentDateTime] = useState("")
   const [eventName, setEventName] = useState("")
   const [eventDescription, setEventDescription] = useState("")
   const [enhancedDescription, setEnhancedDescription] = useState("")
@@ -26,6 +27,13 @@ const CreateEvent = () => {
   const [eventImage, setEventImage] = useState<File | null>(null)
   const [eventImageUrl, setEventImageUrl] = useState("")
   const [uploadProvider, setUploadProvider] = useState<string | null>(null)
+  const [fileInputKey, setFileInputKey] = useState(Date.now())
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadComplete, setUploadComplete] = useState(false)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
+
+  const cancelUploadRef = useRef<(() => void) | null>(null)
 
   const [enablePricing, setEnablePricing] = useState(false)
   const [ticketPrices, setTicketPrices] = useState([{ policy: "", price: "" }])
@@ -43,6 +51,27 @@ const CreateEvent = () => {
   const [enhancing, setEnhancing] = useState(false)
   const [createdEventData, setCreatedEventData] = useState<any>(null)
   const navigate = useNavigate()
+
+  // Update current date and time every second
+  useEffect(() => {
+    const updateCurrentTime = () => {
+      const now = new Date()
+      setCurrentDateTime(now.toLocaleString())
+    }
+
+    updateCurrentTime()
+    const interval = setInterval(updateCurrentTime, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Calculate minimum date (current date + 2 days)
+  const getMinDate = () => {
+    const today = new Date()
+    const minDate = new Date(today)
+    minDate.setDate(today.getDate() + 2)
+    return minDate.toISOString().split("T")[0]
+  }
 
   useEffect(() => {
     const checkBookerStatus = async () => {
@@ -77,6 +106,15 @@ const CreateEvent = () => {
     checkBookerStatus()
   }, [navigate])
 
+  // Clean up upload when component unmounts
+  useEffect(() => {
+    return () => {
+      if (cancelUploadRef.current) {
+        cancelUploadRef.current()
+      }
+    }
+  }, [])
+
   const addPricingRow = () => {
     setTicketPrices([...ticketPrices, { policy: "", price: "" }])
   }
@@ -103,6 +141,64 @@ const CreateEvent = () => {
     // Preview URL for local display
     const previewUrl = URL.createObjectURL(file)
     setEventImageUrl(previewUrl)
+
+    // Reset upload state
+    setUploadProgress(0)
+    setUploadComplete(false)
+    setUploadedImageUrl(null)
+
+    // Start background upload
+    startBackgroundUpload(file)
+  }
+
+  const startBackgroundUpload = (file: File) => {
+    // Cancel any existing upload
+    if (cancelUploadRef.current) {
+      cancelUploadRef.current()
+      cancelUploadRef.current = null
+    }
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    const { uploadPromise, cancelUpload } = uploadImage(file, {
+      cloudinaryFolder: "Events",
+      onProgress: (progress) => {
+        setUploadProgress(progress)
+      },
+      showAlert: false,
+    })
+
+    // Store the cancel function
+    cancelUploadRef.current = cancelUpload
+
+    uploadPromise
+      .then(({ url, provider }) => {
+        setIsUploading(false)
+
+        if (url) {
+          setUploadComplete(true)
+          setUploadedImageUrl(url)
+          setUploadProvider(provider)
+
+          // Hide the success message after 5 seconds
+          setTimeout(() => {
+            setUploadComplete(false)
+          }, 5000)
+        }
+      })
+      .catch((error) => {
+        console.error("Upload failed:", error)
+        setIsUploading(false)
+      })
+  }
+
+  const cancelCurrentUpload = () => {
+    if (cancelUploadRef.current) {
+      cancelUploadRef.current()
+      cancelUploadRef.current = null
+      setIsUploading(false)
+    }
   }
 
   const applyEnhancedDescription = () => {
@@ -170,6 +266,26 @@ const CreateEvent = () => {
     }
   }
 
+  // Validate end time is after start time
+  const validateEndTime = (endTime: string) => {
+    if (!eventDate || !eventStart) return true
+
+    const startDateTime = new Date(`${eventDate}T${eventStart}`)
+    const endDateTime = new Date(`${eventEndDate}T${endTime}`)
+
+    return endDateTime > startDateTime
+  }
+
+  // Validate stop date is before event start date
+  const validateStopDate = (date: string) => {
+    if (!eventDate) return true
+
+    const startDateTime = new Date(eventDate)
+    const stopDateTime = new Date(date)
+
+    return stopDateTime < startDateTime
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -194,27 +310,81 @@ const CreateEvent = () => {
         throw new Error("Please select an event image.")
       }
 
+      // Validate end time is after start time
+      if (!validateEndTime(eventEnd)) {
+        throw new Error("Event end time must be after start time.")
+      }
+
+      // Validate stop date is before event start date
+      if (enableStopDate && !validateStopDate(stopDate)) {
+        throw new Error("Ticket sales stop date must be before event start date.")
+      }
+
       const user = auth.currentUser
       if (!user) throw new Error("User not authenticated")
 
       const { eventId, payId } = generateUniqueId()
       const isFree = !enablePricing
 
-      // Upload image using the tiered upload system
-      const { url: uploadedImageUrl, provider } = await uploadImage(eventImage, {
-        cloudinaryFolder: "Events",
-        supabasePath: "events",
-        showAlert: true,
-      })
+      // Use the already uploaded image URL if available, otherwise wait for upload to complete
+      let imageUrl = uploadedImageUrl
+      let provider = uploadProvider
 
-      if (!uploadedImageUrl) {
-        throw new Error("Image upload failed on all providers")
+      if (!imageUrl && eventImage) {
+        // If upload is still in progress, wait for it to complete
+        if (isUploading && cancelUploadRef.current) {
+          const { url, provider: uploadedProvider } = await new Promise<{
+            url: string | null
+            provider: string | null
+          }>((resolve) => {
+            const { uploadPromise } = uploadImage(eventImage, {
+              cloudinaryFolder: "Events",
+              onProgress: (progress) => {
+                setUploadProgress(progress)
+              },
+              showAlert: false,
+            })
+
+            uploadPromise.then(resolve)
+          })
+
+          if (!url) {
+            throw new Error("Image upload failed. Please try again.")
+          }
+
+          imageUrl = url
+          provider = uploadedProvider
+        } else {
+          // If no upload has started or it failed, start a new one
+          const { url, provider: uploadedProvider } = await new Promise<{
+            url: string | null
+            provider: string | null
+          }>((resolve) => {
+            const { uploadPromise } = uploadImage(eventImage, {
+              cloudinaryFolder: "Events",
+              onProgress: (progress) => {
+                setUploadProgress(progress)
+              },
+              showAlert: false,
+            })
+
+            uploadPromise.then(resolve)
+          })
+
+          if (!url) {
+            throw new Error("Image upload failed. Please try again.")
+          }
+
+          imageUrl = url
+          provider = uploadedProvider
+        }
       }
 
-      setUploadProvider(provider)
+      if (!imageUrl) {
+        throw new Error("Image upload failed. Please try again.")
+      }
 
       // Get user data for booker name
-
       const userDoc = await getDoc(doc(db, "users", user.uid))
       const userData = userDoc.exists() ? userDoc.data() : {}
       const bookerName = userData.username || userData.fullName || "Unknown Booker"
@@ -228,7 +398,7 @@ const CreateEvent = () => {
         eventStart,
         eventEnd,
         eventType,
-        eventImage: uploadedImageUrl,
+        eventImage: imageUrl,
         imageProvider: provider,
         ticketPrices: isFree ? [] : ticketPrices,
         enableStopDate,
@@ -282,6 +452,7 @@ const CreateEvent = () => {
       <Preloader loading={loading} />
       <BookersHeader />
       <div className="create-event-container">
+        <div className="current-datetime">Current Date and Time: {currentDateTime}</div>
         <img src="/create-event.svg" alt="Create Event" className="event-image" />
         <h2>Create Your Event: The magic starts here✨</h2>
         <form onSubmit={handleSubmit}>
@@ -291,8 +462,47 @@ const CreateEvent = () => {
             <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
 
             <label>Event Image</label>
-            <div className="file-upload-container">
-              <input type="file" accept="image/*" onChange={handleFileChange} required />
+            <div className="custom-file-upload">
+              <input
+                type="file"
+                id="file-upload"
+                accept="image/*"
+                onChange={handleFileChange}
+                required
+                key={fileInputKey}
+                className="hidden-file-input"
+              />
+              <label htmlFor="file-upload" className="file-upload-button">
+                <Upload size={18} className="upload-icon" />
+                {eventImage ? eventImage.name : "Choose an image for your event"}
+              </label>
+
+              {isUploading && (
+                <div className="upload-progress-container">
+                  <div className="upload-progress-bar">
+                    <div className="upload-progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+                  </div>
+                  <div className="upload-progress-text">
+                    Uploading: {uploadProgress}%
+                    <button
+                      type="button"
+                      className="cancel-upload-button"
+                      onClick={cancelCurrentUpload}
+                      aria-label="Cancel upload"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {uploadComplete && (
+                <div className="upload-complete">
+                  <Check size={16} className="upload-complete-icon" />
+                  Image uploaded successfully
+                </div>
+              )}
+
               {eventImageUrl && (
                 <div className="image-preview">
                   <img src={eventImageUrl || "/placeholder.svg"} alt="Event preview" style={{ maxWidth: "200px" }} />
@@ -339,25 +549,72 @@ const CreateEvent = () => {
               </div>
             )}
 
-            <label>Event Start Date and Time</label>
-            <input type="datetime-local" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required />
+            <label>Event Start Date</label>
+            <div className="date-input-container">
+              <input
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                required
+                min={getMinDate()}
+                className="date-input"
+              />
+            </div>
 
             <label>Event Venue</label>
             <input type="text" value={eventVenue} onChange={(e) => setEventVenue(e.target.value)} required />
 
             <label>Event Start Time</label>
-            <input type="time" value={eventStart} onChange={(e) => setEventStart(e.target.value)} required />
+            <div className="time-input-container">
+              <input type="time" value={eventStart} onChange={(e) => setEventStart(e.target.value)} required />
+            </div>
 
             <label>Event End Date</label>
-            <input type="date" value={eventEndDate} onChange={(e) => setEventEndDate(e.target.value)} required />
+            <div className="date-input-container">
+              <input
+                type="date"
+                value={eventEndDate}
+                onChange={(e) => setEventEndDate(e.target.value)}
+                required
+                disabled={!eventDate}
+                min={eventDate}
+                className="date-input"
+                onClick={() => {
+                  if (!eventDate) {
+                    alert("Please select a start date first")
+                  }
+                }}
+              />
+            </div>
 
             <label>Event End Time</label>
-            <input type="time" value={eventEnd} onChange={(e) => setEventEnd(e.target.value)} required />
+            <div className="time-input-container">
+              <input
+                type="time"
+                value={eventEnd}
+                onChange={(e) => {
+                  const newTime = e.target.value
+                  if (eventDate === eventEndDate && newTime <= eventStart) {
+                    alert("End time must be after start time")
+                    return
+                  }
+                  setEventEnd(newTime)
+                }}
+                required
+                disabled={!eventStart}
+                onClick={() => {
+                  if (!eventStart) {
+                    alert("Please select a start time first")
+                  }
+                }}
+              />
+            </div>
 
             <label>Event Type</label>
             <select value={eventType} onChange={(e) => setEventType(e.target.value)} required>
               <option value="Night party">Night party</option>
               <option value="Concert">Concert</option>
+              <option value="Religious">Religious</option>
               <option value="Conference">Conference</option>
               <option value="Workshop">Workshop</option>
               <option value="Other">Other</option>
@@ -429,8 +686,16 @@ const CreateEvent = () => {
                 <input
                   type="datetime-local"
                   value={stopDate}
-                  onChange={(e) => setStopDate(e.target.value)}
+                  onChange={(e) => {
+                    const newDate = e.target.value
+                    if (eventDate && !validateStopDate(newDate)) {
+                      alert("Stop date must be before event start date")
+                      return
+                    }
+                    setStopDate(newDate)
+                  }}
                   required={enableStopDate}
+                  max={eventDate ? new Date(eventDate).toISOString().slice(0, 16) : undefined}
                 />
               )}
             </div>

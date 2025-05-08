@@ -202,6 +202,7 @@ const Home = () => {
                 <option value="">All Types</option>
                 <option value="Night party">Night Party</option>
                 <option value="Concert">Concert</option>
+                <option value="Religious">Religious</option>
                 <option value="Conference">Conference</option>
                 <option value="Workshop">Workshop</option>
                 <option value="Other">Other</option>
