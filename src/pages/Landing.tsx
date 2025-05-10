@@ -33,10 +33,8 @@ const Landing = () => {
       <Hero />
       <HowItWorks />
       <Features />
-      <Events />
       <BookerCTA />
       <Creators /> 
-      <Testimonials />
       <FAQ />
       <BackToTop />
       <Footer />

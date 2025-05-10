@@ -103,7 +103,10 @@ const BookersHeader: React.FC = () => {
 
         <Footer>
           <FooterLink>
-            <a href="https://me.spotix.xyz/terms">Terms and Conditions</a>
+            <a href="https://my.spotix.com.ng/privacy">Spotix Privacy Policy</a>
+          </FooterLink>
+          <FooterLink>
+            <a href="https://my.spotix.com.ng/acceptable-usage">Terms and Conditions</a>
           </FooterLink>
           <FooterLink>
             <a href="https://tawk.to/chat/67f231fc2dd176190b3b2db3/1io7jc0ap">Contact Us</a>
