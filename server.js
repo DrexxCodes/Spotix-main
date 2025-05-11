@@ -12,7 +12,7 @@ import enhanceRoute from "./api/gemini/enhance.js"
 import paymentRoute from "./api/payment.js"
 import webhookRoute from "./api/webhook.js"
 import verifyRoute from "./api/verify.js"
-import sendMailRoutes from "./api/send-mail.js"
+import sendMailRoutes from "./api/mail.js"
 
 // Configure dotenv
 dotenv.config()
