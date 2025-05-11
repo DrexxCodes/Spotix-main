@@ -70,15 +70,15 @@ const Navbar = () => {
           <a href="#features" onClick={() => setMenuOpen(false)}>
             Features
           </a>
-          <a href="#events" onClick={() => setMenuOpen(false)}>
+          {/* <a href="#events" onClick={() => setMenuOpen(false)}>
             Events
-          </a>
+          </a> */}
           <a href="#creators" onClick={() => setMenuOpen(false)}>
             Creators
           </a>
-          <a href="#testimonials" onClick={() => setMenuOpen(false)}>
+          {/* <a href="#testimonials" onClick={() => setMenuOpen(false)}>
             Testimonials
-          </a>
+          </a> */}
           <Link to="/login" onClick={() => setMenuOpen(false)}>
             Login
           </Link>

@@ -5,12 +5,11 @@ import Navbar from "../components/Landing/NavBar"
 import Hero from "../components/Landing/Hero"
 import HowItWorks from "../components/Landing/HowItWorks"
 import Features from "../components/Landing/Features"
-import Events from "../components/Landing/Events"
-import Testimonials from "../components/Landing/Testimonials"
+// import Events from "../components/Landing/Events"
+// import Testimonials from "../components/Landing/Testimonials"
 import FAQ from "../components/Landing/FAQ"
 import BookerCTA from "../components/Landing/BookerCTA"
 import Creators from "../components/Landing/Creators"
-import BackToTop from "../components/BackToTopButton"
 import Footer from "../components/footer"
 
 const Landing = () => {
@@ -36,7 +35,6 @@ const Landing = () => {
       <BookerCTA />
       <Creators /> 
       <FAQ />
-      <BackToTop />
       <Footer />
     </div>
   )
