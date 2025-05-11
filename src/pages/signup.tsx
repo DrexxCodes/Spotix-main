@@ -1,60 +1,104 @@
-import { useState, useEffect } from "react";
-import { auth, db } from "../services/firebase";
-import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import Preloader from "../components/preloader";
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { auth, db } from "../services/firebase"
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
+import { Eye, EyeOff, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import Preloader from "../components/preloader"
 
 const Signup = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [referral, setReferral] = useState("");
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(true); // Page load preloader
-  const [signingUp, setSigningUp] = useState(false); // Signup action preloader
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [username, setUsername] = useState("")
+  const [referral, setReferral] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(true) // Page load preloader
+  const [signingUp, setSigningUp] = useState(false) // Signup action preloader
+  const [sendingEmail, setSendingEmail] = useState(false) // Email sending indicator
+  const navigate = useNavigate()
 
   // Words for animation
-  const words = ["Event", "Party", "Meeting", "Conference"];
+  const words = ["Event", "Party", "Meeting", "Conference"]
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-    let index = 0;
+    setTimeout(() => setLoading(false), 1000)
+    let index = 0
     const interval = setInterval(() => {
-      const animatedText = document.getElementById("animated-text");
+      const animatedText = document.getElementById("animated-text")
       if (animatedText) {
-        animatedText.style.opacity = "0";
+        animatedText.style.opacity = "0"
         setTimeout(() => {
-          animatedText.textContent = words[index];
-          animatedText.style.opacity = "1";
-          index = (index + 1) % words.length;
-        }, 300);
+          animatedText.textContent = words[index]
+          animatedText.style.opacity = "1"
+          index = (index + 1) % words.length
+        }, 300)
       }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Function to send verification email using our custom API
+  const sendVerificationEmail = async (user, userName) => {
+    setSendingEmail(true)
+    try {
+      // First, get the verification URL from Firebase
+      await sendEmailVerification(user)
+
+      // Then send our custom email with the verification URL
+      // Note: We need to extract the action URL from Firebase's email
+      // Since we can't directly access the verification URL, we'll use Firebase's built-in mechanism
+      // and inform the user that they'll receive two emails (one from Firebase and one from our system)
+
+      const response = await fetch("/api/mail/email-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: userName,
+          action_url: `https://spotix.com.ng/verify-email?uid=${user.uid}`, // This is a fallback URL
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to send verification email")
+      }
+
+      return true
+    } catch (error) {
+      console.error("Error sending verification email:", error)
+      return false
+    } finally {
+      setSendingEmail(false)
+    }
+  }
 
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError("")
+    setSuccess("")
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+      setError("Passwords do not match.")
+      return
     }
 
-    setSigningUp(true);
+    setSigningUp(true)
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
 
-      await updateProfile(user, { displayName: username });
+      await updateProfile(user, { displayName: username })
 
       // Store user info in Firestore
       await setDoc(doc(db, "users", user.uid), {
@@ -62,20 +106,48 @@ const Signup = () => {
         username,
         email,
         referral,
-        isBooker: false, 
-        wallet: 0.00,
-      });
+        isBooker: false,
+        wallet: 0.0,
+        createdAt: new Date(),
+        emailVerified: false,
+      })
 
-      // Send email verification
-      await sendEmailVerification(user);
+      // Send email verification using our custom function
+      const emailSent = await sendVerificationEmail(user, fullName || username)
 
-      setError("A confirmation email has been sent. Please verify your email before logging in.");
+      if (emailSent) {
+        setSuccess("Account created successfully! Please check your email to verify your account before logging in.")
+      } else {
+        setSuccess(
+          "Account created, but we couldn't send a verification email. Please try to resend the verification email from the login page.",
+        )
+      }
+
+      // Clear form
+      setEmail("")
+      setPassword("")
+      setConfirmPassword("")
+      setFullName("")
+      setUsername("")
+      setReferral("")
+
+      // Redirect to login after 5 seconds
+      setTimeout(() => {
+        navigate("/login")
+      }, 5000)
     } catch (err: any) {
-      setError("Failed to create an account.");
+      console.error("Signup error:", err)
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already in use. Please try another email or login.")
+      } else if (err.code === "auth/weak-password") {
+        setError("Password is too weak. Please use a stronger password.")
+      } else {
+        setError("Failed to create an account. Please try again later.")
+      }
     }
 
-    setSigningUp(false);
-  };
+    setSigningUp(false)
+  }
 
   return (
     <>
@@ -84,23 +156,80 @@ const Signup = () => {
         <div className="auth-form">
           <img src="/logo.svg" alt="Logo" className="auth-logo" />
           <h2>Sign Up</h2>
-          {error && <p className="error-message">{error}</p>}
+
+          {error && (
+            <div className="error-message">
+              <AlertCircle size={16} className="error-icon" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="success-message">
+              <CheckCircle size={16} className="success-icon" />
+              <p>{success}</p>
+            </div>
+          )}
+
+          {sendingEmail && (
+            <div className="sending-email-message">
+              <Loader2 size={16} className="loading-icon" />
+              <p>Sending verification email...</p>
+            </div>
+          )}
 
           <form onSubmit={handleSignup}>
-            <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-            <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
             <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
             <div className="password-container">
-              <input type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              {showPassword ? <EyeOff className="password-toggle" onClick={() => setShowPassword(false)} /> : <Eye className="password-toggle" onClick={() => setShowPassword(true)} />}
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              {showPassword ? (
+                <EyeOff className="password-toggle" onClick={() => setShowPassword(false)} />
+              ) : (
+                <Eye className="password-toggle" onClick={() => setShowPassword(true)} />
+              )}
             </div>
 
-            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-            <input type="text" placeholder="Referral Code (Optional)" value={referral} onChange={(e) => setReferral(e.target.value)} />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Referral Code (Optional)"
+              value={referral}
+              onChange={(e) => setReferral(e.target.value)}
+            />
 
-            <button type="submit">Sign Up</button>
-            <p>Already a Spotix User? <a href="/login">Log in</a></p>
+            <button type="submit" disabled={signingUp || sendingEmail}>
+              {signingUp ? "Creating Account..." : "Sign Up"}
+            </button>
+            <p>
+              Already a Spotix User? <a href="/login">Log in</a>
+            </p>
           </form>
         </div>
 
@@ -110,7 +239,7 @@ const Signup = () => {
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Signup;
+export default Signup

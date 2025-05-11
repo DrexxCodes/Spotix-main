@@ -1,0 +1,44 @@
+/* Email confirmation message styling */
+.email-confirmation-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+.email-confirmation-message .email-icon {
+  color: #52c41a;
+}
+
+.email-confirmation-message p {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Email sending indicator */
+.email-sending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #1890ff;
+  margin-top: 8px;
+}
+
+.email-sending .loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

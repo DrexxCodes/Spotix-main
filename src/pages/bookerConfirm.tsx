@@ -10,7 +10,7 @@ import Preloader from "../components/preloader"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import { Tooltip } from "../components/Tooltip"
-// import "../styles/confirm.css"
+import "../styles/confirm.css"
 
 interface UserProfile {
   uid: string
@@ -41,6 +41,7 @@ const BookerConfirm = () => {
   })
   const [consentChecked, setConsentChecked] = useState(false)
   const [profilePictureError, setProfilePictureError] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -68,11 +69,11 @@ const BookerConfirm = () => {
 
               setUser(userProfile)
 
-                            // Check if user is already a booker
-                            if (userData.isBooker) {
-                              setLoading(false)
-                              return
-                            }
+              // Check if user is already a booker
+              if (userData.isBooker) {
+                setLoading(false)
+                return
+              }
 
               // Pre-fill booker name with user's full name if available
               if (userData.fullName) {
@@ -117,6 +118,30 @@ const BookerConfirm = () => {
     setConsentChecked(e.target.checked)
   }
 
+  const sendConfirmationEmail = async (name: string, email: string) => {
+    try {
+      const response = await fetch("https://spotix-backend.onrender.com/api/mail/booker-confirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to send confirmation email")
+      }
+
+      setEmailSent(true)
+    } catch (error) {
+      console.error("Error sending confirmation email:", error)
+      // Continue with the process even if email fails
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -138,12 +163,25 @@ const BookerConfirm = () => {
         bookerPassword: bookerData.bookerPassword,
       })
 
-      alert("Congratulations! You are now a booker.")
+      // Send confirmation email
+      await sendConfirmationEmail(bookerData.bookerName || user.fullName, user.email)
+
+      // Show success message with email confirmation
+      setLoading(false)
+
+      // Show success dialog with email confirmation
+      if (emailSent) {
+        alert(
+          "Congratulations! You are now a booker. We have sent a confirmation email to your registered email address.",
+        )
+      } else {
+        alert("Congratulations! You are now a booker.")
+      }
+
       navigate("/profile")
     } catch (error) {
       console.error("Error updating booker status:", error)
       alert("Failed to update booker status. Please try again.")
-    } finally {
       setLoading(false)
     }
   }
@@ -152,24 +190,24 @@ const BookerConfirm = () => {
     return <Preloader loading={loading} />
   }
 
-    // If user is already a booker, show alert dialog
-    if (user.isBooker) {
-      return (
-        <div className="booker-confirm-container">
-          <UserHeader />
-          <div className="already-booker-dialog">
-            <img src="/BookerConfirm.svg" alt="Already a Booker" className="booker-confirm-image" />
-            <h2>Dear booker {user.username},</h2>
-            <p>You're already a booker on our platform!</p>
-            <p>You can create and manage events from your dashboard.</p>
-            <button className="home-button" onClick={() => navigate("/")}>
-              Go Home
-            </button>
-          </div>
-          <Footer />
+  // If user is already a booker, show alert dialog
+  if (user.isBooker) {
+    return (
+      <div className="booker-confirm-container">
+        <UserHeader />
+        <div className="already-booker-dialog">
+          <img src="/BookerConfirm.svg" alt="Already a Booker" className="booker-confirm-image" />
+          <h2>Dear booker {user.username},</h2>
+          <p>You're already a booker on our platform!</p>
+          <p>You can create and manage events from your dashboard.</p>
+          <button className="home-button" onClick={() => navigate("/")}>
+            Go Home
+          </button>
         </div>
-      )
-    }
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="booker-confirm-container">
@@ -180,13 +218,14 @@ const BookerConfirm = () => {
           <img src="/BookerConfirm.svg" alt="Become a Booker" className="booker-confirm-image" />
           <h1 className="booker-confirm-title">Become a Booker</h1>
           <p className="booker-confirm-message">
-            <div className="greeting">Hello there <span className="username-highlight">{user.username}</span></div>. 
-            You're now taking a step to become
-            a booker in Spotix. This will enable you to post events, verify tickets and get paid. We hope you've read
-            our terms for bookers and switching to a booker now means you've seen and gone through the provisions there.
-            It's also important that you fill the details here as we would use this in creating your booker profile. A
-            picture of you (individual booker) or your logo (Business booker) is required for you to be a booker. Thank
-            you for partnering with Spotix.
+            <div className="greeting">
+              Hello there <span className="username-highlight">{user.username}</span>
+            </div>
+            . You're now taking a step to become a booker in Spotix. This will enable you to post events, verify tickets
+            and get paid. We hope you've read our terms for bookers and switching to a booker now means you've seen and
+            gone through the provisions there. It's also important that you fill the details here as we would use this
+            in creating your booker profile. A picture of you (individual booker) or your logo (Business booker) is
+            required for you to be a booker. Thank you for partnering with Spotix.
           </p>
         </div>
 
@@ -330,10 +369,9 @@ const BookerConfirm = () => {
           </div>
         </form>
       </div>
-<Footer />
+      <Footer />
     </div>
   )
 }
 
 export default BookerConfirm
-

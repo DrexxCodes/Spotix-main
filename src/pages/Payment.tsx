@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
-import { CheckCircle, XCircle, Loader2, AlertCircle, Bitcoin, Tag, Share2 } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -37,6 +37,8 @@ interface EventDetails {
   eventEnd: string
   stopDate?: string
   enableStopDate?: boolean
+  bookerName?: string
+  bookerEmail?: string
 }
 
 const Payment = () => {
@@ -59,6 +61,8 @@ const Payment = () => {
   const [shareUrl, setShareUrl] = useState<string>("")
   const [showShareOptions, setShowShareOptions] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailSending, setEmailSending] = useState(false)
 
   // Payment process states
   const [currentStep, setCurrentStep] = useState<string | null>(null)
@@ -148,6 +152,19 @@ const Payment = () => {
 
       if (eventDoc.exists()) {
         const data = eventDoc.data()
+
+        // Get booker details
+        const bookerDocRef = doc(db, "users", creatorId)
+        const bookerDoc = await getDoc(bookerDocRef)
+        let bookerName = "Event Host"
+        let bookerEmail = "support@spotix.com.ng"
+
+        if (bookerDoc.exists()) {
+          const bookerData = bookerDoc.data()
+          bookerName = bookerData.bookerName || bookerData.fullName || "Event Host"
+          bookerEmail = bookerData.email || "support@spotix.com.ng"
+        }
+
         setEventDetails({
           eventVenue: data.eventVenue || "",
           eventType: data.eventType || "",
@@ -157,6 +174,8 @@ const Payment = () => {
           eventEnd: data.eventEnd || "",
           stopDate: data.enableStopDate ? data.stopDate : undefined,
           enableStopDate: data.enableStopDate || false,
+          bookerName,
+          bookerEmail,
         })
       }
     } catch (error) {
@@ -295,6 +314,44 @@ const Payment = () => {
     }
   }
 
+  // Send confirmation email
+  const sendConfirmationEmail = async (ticketId: string, ticketReference: string, userData: any) => {
+    if (!paymentData || !eventDetails) return
+
+    try {
+      setEmailSending(true)
+
+      const response = await fetch("https://spotix-backend.onrender.com/api/mail/payment-confirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          name: userData.fullName || userData.username || "Valued Customer",
+          ticket_ID: ticketId,
+          event_host: eventDetails.bookerName || "Event Host",
+          event_name: paymentData.eventName,
+          payment_ref: ticketReference,
+          ticket_type: paymentData.ticketType,
+          booker_email: eventDetails.bookerEmail || "support@spotix.com.ng",
+          ticket_price: finalPrice.toFixed(2),
+          payment_method: "IWSS", // In-Wallet Spotix System
+        }),
+      })
+
+      if (response.ok) {
+        setEmailSent(true)
+      } else {
+        console.error("Failed to send confirmation email")
+      }
+    } catch (error) {
+      console.error("Error sending confirmation email:", error)
+    } finally {
+      setEmailSending(false)
+    }
+  }
+
   // Initialize Paystack client-side
   const initializePaystack = () => {
     try {
@@ -343,6 +400,10 @@ const Payment = () => {
             eventStart: eventDetails.eventStart,
             eventEnd: eventDetails.eventEnd,
             stopDate: eventDetails.stopDate,
+            bookerName: eventDetails.bookerName,
+            bookerEmail: eventDetails.bookerEmail,
+            userFullName: userData.fullName || userData.username || "Valued Customer",
+            userEmail: userData.email,
           }
 
           // Save payment data for the callback
@@ -361,6 +422,10 @@ const Payment = () => {
               eventEndDate: eventDetails.eventEndDate || null,
               eventStart: eventDetails.eventStart || null,
               eventEnd: eventDetails.eventEnd || null,
+              bookerName: eventDetails.bookerName || null,
+              bookerEmail: eventDetails.bookerEmail || null,
+              userFullName: userData.fullName || userData.username || "Valued Customer",
+              userEmail: userData.email,
               // Only include stopDate if it exists
               ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
             }),
@@ -561,6 +626,9 @@ const Payment = () => {
       }
 
       setStepStatus("success")
+
+      // Send confirmation email
+      await sendConfirmationEmail(ticketId, ticketReference, userData)
 
       setPaymentResult({
         success: true,
@@ -787,6 +855,13 @@ const Payment = () => {
                   <CheckCircle size={60} className="text-green-500" />
                 </div>
                 <h2>Payment Successful!</h2>
+
+                {emailSent && (
+                  <div className="email-confirmation-message">
+                    <Mail size={18} className="email-icon" />
+                    <p>A confirmation email has been sent to your registered email address.</p>
+                  </div>
+                )}
 
                 <div className="ticket-preview">
                   <div className="ticket-header">

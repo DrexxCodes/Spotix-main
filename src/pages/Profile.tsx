@@ -179,11 +179,11 @@ const Profile = () => {
       if (imageFile) {
         setUploadingImage(true)
 
-        const { url, provider } = await uploadImage(imageFile, {
+        const { uploadPromise } = uploadImage(imageFile, {
           cloudinaryFolder: "ProfilePictures",
-          supabasePath: "profiles",
           showAlert: true,
         })
+        const { url, provider } = await uploadPromise
 
         if (url) {
           profilePictureUrl = url

@@ -12,6 +12,7 @@ import enhanceRoute from "./api/gemini/enhance.js"
 import paymentRoute from "./api/payment.js"
 import webhookRoute from "./api/webhook.js"
 import verifyRoute from "./api/verify.js"
+import sendMailRoutes from "./api/send-mail.js"
 
 // Configure dotenv
 dotenv.config()
@@ -55,8 +56,9 @@ fastify.get("/api/test", async (request, reply) => {
 // Register API routes before static file handling
 fastify.register(enhanceRoute, { prefix: "/api/gemini" })
 fastify.register(paymentRoute, { prefix: "/api" })
-fastify.register(webhookRoute, { prefix: "/api/payment" }) 
+fastify.register(webhookRoute, { prefix: "/api/payment" })
 fastify.register(verifyRoute, { prefix: "/api" })
+fastify.register(sendMailRoutes, { prefix: "/api/mail" })
 
 // Check if dist directory exists before registering static plugin
 const distPath = path.join(__dirname, "dist")
@@ -65,7 +67,7 @@ if (fs.existsSync(distPath)) {
   await fastify.register(fastifyStatic, {
     root: distPath,
     prefix: "/",
-    decorateReply: false
+    decorateReply: false,
   })
 
   // Use a preHandler hook instead of a catch-all route

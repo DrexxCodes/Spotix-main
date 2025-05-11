@@ -1,0 +1,20 @@
+/* Booker confirmation success message */
+.email-confirmation-message {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+  padding: 12px 16px;
+  margin: 20px 0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.email-confirmation-message .icon {
+  color: #1890ff;
+}
+
+.email-confirmation-message p {
+  margin: 0;
+  color: #333;
+}

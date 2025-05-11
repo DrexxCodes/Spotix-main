@@ -222,11 +222,11 @@ const Verification = () => {
       }, 500)
 
       // Use the tiered upload system
-      const { url: fileUrl, provider } = await uploadImage(file, {
+      const { uploadPromise } = uploadImage(file, {
         cloudinaryFolder: "Verification",
-        supabasePath: "verification",
         showAlert: true,
       })
+      const { url: fileUrl, provider } = await uploadPromise
 
       clearInterval(progressInterval)
 

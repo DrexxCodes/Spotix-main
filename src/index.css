@@ -11,9 +11,9 @@
 }
 
 .content-anchor {
-  height: 1px; 
+  height: 1px;
   width: 100%;
-  margin-bottom: 50px; 
+  margin-bottom: 50px;
   pointer-events: none;
 }
 
@@ -46,11 +46,11 @@ body {
   padding: 20px;
 }
 
- 
+
 
 /* Apply padding only to pages that need it, not globally */
 body:not(.land) {
-  padding-top: 120px; 
+  padding-top: 120px;
 }
 
 body.land {
@@ -271,6 +271,153 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Email verification styles */
+.verification-option {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.verification-option p {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #495057;
+  font-size: 14px;
+}
+
+.resend-verification-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.resend-verification-btn:hover {
+  background-color: #5a2589;
+}
+
+.resend-verification-btn:disabled {
+  background-color: #9c6fc1;
+  cursor: not-allowed;
+}
+
+.verification-sent-message {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #d4edda;
+  border-radius: 4px;
+  color: #155724;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.verification-sent-message p {
+  margin: 0;
+  color: #155724;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8d7da;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  color: #721c24;
+}
+
+.error-message .error-icon {
+  color: #dc3545;
+  flex-shrink: 0;
+}
+
+.error-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #d4edda;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  color: #155724;
+}
+
+.success-message .success-icon {
+  color: #28a745;
+  flex-shrink: 0;
+}
+
+.success-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.sending-email-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #e2e3e5;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  color: #383d41;
+}
+
+.sending-email-message .loading-icon {
+  animation: spin 1s linear infinite;
+  color: #6b2fa5;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sending-email-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Improve button states */
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+button {
+  position: relative;
+}
+
+button .loading-icon {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
 
 /* Switch Toggle Styles */
 .switch-container {
@@ -744,7 +891,7 @@ input:checked+.slider:before {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-    position: static;
+  position: static;
 }
 
 .home-header {
@@ -960,7 +1107,8 @@ input:checked+.slider:before {
 
 /* Past event date styling */
 .event-date-box.past-event {
-  background-color: #dc3545; /* Red background for past events */
+  background-color: #dc3545;
+  /* Red background for past events */
 }
 
 /* Like button styling */
@@ -1203,6 +1351,7 @@ input:checked+.slider:before {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-100%);
   }
@@ -1330,7 +1479,8 @@ input:checked+.slider:before {
   margin-top: 0;
   margin-bottom: 15px;
   font-size: 1.3rem;
-  padding-right: 30px; /* Make room for close button */
+  padding-right: 30px;
+  /* Make room for close button */
 }
 
 .passed-event-dialog p {
@@ -1515,7 +1665,8 @@ input:checked+.slider:before {
   background: white;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  border-left: 5px solid #6b2fa5; /* Default border color */
+  border-left: 5px solid #6b2fa5;
+  /* Default border color */
 }
 
 .event-header {
@@ -4155,15 +4306,15 @@ input:checked+.slider:before {
   transition: 0.4s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: #6b2fa5;
 }
 
-input:focus + .slider {
+input:focus+.slider {
   box-shadow: 0 0 1px #6b2fa5;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(26px);
 }
 
@@ -4473,6 +4624,7 @@ input:checked + .slider:before {
 
 /* Responsive adjustments for booker pages */
 @media (max-width: 768px) {
+
   .booker-profile-container,
   .booker-dashboard-container,
   .booker-tickets-container,
@@ -5717,6 +5869,7 @@ input:checked + .slider:before {
     opacity: 0;
     transform: translateX(-50%) translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -5900,7 +6053,8 @@ input:checked + .slider:before {
   color: #666;
 }
 
-.ticket-date, .ticket-time {
+.ticket-date,
+.ticket-time {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -6332,6 +6486,7 @@ input:checked + .slider:before {
 
 /* Responsive styles */
 @media (max-width: 768px) {
+
   .ticket-history-container,
   .ticket-info-container {
     padding: 20px;
@@ -6386,6 +6541,7 @@ input:checked + .slider:before {
 
 /* General mobile improvements */
 @media (max-width: 768px) {
+
   .ticket-info-container,
   .booker-dashboard-container,
   .booker-tickets-container,
@@ -6993,6 +7149,7 @@ input:checked + .slider:before {
 .balance-card:first-child .balance-amount {
   color: #6b2fa5;
   background: linear-gradient(45deg, #6b2fa5, #9b59b6);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -7015,8 +7172,9 @@ input:checked + .slider:before {
 .balance-card:nth-child(2) .balance-amount {
   color: #28a745;
   background: linear-gradient(45deg, #28a745, #5cb85c);
+  background-clip: text;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparents;
 }
 
 /* Add a subtle animation for the balance cards */
@@ -7024,9 +7182,11 @@ input:checked + .slider:before {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.02);
   }
+
   100% {
     transform: scale(1);
   }
@@ -7141,6 +7301,7 @@ input:checked + .slider:before {
 
 /* Very small screens additional fixes */
 @media (max-width: 480px) {
+
   .ticket-info-tabs,
   .verification-tabs {
     display: grid;
@@ -7466,9 +7627,11 @@ input:checked + .slider:before {
   0% {
     top: calc(50% - 110px);
   }
+
   50% {
     top: calc(50% + 110px);
   }
+
   100% {
     top: calc(50% - 110px);
   }
@@ -7497,9 +7660,11 @@ input:checked + .slider:before {
     0% {
       top: calc(50% - 90px);
     }
+
     50% {
       top: calc(50% + 90px);
     }
+
     100% {
       top: calc(50% - 90px);
     }
@@ -7817,7 +7982,8 @@ input:checked + .slider:before {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
-  display: none; /* Hide on mobile, show on tablet+ */
+  display: none;
+  /* Hide on mobile, show on tablet+ */
 }
 
 @media (min-width: 768px) {
@@ -7873,7 +8039,8 @@ input:checked + .slider:before {
 
 @media (min-width: 768px) {
   .mobile-events-cards {
-    display: none; /* Hide on tablet and larger */
+    display: none;
+    /* Hide on tablet and larger */
   }
 }
 

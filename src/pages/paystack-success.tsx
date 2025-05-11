@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, collection, addDoc, updateDoc, getDocs } from "firebase/firestore"
-import { CheckCircle, XCircle, Share2 } from "lucide-react"
+import { CheckCircle, XCircle, Share2, Mail } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -20,6 +20,8 @@ const PaystackSuccess = () => {
   const [eventData, setEventData] = useState<any>(null)
   const [showShareOptions, setShowShareOptions] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailSending, setEmailSending] = useState(false)
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -51,7 +53,9 @@ const PaystackSuccess = () => {
         setEventData(paymentData)
 
         // Verify payment on the server
-        const response = await axios.get(`https://spotix-backend.onrender.com/api/payment/verify?reference=${reference}`)
+        const response = await axios.get(
+          `https://spotix-backend.onrender.com/api/payment/verify?reference=${reference}`,
+        )
         const data = response.data
 
         if (data.status && data.data && data.data.status === "success") {
@@ -164,6 +168,9 @@ const PaystackSuccess = () => {
             }
           }
 
+          // Send confirmation email
+          await sendConfirmationEmail(ticketId, ticketReference, userData, paymentData)
+
           setPaymentResult({
             success: true,
             message: "Payment successful",
@@ -198,6 +205,44 @@ const PaystackSuccess = () => {
 
     verifyPayment()
   }, [location, navigate])
+
+  // Send confirmation email
+  const sendConfirmationEmail = async (ticketId: string, ticketReference: string, userData: any, paymentData: any) => {
+    if (!paymentData) return
+
+    try {
+      setEmailSending(true)
+
+      const response = await fetch("https://spotix-backend.onrender.com/api/mail/payment-confirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          name: userData.fullName || userData.username || "Valued Customer",
+          ticket_ID: ticketId,
+          event_host: paymentData.bookerName || "Event Host",
+          event_name: paymentData.eventName,
+          payment_ref: ticketReference,
+          ticket_type: paymentData.ticketType,
+          booker_email: paymentData.bookerEmail || "support@spotix.com.ng",
+          ticket_price: paymentData.ticketPrice.toFixed(2),
+          payment_method: "Paystack",
+        }),
+      })
+
+      if (response.ok) {
+        setEmailSent(true)
+      } else {
+        console.error("Failed to send confirmation email")
+      }
+    } catch (error) {
+      console.error("Error sending confirmation email:", error)
+    } finally {
+      setEmailSending(false)
+    }
+  }
 
   const generateTicketId = () => {
     const randomNumbers = Math.floor(10000000 + Math.random() * 90000000).toString()
@@ -283,6 +328,13 @@ const PaystackSuccess = () => {
             <p className="text-center text-gray-700 mb-6">
               Congratulations! Your payment has been completed successfully. A receipt has been sent to your email.
             </p>
+
+            {emailSent && (
+              <div className="email-confirmation-message">
+                <Mail size={18} className="email-icon" />
+                <p>A confirmation email has been sent to your registered email address.</p>
+              </div>
+            )}
 
             <div className="ticket-preview">
               <div className="ticket-header">
