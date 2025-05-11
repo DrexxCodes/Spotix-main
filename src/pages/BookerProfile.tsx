@@ -25,7 +25,7 @@ interface BookerProfileData {
   totalRevenue: number
   joinDate: string
   isVerified: boolean
-  bvt?: string 
+  bvt?: string
 }
 
 const BookerProfile = () => {
@@ -204,7 +204,9 @@ const BookerProfile = () => {
             </div>
 
             <div className="profile-actions">
-              <button className="edit-profile-btn" onClick={() => navigate("/profile")}>Edit Profile</button>
+              <button className="edit-profile-btn" onClick={() => navigate("/profile")}>
+                Edit Profile
+              </button>
               <button className="change-password-btn">Change Password</button>
             </div>
           </div>
