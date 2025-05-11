@@ -5,8 +5,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { auth } from "../services/firebase"
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
-import { Eye, EyeOff, AlertCircle, Mail, Loader2 } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Eye, EyeOff, AlertCircle, Mail, Loader2, CheckCircle } from "lucide-react"
+import { useNavigate, useLocation } from "react-router-dom"
 import Preloader from "../components/preloader"
 
 const Login = () => {
@@ -20,7 +20,10 @@ const Login = () => {
   const [sendingVerification, setSendingVerification] = useState(false)
   const [verificationSent, setVerificationSent] = useState(false)
   const [unverifiedUser, setUnverifiedUser] = useState<any>(null)
+  const [verificationMessage, setVerificationMessage] = useState("")
+
   const navigate = useNavigate()
+  const location = useLocation()
 
   const words = ["Event", "Party", "Meeting", "Conference"]
 
@@ -40,6 +43,20 @@ const Login = () => {
     }, 2000)
     return () => clearInterval(interval)
   }, [])
+
+  // Check for verification message from signup
+  useEffect(() => {
+    if (location.state && location.state.verificationMessage) {
+      setVerificationMessage(location.state.verificationMessage)
+
+      // Clear the message after 10 seconds
+      const timer = setTimeout(() => {
+        setVerificationMessage("")
+      }, 10000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [location])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +102,7 @@ const Login = () => {
       await sendEmailVerification(unverifiedUser)
 
       // Also send our custom verification email
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/email-verification", {
+      const response = await fetch("/api/mail/email-verification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -93,7 +110,6 @@ const Login = () => {
         body: JSON.stringify({
           email: unverifiedUser.email,
           name: unverifiedUser.displayName || "Valued Customer",
-          action_url: `https://spotix.com.ng/verify-email?uid=${unverifiedUser.uid}`, // Fallback URL
         }),
       })
 
@@ -121,6 +137,13 @@ const Login = () => {
           <div className="auth-form">
             <img src="/logo.svg" alt="Logo" className="auth-logo" />
             <h2>Login</h2>
+
+            {verificationMessage && (
+              <div className="verification-message">
+                <CheckCircle size={16} className="verification-icon" />
+                <p>{verificationMessage}</p>
+              </div>
+            )}
 
             {error && (
               <div className="error-message">

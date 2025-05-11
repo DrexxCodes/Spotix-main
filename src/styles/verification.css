@@ -658,3 +658,55 @@
     width: 100% !important;
   }
   
+  /* Age verification styles */
+.age-error {
+  border-color: #ff4d4f !important;
+  background-color: #fff1f0 !important;
+}
+
+.age-requirement-note {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.age-error-section {
+  background-color: #fff1f0;
+  border: 1px solid #ff4d4f;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.age-error-message {
+  text-align: center;
+}
+
+.age-error-message h3 {
+  color: #ff4d4f;
+  margin-bottom: 12px;
+}
+
+.age-error-message p {
+  margin-bottom: 16px;
+}
+
+/* Phone number input styles */
+.phone-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.phone-input:focus {
+  border-color: #6b2fa5;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 47, 165, 0.2);
+}
+
+.phone-input::placeholder {
+  color: #aaa;
+}

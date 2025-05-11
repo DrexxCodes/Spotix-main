@@ -72,7 +72,7 @@ const BookerCTA = () => {
         </div>
 
         <div className={`booker-cta-image ${imageInView ? "animate-in" : ""}`} ref={imageRef}>
-          <img src="/Capture.JPG?height=500&width=500" alt="Booker Dashboard" />
+          <img src="/Capture.PNG?height=500&width=500" alt="Booker Dashboard" />
         </div>
       </div>
     </section>

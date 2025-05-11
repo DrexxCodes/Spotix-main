@@ -199,12 +199,12 @@ export default async function sendMailRoutes(fastify, options) {
   // Route for email verification
   fastify.post("/email-verification", async (request, reply) => {
     try {
-      const { email, name, action_url } = request.body
+      const { email, name } = request.body
 
-      if (!email || !name || !action_url) {
+      if (!email || !name) {
         return reply.code(400).send({
           success: false,
-          message: "Missing required fields: email, name, or action_url",
+          message: "Missing required fields: email or name",
         })
       }
 
@@ -226,7 +226,6 @@ export default async function sendMailRoutes(fastify, options) {
             email: email,
             data: {
               name: name,
-              action_url: action_url,
             },
           },
         ],

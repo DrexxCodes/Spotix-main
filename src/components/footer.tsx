@@ -53,7 +53,7 @@ const Footer = () => {
               <Link to="https://my.spotix.com.ng/terms">User Terms</Link>
             </li>
             <li>
-              <Link to="https://spotix.site">Spotix Anonymous</Link>
+              <Link to="https://anonymous.spotix.com.ng">Spotix Anonymous</Link>
             </li>
             <li>
               <Link to="https://spotix.tawk.help">Help Center</Link>

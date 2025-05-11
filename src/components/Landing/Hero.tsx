@@ -27,6 +27,9 @@ const Hero = () => {
     // Initialize the particle background
     initParticles()
 
+    // Add resize event listener
+    window.addEventListener("resize", handleResize)
+
     return () => {
       // Clean up any event listeners or animations
       window.removeEventListener("resize", handleResize)
@@ -47,9 +50,9 @@ const Hero = () => {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set canvas dimensions
+    // Set canvas dimensions to full viewport
     canvas.width = window.innerWidth
-    canvas.height = 600
+    canvas.height = window.innerHeight
 
     // Create particles
     const particles: Particle[] = []
@@ -91,26 +94,38 @@ const Hero = () => {
     }
 
     animate()
-
-    // Add resize listener
-    window.addEventListener("resize", handleResize)
   }
 
   return (
-    <section className="hero-section">
-      <canvas id="hero-particles" className="hero-particles"></canvas>
-      <div className="hero-content">
-        <h1 ref={titleRef} className="hero-title">
+    <section className="h-screen w-screen overflow-hidden relative bg-gradient-to-br from-[#6b2fa5] to-[#9b59b6] flex items-center justify-center">
+      <canvas id="hero-particles" className="absolute inset-0 w-full h-full z-0"></canvas>
+      <div className="hero-content relative z-10 text-center px-4 max-w-3xl mx-auto">
+        <h1
+          ref={titleRef}
+          className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 opacity-0 transform translate-y-8 transition-all duration-800 ease-out"
+        >
           Discover & Book Amazing Events
         </h1>
-        <p ref={subtitleRef} className="hero-subtitle">
+        <p
+          ref={subtitleRef}
+          className="hero-subtitle text-lg md:text-xl text-white mb-10 opacity-0 transform translate-y-8 transition-all duration-800 ease-out mx-auto"
+        >
           Your one-stop platform for finding and booking tickets to the most exciting events
         </p>
-        <div ref={ctaRef} className="hero-cta">
-          <Link to="/home" className="hero-button primary">
+        <div
+          ref={ctaRef}
+          className="flex flex-col sm:flex-row justify-center gap-4 opacity-0 transform translate-y-8 transition-all duration-800 ease-out"
+        >
+          <Link
+            to="/home"
+            className="hero-button bg-white text-[#6b2fa5] hover:bg-opacity-90 px-10 py-4 min-w-[180px] rounded-full text-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
+          >
             Get Started
           </Link>
-          <Link to="/createevent" className="hero-button secondary">
+          <Link
+            to="/createevent"
+            className="hero-button bg-transparent border-2 border-white text-white hover:bg-white hover:bg-opacity-10 hover:text-[#6b2fa5] px-10 py-4 min-w-[180px] rounded-full text-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
+          >
             Create Events
           </Link>
         </div>
@@ -130,4 +145,3 @@ interface Particle {
 }
 
 export default Hero
-

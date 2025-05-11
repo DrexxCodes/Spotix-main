@@ -10,8 +10,6 @@ import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
-// import "../styles/profile.css"
-import { Check, Copy } from 'lucide-react'
 
 interface UserProfile {
   uid: string
@@ -72,7 +70,9 @@ const Profile = () => {
   const [accountVerificationLoading, setAccountVerificationLoading] = useState(false)
   const [accountVerificationError, setAccountVerificationError] = useState<string | null>(null)
   const [accountVerifiedName, setAccountVerifiedName] = useState("")
-  const [accountVerificationStatus, setAccountVerificationStatus] = useState<"pending" | "verified" | "failed">("pending")
+  const [accountVerificationStatus, setAccountVerificationStatus] = useState<"pending" | "verified" | "failed">(
+    "pending",
+  )
 
   const banks = [
     "Opay",
@@ -148,6 +148,15 @@ const Profile = () => {
 
     checkAuth()
   }, [navigate])
+
+  // Check for existing verified account details
+  useEffect(() => {
+    if (user && user.accountName && user.accountNumber && user.bankName) {
+      // If all account details are present, assume they were verified
+      setAccountVerifiedName(user.accountName)
+      setAccountVerificationStatus("verified")
+    }
+  }, [user])
 
   // Reset copy success message after 3 seconds
   useEffect(() => {
@@ -270,39 +279,9 @@ const Profile = () => {
   }
 
   const handleBookerStatusClick = () => {
-    if (user?.isBooker) {
-      // Show confirmation dialog if user is already a booker
-      setShowDialog(true)
-    } else {
-      // Redirect to booker confirmation page
+    // Only allow becoming a booker, not returning to user
+    if (!user?.isBooker) {
       navigate("/booker-confirm")
-    }
-  }
-
-  const toggleBookerStatus = async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      // Update user profile in Firestore
-      const userDocRef = doc(db, "users", user.uid)
-      await updateDoc(userDocRef, {
-        isBooker: !user.isBooker,
-      })
-
-      // Update local state
-      setUser({
-        ...user,
-        isBooker: !user.isBooker,
-      })
-
-      alert("You are now a regular user.")
-    } catch (error) {
-      console.error("Error toggling booker status:", error)
-      alert("Failed to update booker status. Please try again.")
-    } finally {
-      setLoading(false)
-      setShowDialog(false)
     }
   }
 
@@ -349,56 +328,58 @@ const Profile = () => {
   }
 
   const handleAccountNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); // Allow only numbers and limit to 10 characters
+    const value = e.target.value.replace(/[^0-9]/g, "").slice(0, 10) // Allow only numbers and limit to 10 characters
     if (user) {
       setUser({
         ...user,
         accountNumber: value,
-      });
+      })
     }
-  };
+  }
 
   const verifyAccount = async () => {
     if (!user?.accountNumber || !user.bankName) {
-      setAccountVerificationError("Please enter both account number and bank name.");
-      return;
+      setAccountVerificationError("Please enter both account number and bank name.")
+      return
     }
 
-    setAccountVerificationLoading(true);
-    setAccountVerificationError(null);
-    setAccountVerifiedName("");
-    setAccountVerificationStatus("pending");
+    setAccountVerificationLoading(true)
+    setAccountVerificationError(null)
+    setAccountVerifiedName("")
+    setAccountVerificationStatus("pending")
 
     try {
-      const response = await fetch(`https://spotix-backend.onrender.com/api/verify?accountNumber=${user.accountNumber}&bankName=${user.bankName}`);
+      const response = await fetch(
+        `https://spotix-backend.onrender.com/api/verify?accountNumber=${user.accountNumber}&bankName=${user.bankName}`,
+      )
       if (!response.ok) {
-        throw new Error(`Verification failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Verification failed: ${response.status} ${response.statusText}`)
       }
-      const data = await response.json();
+      const data = await response.json()
 
       if (data.status === true) {
-        setAccountVerifiedName(data.account_name);
-        setAccountVerificationStatus("verified");
+        setAccountVerifiedName(data.account_name)
+        setAccountVerificationStatus("verified")
         setUser({
           ...user,
           accountName: data.account_name,
-        });
+        })
       } else {
-        setAccountVerificationError(data.message || "Account verification failed.");
-        setAccountVerificationStatus("failed");
+        setAccountVerificationError(data.message || "Account verification failed.")
+        setAccountVerificationStatus("failed")
       }
     } catch (error) {
-      console.error("Error verifying account:", error);
-      setAccountVerificationError("Failed to verify account. Please try again.");
-      setAccountVerificationStatus("failed");
+      console.error("Error verifying account:", error)
+      setAccountVerificationError("Failed to verify account. Please try again.")
+      setAccountVerificationStatus("failed")
     } finally {
-      setAccountVerificationLoading(false);
+      setAccountVerificationLoading(false)
     }
-  };
+  }
 
   const canSubmitForm = () => {
-    return accountVerificationStatus === "verified" && user?.accountNumber && user?.bankName && user?.accountName;
-  };
+    return accountVerificationStatus === "verified" && user?.accountNumber && user?.bankName && user?.accountName
+  }
 
   if (loading || !user) {
     return <Preloader loading={loading} />
@@ -473,8 +454,10 @@ const Profile = () => {
                 onChange={handleBankInputChange}
                 placeholder="Enter bank name"
                 autoComplete="off"
+                disabled={accountVerificationStatus === "verified"}
+                className={accountVerificationStatus === "verified" ? "readonly-input" : ""}
               />
-              {showBankSuggestions && filteredBanks.length > 0 && (
+              {showBankSuggestions && filteredBanks.length > 0 && accountVerificationStatus !== "verified" && (
                 <div className="bank-suggestions">
                   {filteredBanks.map((bank, index) => (
                     <div key={index} className="bank-suggestion-item" onClick={() => selectBank(bank)}>
@@ -495,7 +478,14 @@ const Profile = () => {
               onChange={handleAccountNumberChange}
               placeholder="Enter account number"
               maxLength={10}
+              disabled={accountVerificationStatus === "verified"}
+              className={accountVerificationStatus === "verified" ? "readonly-input" : ""}
             />
+            {user.accountNumber && user.accountNumber.length < 10 && accountVerificationStatus !== "verified" && (
+              <p className="input-hint" style={inputHintStyle}>
+                Account number must be exactly 10 digits
+              </p>
+            )}
           </div>
 
           <div className="form-group">
@@ -504,28 +494,59 @@ const Profile = () => {
               <input
                 type="text"
                 id="accountName"
-                value={accountVerifiedName}
+                value={accountVerifiedName || user.accountName}
                 readOnly
                 placeholder="Verify account to populate name"
                 style={{ flex: 1, marginRight: "10px" }}
+                className="readonly-input"
               />
-              <button
-                type="button"
-                onClick={verifyAccount}
-                disabled={!user.accountNumber || !user.bankName || accountVerificationLoading}
-                style={{
-                  padding: "8px 12px",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                {accountVerificationLoading ? "Verifying..." : "Verify"}
-              </button>
+              {accountVerificationStatus !== "verified" && (
+                <button
+                  type="button"
+                  onClick={verifyAccount}
+                  disabled={
+                    !user.accountNumber ||
+                    !user.bankName ||
+                    accountVerificationLoading ||
+                    user.accountNumber.length !== 10
+                  }
+                  style={{
+                    padding: "8px 12px",
+                    backgroundColor: "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: user.accountNumber?.length === 10 ? "pointer" : "not-allowed",
+                    opacity: user.accountNumber?.length === 10 ? 1 : 0.7,
+                  }}
+                >
+                  {accountVerificationLoading ? "Verifying..." : "Verify"}
+                </button>
+              )}
             </div>
             {accountVerificationError && <p style={{ color: "red" }}>{accountVerificationError}</p>}
+            {accountVerificationStatus === "verified" && (
+              <p style={{ color: "green", marginTop: "5px" }}>
+                <span style={{ display: "inline-flex", alignItems: "center" }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ marginRight: "5px" }}
+                  >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Account verified
+                </span>
+              </p>
+            )}
           </div>
         </div>
 
@@ -559,16 +580,14 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Booker Status Section */}
-        <div className="form-section">
-          <button
-            type="button"
-            className={`booker-btn ${user.isBooker ? "return-btn" : ""}`}
-            onClick={handleBookerStatusClick}
-          >
-            {user.isBooker ? "Return to User" : "Become Booker"}
-          </button>
-        </div>
+        {/* Booker Status Section - Only show "Become Booker" button if not already a booker */}
+        {!user.isBooker && (
+          <div className="form-section">
+            <button type="button" className="booker-btn" onClick={handleBookerStatusClick}>
+              Become Booker
+            </button>
+          </div>
+        )}
 
         {/* Save Button */}
         <button type="submit" className="save-btn" disabled={uploadingImage || !canSubmitForm()}>
@@ -579,16 +598,17 @@ const Profile = () => {
         <LogoutBtn onClick={handleLogout} />
       </form>
 
-      {/* Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showDialog}
-        message="Dear booker, if you proceed with this, you will lose access to your events, but we will keep your data as stated in the booker's terms of service. Also remember that you can only receive payouts as a booker."
-        onConfirm={toggleBookerStatus}
-        onCancel={() => setShowDialog(false)}
-      />
       <Footer />
     </div>
   )
+}
+
+// Add this style at the end of the file or in your CSS
+const inputHintStyle = {
+  fontSize: "12px",
+  color: "#ff9800",
+  marginTop: "4px",
+  marginBottom: "0",
 }
 
 export default Profile

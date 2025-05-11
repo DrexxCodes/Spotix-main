@@ -1,3 +1,14 @@
+/* Age verification styles */
+.age-error-message {
+  color: #ff4d4f;
+  font-size: 14px;
+  margin-top: 4px;
+  background-color: #fff1f0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid #ff4d4f;
+}
+
 /* Booker confirmation success message */
 .email-confirmation-message {
   background-color: #e6f7ff;
@@ -17,4 +28,10 @@
 .email-confirmation-message p {
   margin: 0;
   color: #333;
+}
+
+/* Disabled button styles */
+.activate-booker-btn:disabled {
+  background-color: #d9d9d9;
+  cursor: not-allowed;
 }

@@ -46,6 +46,16 @@ const BookerDashboard = () => {
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([])
   const [bookerName, setBookerName] = useState("")
 
+  // Format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
+
+  // Format currency with commas
+  const formatCurrency = (amount: number): string => {
+    return `₦${formatNumber(Number.parseFloat(amount.toFixed(2)))}`
+  }
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -229,7 +239,7 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Total Events</h3>
-                <p className="stat-value">{stats.totalEvents}</p>
+                <p className="stat-value">{formatNumber(stats.totalEvents)}</p>
               </div>
             </div>
             <div className="stat-card">
@@ -238,7 +248,7 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Active Events</h3>
-                <p className="stat-value">{stats.activeEvents}</p>
+                <p className="stat-value">{formatNumber(stats.activeEvents)}</p>
               </div>
             </div>
             <div className="stat-card">
@@ -247,7 +257,7 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Past Events</h3>
-                <p className="stat-value">{stats.pastEvents}</p>
+                <p className="stat-value">{formatNumber(stats.pastEvents)}</p>
               </div>
             </div>
             <div className="stat-card">
@@ -256,7 +266,7 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Total Revenue</h3>
-                <p className="stat-value">₦{stats.totalRevenue.toFixed(2)}</p>
+                <p className="stat-value">{formatCurrency(stats.totalRevenue)}</p>
               </div>
             </div>
             <div className="stat-card highlight">
@@ -265,7 +275,7 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Available Balance</h3>
-                <p className="stat-value">₦{stats.availableBalance.toFixed(2)}</p>
+                <p className="stat-value">{formatCurrency(stats.availableBalance)}</p>
               </div>
             </div>
             <div className="stat-card">
@@ -274,7 +284,7 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Total Paid Out</h3>
-                <p className="stat-value">₦{stats.totalPaidOut.toFixed(2)}</p>
+                <p className="stat-value">{formatCurrency(stats.totalPaidOut)}</p>
               </div>
             </div>
             <div className="stat-card">
@@ -283,7 +293,16 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Tickets Sold</h3>
-                <p className="stat-value">{stats.totalTicketsSold}</p>
+                <p className="stat-value">{formatNumber(stats.totalTicketsSold)}</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <User size={20} />
+              </div>
+              <div className="stat-content">
+                <h3>Account State</h3>
+                <p className="stat-value"><span>Active</span></p>
               </div>
             </div>
           </div>
@@ -318,13 +337,13 @@ const BookerDashboard = () => {
                           {new Date(event.eventDate).toLocaleDateString()}
                         </td>
                         <td data-label="Tickets" className="hide-md">
-                          {event.ticketsSold}
+                          {formatNumber(event.ticketsSold)}
                         </td>
                         <td data-label="Revenue" className="hide-md">
-                          ₦{event.revenue.toFixed(2)}
+                          {formatCurrency(event.revenue)}
                         </td>
                         <td data-label="Balance" className="hide-sm">
-                          ₦{event.availableBalance.toFixed(2)}
+                          {formatCurrency(event.availableBalance)}
                         </td>
                         <td data-label="Status">
                           <span className={`status-badge status-${event.status}`}>
@@ -367,15 +386,15 @@ const BookerDashboard = () => {
                       </div>
                       <div className="mobile-event-detail">
                         <span className="detail-label">Tickets:</span>
-                        <span className="detail-value">{event.ticketsSold}</span>
+                        <span className="detail-value">{formatNumber(event.ticketsSold)}</span>
                       </div>
                       <div className="mobile-event-detail">
                         <span className="detail-label">Revenue:</span>
-                        <span className="detail-value">₦{event.revenue.toFixed(2)}</span>
+                        <span className="detail-value">{formatCurrency(event.revenue)}</span>
                       </div>
                       <div className="mobile-event-detail">
                         <span className="detail-label">Balance:</span>
-                        <span className="detail-value">₦{event.availableBalance.toFixed(2)}</span>
+                        <span className="detail-value">{formatCurrency(event.availableBalance)}</span>
                       </div>
                     </div>
                     <button className="mobile-view-button" onClick={() => handleViewEvent(event.id)}>

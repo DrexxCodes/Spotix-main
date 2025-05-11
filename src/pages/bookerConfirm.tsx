@@ -10,7 +10,7 @@ import Preloader from "../components/preloader"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import { Tooltip } from "../components/Tooltip"
-import "../styles/confirm.css"
+// import "../styles/confirm.css"
 
 interface UserProfile {
   uid: string
@@ -42,7 +42,16 @@ const BookerConfirm = () => {
   const [consentChecked, setConsentChecked] = useState(false)
   const [profilePictureError, setProfilePictureError] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [ageError, setAgeError] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  // Calculate the maximum date of birth (18 years ago from today)
+  const getMaxDateOfBirth = () => {
+    const today = new Date()
+    const eighteenYearsAgo = new Date(today)
+    eighteenYearsAgo.setFullYear(today.getFullYear() - 18)
+    return eighteenYearsAgo.toISOString().split("T")[0]
+  }
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -112,6 +121,24 @@ const BookerConfirm = () => {
       ...prev,
       [name]: value,
     }))
+
+    // Check age when date of birth changes
+    if (name === "dateOfBirth") {
+      const birthDate = new Date(value)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+
+      if (age < 18) {
+        setAgeError("You must be at least 18 years old to become a booker.")
+      } else {
+        setAgeError(null)
+      }
+    }
   }
 
   const handleConsentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +147,7 @@ const BookerConfirm = () => {
 
   const sendConfirmationEmail = async (name: string, email: string) => {
     try {
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/booker-confirmation", {
+      const response = await fetch("/api/mail/booker-confirmation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,6 +174,11 @@ const BookerConfirm = () => {
 
     if (profilePictureError) {
       alert("Please add a profile picture before becoming a booker.")
+      return
+    }
+
+    if (ageError) {
+      alert(ageError)
       return
     }
 
@@ -261,15 +293,17 @@ const BookerConfirm = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="dateOfBirth">Date of Birth</label>
+              <label htmlFor="dateOfBirth">Date of Birth (Must be 18 or older)</label>
               <input
                 type="date"
                 id="dateOfBirth"
                 name="dateOfBirth"
                 value={bookerData.dateOfBirth}
                 onChange={handleInputChange}
+                max={getMaxDateOfBirth()}
                 required
               />
+              {ageError && <div className="age-error-message">{ageError}</div>}
             </div>
 
             <div className="form-group">
@@ -361,7 +395,7 @@ const BookerConfirm = () => {
               </label>
             </div>
 
-            {consentChecked && (
+            {consentChecked && !ageError && (
               <button type="submit" className="activate-booker-btn">
                 Activate Booker
               </button>

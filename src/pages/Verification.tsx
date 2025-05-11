@@ -45,6 +45,8 @@ const Verification = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [userData, setUserData] = useState<UserData | null>(null)
+  const [phoneNumber, setPhoneNumber] = useState("")
+  const [ageError, setAgeError] = useState<string | null>(null)
   const [verificationData, setVerificationData] = useState<VerificationData>({
     nin: { status: "pending", dateUploaded: "", timeUploaded: "", fileUrl: "" },
     selfie: { status: "pending", dateUploaded: "", timeUploaded: "", fileUrl: "" },
@@ -94,7 +96,15 @@ const Verification = () => {
             return
           }
 
-          setUserData({
+          // Check if user is at least 18 years old
+          if (data.dateOfBirth) {
+            const age = calculateAge(data.dateOfBirth)
+            if (Number.parseInt(age) < 18) {
+              setAgeError("You must be at least 18 years old to be verified as a booker.")
+            }
+          }
+
+          const userData = {
             uid: user.uid,
             username: data.username || "",
             email: data.email || "",
@@ -105,7 +115,10 @@ const Verification = () => {
             accountNumber: data.accountNumber || "",
             bankName: data.bankName || "",
             isVerified: data.isVerified || false,
-          })
+          }
+
+          setUserData(userData)
+          setPhoneNumber(userData.phoneNumber || "")
 
           // Get verification data from Firestore
           const verificationQuery = query(collection(db, "verification"), where("uid", "==", user.uid))
@@ -155,15 +168,25 @@ const Verification = () => {
       verificationData.proofOfAddress.status === "completed"
 
     const addressFilled = verificationData.address.trim() !== ""
+    const phoneNumberFilled = phoneNumber.trim() !== ""
+    const noAgeError = !ageError
 
-    setAllRequirementsMet(allDocumentsUploaded && addressFilled && verificationId !== "")
-  }, [verificationData, verificationId])
+    setAllRequirementsMet(
+      allDocumentsUploaded && addressFilled && phoneNumberFilled && verificationId !== "" && noAgeError,
+    )
+  }, [verificationData, verificationId, phoneNumber, ageError])
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setVerificationData({
       ...verificationData,
       address: e.target.value,
     })
+  }
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow only numbers and limit to 11 characters for Nigerian phone numbers
+    const value = e.target.value.replace(/[^0-9]/g, "").slice(0, 11)
+    setPhoneNumber(value)
   }
 
   const handleVerificationIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,7 +275,6 @@ const Verification = () => {
         },
       }
 
-
       // Check if all documents are uploaded and address is filled
       const allDocumentsUploaded =
         updatedVerificationData.nin.status === "completed" &&
@@ -273,7 +295,6 @@ const Verification = () => {
         setShowUploadDialog(null)
         setUploadProgress({ ...uploadProgress, [documentType]: 0 })
       }, 1000)
-
     } catch (error) {
       console.error("Error uploading file:", error)
       alert("Failed to upload file. Please try again.")
@@ -329,8 +350,22 @@ const Verification = () => {
   const saveVerification = async () => {
     if (!userData) return
 
+    // Check if user is at least 18 years old
+    if (ageError) {
+      alert(ageError)
+      return
+    }
+
     try {
       setLoading(true)
+
+      // Update phone number in user document
+      if (phoneNumber !== userData.phoneNumber) {
+        const userDocRef = doc(db, "users", userData.uid)
+        await updateDoc(userDocRef, {
+          phoneNumber: phoneNumber,
+        })
+      }
 
       // Save verification data to Firestore
       await saveVerificationToFirestore(verificationData)
@@ -388,6 +423,19 @@ const Verification = () => {
           </p>
         </div>
 
+        {ageError && (
+          <div className="verification-section age-error-section">
+            <div className="age-error-message">
+              <h3>Age Verification Failed</h3>
+              <p>{ageError}</p>
+              <p>You must be at least 18 years old to be verified as a booker on Spotix.</p>
+              <button className="cancel-button" onClick={() => navigate("/bookerprofile")}>
+                Return to Profile
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="verification-section">
           <h2>Personal Information</h2>
           <div className="form-grid">
@@ -401,7 +449,14 @@ const Verification = () => {
             </div>
             <div className="form-group">
               <label>Phone Number</label>
-              <input type="text" value={userData.phoneNumber} readOnly className="readonly-input" />
+              <input
+                type="text"
+                value={phoneNumber}
+                onChange={handlePhoneNumberChange}
+                placeholder="Enter your phone number"
+                className="phone-input"
+                maxLength={11}
+              />
             </div>
             <div className="form-group">
               <label>Age</label>
@@ -409,8 +464,11 @@ const Verification = () => {
                 type="text"
                 value={userData.dateOfBirth ? calculateAge(userData.dateOfBirth) : "Not provided"}
                 readOnly
-                className="readonly-input"
+                className={`readonly-input ${Number.parseInt(calculateAge(userData.dateOfBirth)) < 18 ? "age-error" : ""}`}
               />
+              {Number.parseInt(calculateAge(userData.dateOfBirth)) < 18 && (
+                <p className="age-requirement-note">Must be at least 18 years old</p>
+              )}
             </div>
             <div className="form-group verification-id-group">
               <label>Verification ID</label>
@@ -577,7 +635,7 @@ const Verification = () => {
         )}
 
         <div className="verification-actions">
-          <button className="save-button" onClick={saveVerification}>
+          <button className="save-button" onClick={saveVerification} disabled={!!ageError}>
             Save Verification
           </button>
           <button className="cancel-button" onClick={() => navigate("/bookerprofile")}>

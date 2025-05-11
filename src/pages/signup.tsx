@@ -52,11 +52,7 @@ const Signup = () => {
       // First, get the verification URL from Firebase
       await sendEmailVerification(user)
 
-      // Then send our custom email with the verification URL
-      // Note: We need to extract the action URL from Firebase's email
-      // Since we can't directly access the verification URL, we'll use Firebase's built-in mechanism
-      // and inform the user that they'll receive two emails (one from Firebase and one from our system)
-
+      // Then send our custom welcome email
       const response = await fetch("/api/mail/email-verification", {
         method: "POST",
         headers: {
@@ -65,7 +61,6 @@ const Signup = () => {
         body: JSON.stringify({
           email: user.email,
           name: userName,
-          action_url: `https://spotix.com.ng/verify-email?uid=${user.uid}`, // This is a fallback URL
         }),
       })
 
@@ -113,15 +108,7 @@ const Signup = () => {
       })
 
       // Send email verification using our custom function
-      const emailSent = await sendVerificationEmail(user, fullName || username)
-
-      if (emailSent) {
-        setSuccess("Account created successfully! Please check your email to verify your account before logging in.")
-      } else {
-        setSuccess(
-          "Account created, but we couldn't send a verification email. Please try to resend the verification email from the login page.",
-        )
-      }
+      await sendVerificationEmail(user, fullName || username)
 
       // Clear form
       setEmail("")
@@ -131,10 +118,13 @@ const Signup = () => {
       setUsername("")
       setReferral("")
 
-      // Redirect to login after 5 seconds
-      setTimeout(() => {
-        navigate("/login")
-      }, 5000)
+      // Redirect to login with verification message
+      navigate("/login", {
+        state: {
+          verificationMessage:
+            "We have sent you an email to verify your account. Please check your inbox and verify your email before logging in.",
+        },
+      })
     } catch (err: any) {
       console.error("Signup error:", err)
       if (err.code === "auth/email-already-in-use") {
@@ -144,9 +134,8 @@ const Signup = () => {
       } else {
         setError("Failed to create an account. Please try again later.")
       }
+      setSigningUp(false)
     }
-
-    setSigningUp(false)
   }
 
   return (

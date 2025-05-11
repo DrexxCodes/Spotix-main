@@ -26,7 +26,7 @@ const Navbar = () => {
       <div className="nav-container">
         <div className="nav-logo">
           <a href="/"><img src="/logo.svg" alt="Spotix Logo" className="nav-logo-img" /></a>
-          <span className="nav-logo-text"><a href="/">SPOTIX</a></span>
+          <span className="nav-logo-text"><a href="/">Spotix</a></span>
         </div>
 
         <div className="nav-links-desktop">
@@ -36,15 +36,15 @@ const Navbar = () => {
           <a href="#features" className="nav-link">
             Features
           </a>
-          <a href="#events" className="nav-link">
+          {/* <a href="#events" className="nav-link">
             Events
-          </a>
+          </a> */}
           <a href="#creators" className="nav-link">
             Creators
           </a>
-          <a href="#testimonials" className="nav-link">
+          {/* <a href="#testimonials" className="nav-link">
             Testimonials
-          </a>
+          </a> */}
           <Link to="/login" className="nav-link-button">
             Login
           </Link>
