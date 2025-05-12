@@ -24,63 +24,63 @@ const Events = () => {
 
   const featuredEvents = [
     {
-      id: "event1",
-      title: "Tech Conference 2023",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/cloudinary-group.jpg?height=400&width=600",
-      date: "November 15, 2023",
-      location: "San Francisco, CA",
-      type: "Conference",
+      id: "https://www.spotix.com.ng/event/oNUFwQ5pcwUee7pU45FJOC2TmiI3/5YPAcaetwwR0RtGD47bp",
+      title: "FOSSSA Welcome Party",
+      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1747052755/Events/NNAMDI_AZIKIWE_UNIVERSITY_1080_x_1280_px_cbgf8y.jpg?height=400&width=600",
+      date: "Saturday, May 24, 2025",
+      location: "Wintess Lounge",
+      type: "Night Party",
       price: "Paid",
     },
-    {
-      id: "event2",
-      title: "Summer Music Festival",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/landscapes/beach-boat.jpg?height=400&width=600",
-      date: "July 10, 2023",
-      location: "Austin, TX",
-      type: "Festival",
-      price: "Paid",
-    },
-    {
-      id: "event3",
-      title: "Business Summit",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/imagecon-group.jpg?height=400&width=600",
-      date: "September 5, 2023",
-      location: "New York, NY",
-      type: "Summit",
-      price: "Free",
-    },
+    // {
+    //   id: "event2",
+    //   title: "Summer Music Festival",
+    //   image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/landscapes/beach-boat.jpg?height=400&width=600",
+    //   date: "July 10, 2023",
+    //   location: "Austin, TX",
+    //   type: "Festival",
+    //   price: "Paid",
+    // },
+    // {
+    //   id: "event3",
+    //   title: "Business Summit",
+    //   image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/imagecon-group.jpg?height=400&width=600",
+    //   date: "September 5, 2023",
+    //   location: "New York, NY",
+    //   type: "Summit",
+    //   price: "Free",
+    // },
   ]
 
   const upcomingEvents = [
     {
-      id: "event4",
-      title: "Charity Gala",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/food/spices.jpg?height=200&width=300",
-      date: "December 12, 2023",
-      type: "Gala",
+      id: "https://www.spotix.com.ng/event/oNUFwQ5pcwUee7pU45FJOC2TmiI3/5YPAcaetwwR0RtGD47bp",
+      title: "FOSSSA Welcome Party",
+      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1747052755/Events/NNAMDI_AZIKIWE_UNIVERSITY_1080_x_1280_px_cbgf8y.jpg?height=200&width=300",
+      date: "May 24, 2025",
+      type: "Night Party",
     },
-    {
-      id: "event5",
-      title: "Art Exhibition",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/ecommerce/accessories-bag.jpg?height=200&width=300",
-      date: "October 20, 2023",
-      type: "Exhibition",
-    },
-    {
-      id: "event6",
-      title: "Comedy Night",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/people/bicycle.jpg?height=200&width=300",
-      date: "November 5, 2023",
-      type: "Entertainment",
-    },
-    {
-      id: "event7",
-      title: "Startup Pitch Day",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/ecommerce/leather-bag-gray.jpg?height=200&width=300",
-      date: "October 15, 2023",
-      type: "Business",
-    },
+    // {
+    //   id: "event5",
+    //   title: "Art Exhibition",
+    //   image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/ecommerce/accessories-bag.jpg?height=200&width=300",
+    //   date: "October 20, 2023",
+    //   type: "Exhibition",
+    // },
+    // {
+    //   id: "event6",
+    //   title: "Comedy Night",
+    //   image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/people/bicycle.jpg?height=200&width=300",
+    //   date: "November 5, 2023",
+    //   type: "Entertainment",
+    // },
+    // {
+    //   id: "event7",
+    //   title: "Startup Pitch Day",
+    //   image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1743425237/samples/ecommerce/leather-bag-gray.jpg?height=200&width=300",
+    //   date: "October 15, 2023",
+    //   type: "Business",
+    // },
   ]
 
   const upcomingEventsRefs = useRef<Array<HTMLAnchorElement | null>>(upcomingEvents.map(() => null))
@@ -143,7 +143,7 @@ const Events = () => {
                 <div className="featured-event-price">
                   <span className={event.price === "Free" ? "free" : "paid"}>{event.price}</span>
                 </div>
-                <Link to={`/event/${event.id}`} className="featured-event-button">
+                <Link to={`${event.id}`} className="featured-event-button">
                   View Details
                 </Link>
               </div>
@@ -166,7 +166,7 @@ const Events = () => {
           {upcomingEvents.map((event, index) => {
             return (
               <Link
-                to={`/event/${event.id}`}
+                to={`${event.id}`}
                 key={event.id}
                 className={`upcoming-event-card ${upcomingEventsInView[index] ? "animate-in" : ""}`}
                 ref={(el) => {
@@ -195,7 +195,7 @@ const Events = () => {
         </div>
 
         <div className="view-all-container">
-          <Link to="/events" className="view-all-button">
+          <Link to="/home" className="view-all-button">
             View All Events
           </Link>
         </div>

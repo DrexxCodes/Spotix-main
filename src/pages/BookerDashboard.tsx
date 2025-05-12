@@ -1,13 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { collection, getDocs, doc, getDoc } from "firebase/firestore"
 import Footer from "../components/footer"
-import Preloader from "../components/preloader"
-import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock } from "lucide-react"
+import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock, RefreshCw } from "lucide-react"
 import BookersHeader from "../components/BookersHeader"
+import {
+  CACHE_KEYS,
+  isCacheExpired,
+  cacheDashboardData,
+  getCachedDashboardData,
+  shouldBackgroundRefresh,
+} from "../utils/cacheUtils"
 import "../booker-dashboard-override.css"
 // import "../styles/dashboard.css"
 
@@ -31,159 +37,257 @@ interface RecentEvent {
   status: string
 }
 
+interface DashboardData {
+  stats: DashboardStats
+  recentEvents: RecentEvent[]
+  bookerName: string
+  lastUpdated: number
+}
+
+const initialStats: DashboardStats = {
+  totalEvents: 0,
+  activeEvents: 0,
+  pastEvents: 0,
+  totalRevenue: 0,
+  availableBalance: 0,
+  totalPaidOut: 0,
+  totalTicketsSold: 0,
+}
+
 const BookerDashboard = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<DashboardStats>({
-    totalEvents: 0,
-    activeEvents: 0,
-    pastEvents: 0,
-    totalRevenue: 0,
-    availableBalance: 0,
-    totalPaidOut: 0,
-    totalTicketsSold: 0,
-  })
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [stats, setStats] = useState<DashboardStats>(initialStats)
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([])
   const [bookerName, setBookerName] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
-  // Format number with commas
-  const formatNumber = (num: number): string => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  }
+  // Format number with commas - memoized for performance
+  const formatNumber = useMemo(() => {
+    return (num: number): string => {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    }
+  }, [])
 
-  // Format currency with commas
-  const formatCurrency = (amount: number): string => {
-    return `₦${formatNumber(Number.parseFloat(amount.toFixed(2)))}`
-  }
+  // Format currency with commas - memoized for performance
+  const formatCurrency = useMemo(() => {
+    return (amount: number): string => {
+      return `₦${formatNumber(Number.parseFloat(amount.toFixed(2)))}`
+    }
+  }, [formatNumber])
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const user = auth.currentUser
-        if (!user) return
+  // Fetch dashboard data function - extracted as a callback to be reusable
+  const fetchDashboardData = useCallback(async (forceRefresh = false): Promise<DashboardData | null> => {
+    try {
+      const user = auth.currentUser
+      if (!user) {
+        setError("User not authenticated")
+        return null
+      }
 
-        // Get user data
-        const userDocRef = doc(db, "users", user.uid)
-        const userDoc = await getDoc(userDocRef)
-        if (userDoc.exists()) {
-          const userData = userDoc.data()
-          setBookerName(userData.username || userData.fullName || "Booker")
+      // Check cache first if not forcing refresh
+      if (!forceRefresh) {
+        const cachedData = getCachedDashboardData()
+        if (cachedData) {
+          return cachedData
+        }
+      }
+
+      // Get user data
+      const userDocRef = doc(db, "users", user.uid)
+      const userDoc = await getDoc(userDocRef)
+      let userName = "Booker"
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+        userName = userData.username || userData.fullName || "Booker"
+      }
+
+      // Fetch events from the user's events collection
+      const eventsCollectionRef = collection(db, "events", user.uid, "userEvents")
+      const eventsSnapshot = await getDocs(eventsCollectionRef)
+
+      const totalEvents = eventsSnapshot.size
+      let activeEvents = 0
+      let pastEvents = 0
+      let totalRevenue = 0
+      let totalPaidOut = 0
+      let totalAvailableBalance = 0
+      let totalTicketsSold = 0
+
+      const recentEventsData: RecentEvent[] = []
+      const eventPromises: Promise<void>[] = []
+
+      for (const eventDoc of eventsSnapshot.docs) {
+        const eventData = eventDoc.data()
+        const eventDate = new Date(eventData.eventDate)
+        const isPast = eventDate < new Date()
+
+        // Update counters
+        if (isPast) {
+          pastEvents++
+        } else {
+          activeEvents++
         }
 
-        // Fetch events from the user's events collection
-        const eventsCollectionRef = collection(db, "events", user.uid, "userEvents")
-        const eventsSnapshot = await getDocs(eventsCollectionRef)
+        const eventRevenue = eventData.totalRevenue || 0
+        totalRevenue += eventRevenue
+        totalTicketsSold += eventData.ticketsSold || 0
 
-        const totalEvents = eventsSnapshot.size
-        let activeEvents = 0
-        let pastEvents = 0
-        let totalRevenue = 0
-        let totalPaidOut = 0
-        let totalAvailableBalance = 0
-        let totalTicketsSold = 0
+        // Use stored financial data if available
+        if (eventData.totalPaidOut !== undefined) {
+          totalPaidOut += eventData.totalPaidOut
+        }
 
-        const recentEventsData: RecentEvent[] = []
-        const eventPromises: Promise<void>[] = []
+        if (eventData.availableRevenue !== undefined) {
+          totalAvailableBalance += eventData.availableRevenue
 
-        for (const eventDoc of eventsSnapshot.docs) {
-          const eventData = eventDoc.data()
-          const eventDate = new Date(eventData.eventDate)
-          const isPast = eventDate < new Date()
+          // Add to recent events with stored values
+          recentEventsData.push({
+            id: eventDoc.id,
+            eventName: eventData.eventName || "Unnamed Event",
+            eventDate: eventData.eventDate || new Date().toISOString(),
+            ticketsSold: eventData.ticketsSold || 0,
+            revenue: eventRevenue,
+            availableBalance: eventData.availableRevenue,
+            status: isPast ? "past" : "active",
+          })
+        } else {
+          // If stored values not available, fetch payouts to calculate
+          const promise = (async () => {
+            const payoutsCollectionRef = collection(db, "events", user.uid, "userEvents", eventDoc.id, "payouts")
+            const payoutsSnapshot = await getDocs(payoutsCollectionRef)
 
-          // Update counters
-          if (isPast) {
-            pastEvents++
-          } else {
-            activeEvents++
-          }
+            let eventPaidOut = 0
+            payoutsSnapshot.forEach((payoutDoc) => {
+              const payoutData = payoutDoc.data()
+              if (payoutData.status === "Confirmed") {
+                eventPaidOut += payoutData.payoutAmount || 0
+              }
+            })
 
-          const eventRevenue = eventData.totalRevenue || 0
-          totalRevenue += eventRevenue
-          totalTicketsSold += eventData.ticketsSold || 0
+            totalPaidOut += eventPaidOut
+            const eventAvailableBalance = eventRevenue - eventPaidOut
+            totalAvailableBalance += eventAvailableBalance
 
-          // Use stored financial data if available
-          if (eventData.totalPaidOut !== undefined) {
-            totalPaidOut += eventData.totalPaidOut
-          }
-
-          if (eventData.availableRevenue !== undefined) {
-            totalAvailableBalance += eventData.availableRevenue
-
-            // Add to recent events with stored values
+            // Add to recent events
             recentEventsData.push({
               id: eventDoc.id,
               eventName: eventData.eventName || "Unnamed Event",
               eventDate: eventData.eventDate || new Date().toISOString(),
               ticketsSold: eventData.ticketsSold || 0,
               revenue: eventRevenue,
-              availableBalance: eventData.availableRevenue,
+              availableBalance: eventAvailableBalance,
               status: isPast ? "past" : "active",
             })
-          } else {
-            // If stored values not available, fetch payouts to calculate
-            const promise = (async () => {
-              const payoutsCollectionRef = collection(db, "events", user.uid, "userEvents", eventDoc.id, "payouts")
-              const payoutsSnapshot = await getDocs(payoutsCollectionRef)
+          })()
 
-              let eventPaidOut = 0
-              payoutsSnapshot.forEach((payoutDoc) => {
-                const payoutData = payoutDoc.data()
-                if (payoutData.status === "Confirmed") {
-                  eventPaidOut += payoutData.payoutAmount || 0
-                }
-              })
-
-              totalPaidOut += eventPaidOut
-              const eventAvailableBalance = eventRevenue - eventPaidOut
-              totalAvailableBalance += eventAvailableBalance
-
-              // Add to recent events
-              recentEventsData.push({
-                id: eventDoc.id,
-                eventName: eventData.eventName || "Unnamed Event",
-                eventDate: eventData.eventDate || new Date().toISOString(),
-                ticketsSold: eventData.ticketsSold || 0,
-                revenue: eventRevenue,
-                availableBalance: eventAvailableBalance,
-                status: isPast ? "past" : "active",
-              })
-            })()
-
-            eventPromises.push(promise)
-          }
+          eventPromises.push(promise)
         }
+      }
 
-        // Wait for all payout calculations to complete
-        await Promise.all(eventPromises)
+      // Wait for all payout calculations to complete
+      await Promise.all(eventPromises)
 
-        // Sort by date (most recent first)
-        recentEventsData.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
+      // Sort by date (most recent first)
+      recentEventsData.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
 
-        // If we didn't calculate available balance from stored values, calculate now
-        if (totalAvailableBalance === 0 && totalEvents > 0) {
-          totalAvailableBalance = totalRevenue - totalPaidOut
+      // If we didn't calculate available balance from stored values, calculate now
+      if (totalAvailableBalance === 0 && totalEvents > 0) {
+        totalAvailableBalance = totalRevenue - totalPaidOut
+      }
+
+      const dashboardStats: DashboardStats = {
+        totalEvents,
+        activeEvents,
+        pastEvents,
+        totalRevenue,
+        availableBalance: totalAvailableBalance,
+        totalPaidOut,
+        totalTicketsSold,
+      }
+
+      // Prepare data object with timestamp
+      const dashboardData: DashboardData = {
+        stats: dashboardStats,
+        recentEvents: recentEventsData.slice(0, 5), // Show only the 5 most recent events
+        bookerName: userName,
+        lastUpdated: Date.now(),
+      }
+
+      // Save to cache
+      cacheDashboardData(dashboardData)
+
+      return dashboardData
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error)
+      setError("Failed to load dashboard data. Please try again.")
+      return null
+    }
+  }, [])
+
+  // Load data from cache or fetch new data
+  const loadDashboardData = useCallback(
+    async (forceRefresh = false) => {
+      try {
+        setIsRefreshing(forceRefresh)
+
+        const dashboardData = await fetchDashboardData(forceRefresh)
+
+        if (dashboardData) {
+          setStats(dashboardData.stats)
+          setRecentEvents(dashboardData.recentEvents)
+          setBookerName(dashboardData.bookerName)
+          setError(null)
         }
-
-        setStats({
-          totalEvents,
-          activeEvents,
-          pastEvents,
-          totalRevenue,
-          availableBalance: totalAvailableBalance,
-          totalPaidOut,
-          totalTicketsSold,
-        })
-
-        setRecentEvents(recentEventsData.slice(0, 5)) // Show only the 5 most recent events
       } catch (error) {
-        console.error("Error fetching dashboard data:", error)
+        console.error("Error loading dashboard data:", error)
+        setError("Failed to load dashboard data. Please try again.")
       } finally {
         setLoading(false)
+        setIsRefreshing(false)
       }
+    },
+    [fetchDashboardData],
+  )
+
+  // Initial data load
+  useEffect(() => {
+    // First try to load from cache for instant display
+    const cachedData = getCachedDashboardData()
+
+    if (cachedData) {
+      // If we have cached data, show it immediately
+      setStats(cachedData.stats)
+      setRecentEvents(cachedData.recentEvents)
+      setBookerName(cachedData.bookerName)
+      setLoading(false)
+
+      // Then check if cache is expired or nearing expiration
+      if (isCacheExpired(CACHE_KEYS.DASHBOARD_DATA) || shouldBackgroundRefresh(CACHE_KEYS.DASHBOARD_DATA)) {
+        loadDashboardData(true)
+      }
+    } else {
+      // No cache, load fresh data
+      loadDashboardData(false)
     }
 
-    fetchDashboardData()
-  }, [])
+    // Set up periodic background refresh (every 2 minutes)
+    const refreshInterval = setInterval(
+      () => {
+        loadDashboardData(true)
+      },
+      2 * 60 * 1000,
+    )
+
+    return () => clearInterval(refreshInterval)
+  }, [loadDashboardData])
+
+  // Handle manual refresh
+  const handleRefresh = () => {
+    loadDashboardData(true)
+  }
 
   const handleCreateEvent = () => {
     navigate("/createEvent")
@@ -208,8 +312,96 @@ const BookerDashboard = () => {
     }
   }
 
+  // Show skeleton loading UI during initial load
   if (loading) {
-    return <Preloader />
+    return (
+      <>
+        <BookersHeader />
+        <div className="booker-dashboard-container">
+          <div className="dashboard-header-container skeleton-header">
+            <div className="dashboard-header">
+              <div className="greeting-container">
+                <div className="skeleton-text-large"></div>
+              </div>
+              <div className="skeleton-button"></div>
+            </div>
+          </div>
+
+          <div className="dashboard-content">
+            <div className="stats-grid">
+              {Array(8)
+                .fill(0)
+                .map((_, index) => (
+                  <div key={index} className="stat-card skeleton-card">
+                    <div className="stat-icon skeleton-icon"></div>
+                    <div className="stat-content">
+                      <div className="skeleton-text-small"></div>
+                      <div className="skeleton-text-medium"></div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div className="recent-events-section">
+              <div className="section-header">
+                <div className="skeleton-text-medium"></div>
+                <div className="skeleton-button-small"></div>
+              </div>
+
+              <div className="events-table-container">
+                <div className="skeleton-table">
+                  <div className="skeleton-table-header"></div>
+                  {Array(5)
+                    .fill(0)
+                    .map((_, index) => (
+                      <div key={index} className="skeleton-table-row"></div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="mobile-events-cards">
+                {Array(3)
+                  .fill(0)
+                  .map((_, index) => (
+                    <div key={index} className="mobile-event-card skeleton-card">
+                      <div className="mobile-event-header">
+                        <div className="skeleton-text-medium"></div>
+                        <div className="skeleton-badge"></div>
+                      </div>
+                      <div className="mobile-event-details">
+                        {Array(4)
+                          .fill(0)
+                          .map((_, detailIndex) => (
+                            <div key={detailIndex} className="mobile-event-detail">
+                              <div className="skeleton-text-small"></div>
+                              <div className="skeleton-text-small"></div>
+                            </div>
+                          ))}
+                      </div>
+                      <div className="skeleton-button"></div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="quick-actions">
+              <div className="skeleton-text-medium"></div>
+              <div className="actions-grid">
+                {Array(4)
+                  .fill(0)
+                  .map((_, index) => (
+                    <div key={index} className="action-card skeleton-action-card">
+                      <div className="skeleton-icon"></div>
+                      <div className="skeleton-text-small"></div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    )
   }
 
   return (
@@ -222,13 +414,27 @@ const BookerDashboard = () => {
               <h1>
                 {getTimeBasedGreeting()}, {bookerName}! Wagwan?
               </h1>
+              {isRefreshing && <span className="refreshing-indicator">Refreshing...</span>}
             </div>
-            <button className="create-event-button" onClick={handleCreateEvent}>
-              <PlusCircle className="button-icon" size={18} />
-              <span>Create New Event</span>
-            </button>
+            <div className="header-actions">
+              <button className="refresh-button" onClick={handleRefresh} disabled={isRefreshing}>
+                <RefreshCw className={`refresh-icon ${isRefreshing ? "spinning" : ""}`} size={16} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </button>
+              <button className="create-event-button" onClick={handleCreateEvent}>
+                <PlusCircle className="button-icon" size={18} />
+                <span>Create New Event</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
+            <button onClick={handleRefresh}>Try Again</button>
+          </div>
+        )}
 
         {/* Dashboard content wrapper for proper containment */}
         <div className="dashboard-content">
@@ -302,7 +508,9 @@ const BookerDashboard = () => {
               </div>
               <div className="stat-content">
                 <h3>Account State</h3>
-                <p className="stat-value"><span>Active</span></p>
+                <p className="stat-value">
+                  <span>Active</span>
+                </p>
               </div>
             </div>
           </div>

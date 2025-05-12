@@ -1,0 +1,183 @@
+/* Skeleton loading styles for dashboard */
+.skeleton-text-small,
+.skeleton-text-medium,
+.skeleton-text-large,
+.skeleton-icon,
+.skeleton-button,
+.skeleton-button-small,
+.skeleton-badge,
+.skeleton-card,
+.skeleton-table-header,
+.skeleton-table-row,
+.skeleton-action-card {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-text-small {
+  height: 12px;
+  width: 80%;
+  margin-bottom: 8px;
+}
+
+.skeleton-text-medium {
+  height: 16px;
+  width: 70%;
+  margin-bottom: 10px;
+}
+
+.skeleton-text-large {
+  height: 24px;
+  width: 60%;
+  margin-bottom: 12px;
+}
+
+.skeleton-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.skeleton-button {
+  height: 40px;
+  width: 120px;
+  border-radius: 4px;
+}
+
+.skeleton-button-small {
+  height: 32px;
+  width: 80px;
+  border-radius: 4px;
+}
+
+.skeleton-badge {
+  height: 20px;
+  width: 60px;
+  border-radius: 10px;
+}
+
+.skeleton-header {
+  padding: 20px;
+}
+
+.skeleton-card {
+  display: flex;
+  padding: 16px;
+  border-radius: 8px;
+  height: 80px;
+}
+
+.skeleton-table {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.skeleton-table-header {
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+.skeleton-table-row {
+  height: 40px;
+  margin-bottom: 8px;
+}
+
+.skeleton-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  padding: 16px;
+  gap: 12px;
+}
+
+/* Refresh button animation */
+.refresh-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.refreshing-indicator {
+  font-size: 0.8rem;
+  color: #666;
+  margin-left: 8px;
+  opacity: 0.8;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background-color: #6c6e73;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+  background-color: #ae8cdb;
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error-message p {
+  color: #cf1322;
+  margin: 0;
+}
+
+.error-message button {
+  align-self: flex-start;
+  padding: 6px 12px;
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.error-message button:hover {
+  background-color: #f5f5f5;
+}

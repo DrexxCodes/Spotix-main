@@ -4,12 +4,13 @@ import { useState, useEffect, type ChangeEvent, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore"
-import { signOut } from "firebase/auth"
+import { signOut, updateEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth"
 import Preloader from "../components/preloader"
 import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
 
 interface UserProfile {
   uid: string
@@ -67,6 +68,14 @@ const Profile = () => {
   const [uploadProvider, setUploadProvider] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  // Auth change states
+  const [newEmail, setNewEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [authChangeLoading, setAuthChangeLoading] = useState(false)
+  const [authChangeError, setAuthChangeError] = useState<string | null>(null)
+  const [authChangeSuccess, setAuthChangeSuccess] = useState<string | null>(null)
+
   const [accountVerificationLoading, setAccountVerificationLoading] = useState(false)
   const [accountVerificationError, setAccountVerificationError] = useState<string | null>(null)
   const [accountVerifiedName, setAccountVerifiedName] = useState("")
@@ -118,6 +127,11 @@ const Profile = () => {
               if (userData.bankName) {
                 setBankInput(userData.bankName)
               }
+
+              // Initialize new email field with current email
+              if (authUser.email) {
+                setNewEmail(authUser.email)
+              }
             } else {
               // Create a new user document if it doesn't exist
               const newUser = {
@@ -133,6 +147,11 @@ const Profile = () => {
               }
               await setDoc(userDocRef, newUser)
               setUser({ uid: authUser.uid, ...newUser })
+
+              // Initialize new email field with current email
+              if (authUser.email) {
+                setNewEmail(authUser.email)
+              }
             }
           } else {
             // User is signed out
@@ -167,6 +186,17 @@ const Profile = () => {
       return () => clearTimeout(timer)
     }
   }, [copySuccess])
+
+  // Reset auth change success/error messages after 5 seconds
+  useEffect(() => {
+    if (authChangeSuccess || authChangeError) {
+      const timer = setTimeout(() => {
+        setAuthChangeSuccess(null)
+        setAuthChangeError(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [authChangeSuccess, authChangeError])
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -228,6 +258,64 @@ const Profile = () => {
       alert("Failed to update profile. Please try again.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleEmailChange = async () => {
+    if (!user || !auth.currentUser) return
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newEmail)) {
+      setAuthChangeError("Please enter a valid email address")
+      return
+    }
+
+    // Check if email is the same as current
+    if (newEmail === user.email) {
+      setAuthChangeError("New email is the same as current email")
+      return
+    }
+
+    setAuthChangeLoading(true)
+    setAuthChangeError(null)
+    setAuthChangeSuccess(null)
+
+    try {
+      // Re-authenticate user with current password
+      const credential = EmailAuthProvider.credential(user.email, password)
+      await reauthenticateWithCredential(auth.currentUser, credential)
+
+      // Update email in Firebase Auth
+      await updateEmail(auth.currentUser, newEmail)
+
+      // Update email in Firestore
+      const userDocRef = doc(db, "users", user.uid)
+      await updateDoc(userDocRef, {
+        email: newEmail,
+      })
+
+      // Update local state
+      setUser({
+        ...user,
+        email: newEmail,
+      })
+
+      setAuthChangeSuccess("Email updated successfully!")
+      setPassword("") // Clear password field
+    } catch (error: any) {
+      console.error("Error updating email:", error)
+      if (error.code === "auth/requires-recent-login") {
+        setAuthChangeError("For security reasons, please log out and log back in before changing your email")
+      } else if (error.code === "auth/wrong-password") {
+        setAuthChangeError("Incorrect password. Please try again")
+      } else if (error.code === "auth/email-already-in-use") {
+        setAuthChangeError("This email is already in use by another account")
+      } else {
+        setAuthChangeError("Failed to update email. Please try again")
+      }
+    } finally {
+      setAuthChangeLoading(false)
     }
   }
 
@@ -433,10 +521,66 @@ const Profile = () => {
               required
             />
           </div>
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input type="email" id="email" value={user.email} readOnly className="readonly-input" />
+        {/* Auth Change Section */}
+        <div className="form-section">
+          <h2 className="section-title">Auth Change</h2>
+
+          {authChangeError && (
+            <div className="auth-error-message">
+              <AlertCircle size={16} className="error-icon" />
+              <p>{authChangeError}</p>
+            </div>
+          )}
+
+          {authChangeSuccess && (
+            <div className="auth-success-message">
+              <CheckCircle size={16} className="success-icon" />
+              <p>{authChangeSuccess}</p>
+            </div>
+          )}
+
+          <div className="auth-change-form">
+            <div className="form-group">
+              <label htmlFor="newEmail">Email Address</label>
+              <input
+                type="email"
+                id="newEmail"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="Enter new email address"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Current Password</label>
+              <div className="password-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your current password"
+                  required
+                />
+                {showPassword ? (
+                  <EyeOff className="password-toggle" onClick={() => setShowPassword(false)} />
+                ) : (
+                  <Eye className="password-toggle" onClick={() => setShowPassword(true)} />
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="update-email-btn"
+              onClick={handleEmailChange}
+              disabled={authChangeLoading || newEmail === user.email || !password}
+            >
+              {authChangeLoading ? "Updating..." : "Update Email"}
+            </button>
           </div>
         </div>
 

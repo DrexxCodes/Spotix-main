@@ -5,7 +5,7 @@ import Navbar from "../components/Landing/NavBar"
 import Hero from "../components/Landing/Hero"
 import HowItWorks from "../components/Landing/HowItWorks"
 import Features from "../components/Landing/Features"
-// import Events from "../components/Landing/Events"
+import Events from "../components/Landing/Events"
 // import Testimonials from "../components/Landing/Testimonials"
 import FAQ from "../components/Landing/FAQ"
 import BookerCTA from "../components/Landing/BookerCTA"
@@ -30,6 +30,7 @@ const Landing = () => {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <Hero />
+      <Events />
       <HowItWorks />
       <Features />
       <BookerCTA />

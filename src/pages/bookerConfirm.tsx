@@ -42,7 +42,9 @@ const BookerConfirm = () => {
   const [consentChecked, setConsentChecked] = useState(false)
   const [profilePictureError, setProfilePictureError] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [emailSending, setEmailSending] = useState(false)
   const [ageError, setAgeError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   // Calculate the maximum date of birth (18 years ago from today)
@@ -146,6 +148,7 @@ const BookerConfirm = () => {
   }
 
   const sendConfirmationEmail = async (name: string, email: string) => {
+    setEmailSending(true)
     try {
       const response = await fetch("/api/mail/booker-confirmation", {
         method: "POST",
@@ -153,32 +156,38 @@ const BookerConfirm = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
           email,
+          name,
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to send confirmation email")
+        const errorText = await response.text()
+        console.error("Failed to send confirmation email:", errorText)
+        throw new Error(`Failed to send confirmation email: ${errorText}`)
       }
 
       setEmailSent(true)
+      return true
     } catch (error) {
       console.error("Error sending confirmation email:", error)
-      // Continue with the process even if email fails
+      return false
+    } finally {
+      setEmailSending(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
 
     if (profilePictureError) {
-      alert("Please add a profile picture before becoming a booker.")
+      setError("Please add a profile picture before becoming a booker.")
       return
     }
 
     if (ageError) {
-      alert(ageError)
+      setError(ageError)
       return
     }
 
@@ -196,24 +205,23 @@ const BookerConfirm = () => {
       })
 
       // Send confirmation email
-      await sendConfirmationEmail(bookerData.bookerName || user.fullName, user.email)
+      const emailSuccess = await sendConfirmationEmail(bookerData.bookerName || user.fullName, user.email)
 
-      // Show success message with email confirmation
-      setLoading(false)
-
-      // Show success dialog with email confirmation
-      if (emailSent) {
+      // Show success message
+      if (emailSuccess) {
         alert(
           "Congratulations! You are now a booker. We have sent a confirmation email to your registered email address.",
         )
       } else {
-        alert("Congratulations! You are now a booker.")
+        alert(
+          "Congratulations! You are now a booker. However, we couldn't send a confirmation email. Please check your account settings.",
+        )
       }
 
       navigate("/profile")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating booker status:", error)
-      alert("Failed to update booker status. Please try again.")
+      setError(`Failed to update booker status: ${error.message || "Unknown error"}`)
       setLoading(false)
     }
   }
@@ -260,6 +268,18 @@ const BookerConfirm = () => {
             required for you to be a booker. Thank you for partnering with Spotix.
           </p>
         </div>
+
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {emailSending && (
+          <div className="sending-email-message">
+            <p>Sending confirmation email...</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="booker-form">
           {/* Booker Onboarding Section */}
@@ -377,6 +397,7 @@ const BookerConfirm = () => {
                 onChange={handleInputChange}
                 placeholder="Enter booker password"
                 required
+                minLength={6}
               />
             </div>
 
@@ -387,6 +408,7 @@ const BookerConfirm = () => {
                   checked={consentChecked}
                   onChange={handleConsentChange}
                   className="consent-checkbox"
+                  required
                 />
                 <span>
                   By switching to a booker and supplying these details you agree that we should process your information
@@ -396,8 +418,8 @@ const BookerConfirm = () => {
             </div>
 
             {consentChecked && !ageError && (
-              <button type="submit" className="activate-booker-btn">
-                Activate Booker
+              <button type="submit" className="activate-booker-btn" disabled={emailSending}>
+                {emailSending ? "Processing..." : "Activate Booker"}
               </button>
             )}
           </div>

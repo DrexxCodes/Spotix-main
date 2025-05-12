@@ -45,11 +45,23 @@ const Signup = () => {
     return () => clearInterval(interval)
   }, [])
 
+  // Validate email format
+  const validateEmail = (email: string): boolean => {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return false
+    }
+
+    // Check if email ends with .com
+    return email.toLowerCase().endsWith(".com")
+  }
+
   // Function to send verification email using our custom API
-  const sendVerificationEmail = async (user, userName) => {
+  const sendVerificationEmail = async (user: any, userName: string): Promise<boolean> => {
     setSendingEmail(true)
     try {
-      // First, get the verification URL from Firebase
+      // First, send the Firebase verification email
       await sendEmailVerification(user)
 
       // Then send our custom welcome email
@@ -65,7 +77,7 @@ const Signup = () => {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to send verification email")
+        console.error("Failed to send custom verification email:", await response.text())
       }
 
       return true
@@ -82,17 +94,26 @@ const Signup = () => {
     setError("")
     setSuccess("")
 
+    // Validate passwords match
     if (password !== confirmPassword) {
       setError("Passwords do not match.")
+      return
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      setError("Invalid email format. Email must end with .com")
       return
     }
 
     setSigningUp(true)
 
     try {
+      // Create user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
+      // Update profile with username
       await updateProfile(user, { displayName: username })
 
       // Store user info in Firestore
@@ -107,8 +128,12 @@ const Signup = () => {
         emailVerified: false,
       })
 
-      // Send email verification using our custom function
-      await sendVerificationEmail(user, fullName || username)
+      // Send verification emails (both Firebase default and our custom one)
+      const emailSent = await sendVerificationEmail(user, fullName || username)
+
+      if (!emailSent) {
+        setSuccess("Account created, but we couldn't send the verification email. Please try logging in to resend it.")
+      }
 
       // Clear form
       setEmail("")
@@ -118,11 +143,11 @@ const Signup = () => {
       setUsername("")
       setReferral("")
 
-      // Redirect to login with verification message
+      // Always redirect to login with verification message
       navigate("/login", {
         state: {
           verificationMessage:
-            "We have sent you an email to verify your account. Please check your inbox and verify your email before logging in.",
+            "Your account has been created! Please check your email to verify your account before logging in.",
         },
       })
     } catch (err: any) {
@@ -131,8 +156,12 @@ const Signup = () => {
         setError("This email is already in use. Please try another email or login.")
       } else if (err.code === "auth/weak-password") {
         setError("Password is too weak. Please use a stronger password.")
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email format. Please enter a valid email address.")
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your internet connection and try again.")
       } else {
-        setError("Failed to create an account. Please try again later.")
+        setError(`Failed to create an account: ${err.message || "Unknown error"}`)
       }
       setSigningUp(false)
     }
@@ -182,7 +211,13 @@ const Signup = () => {
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input
+              type="email"
+              placeholder="Email (must end with .com)"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
             <div className="password-container">
               <input
@@ -191,6 +226,7 @@ const Signup = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
               {showPassword ? (
                 <EyeOff className="password-toggle" onClick={() => setShowPassword(false)} />
@@ -205,6 +241,7 @@ const Signup = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              minLength={6}
             />
             <input
               type="text"

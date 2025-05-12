@@ -3,8 +3,9 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { auth } from "../services/firebase"
+import { auth, db } from "../services/firebase"
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { Eye, EyeOff, AlertCircle, Mail, Loader2, CheckCircle } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import Preloader from "../components/preloader"
@@ -58,6 +59,43 @@ const Login = () => {
     }
   }, [location])
 
+  // Send welcome email after successful verification
+  const sendWelcomeEmail = async (user: any) => {
+    try {
+      const userDocRef = doc(db, "users", user.uid)
+      const userDoc = await getDoc(userDocRef)
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+        const userName = userData.fullName || userData.username || user.displayName || "Valued Customer"
+
+        // Send welcome email
+        const response = await fetch("/api/mail/email-verification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: user.email,
+            name: userName,
+            welcome: true, // Flag to indicate this is a welcome email
+          }),
+        })
+
+        if (!response.ok) {
+          console.error("Failed to send welcome email:", await response.text())
+        }
+
+        // Update user's emailVerified status in Firestore
+        await updateDoc(userDocRef, {
+          emailVerified: true,
+        })
+      }
+    } catch (error) {
+      console.error("Error sending welcome email:", error)
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -77,15 +115,37 @@ const Login = () => {
         return
       }
 
-      navigate("/")
+      // Check if this is the first login after verification
+      const userDocRef = doc(db, "users", user.uid)
+      const userDoc = await getDoc(userDocRef)
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+
+        // If Firebase says email is verified but our DB doesn't, send welcome email
+        if (user.emailVerified && userData.emailVerified === false) {
+          await sendWelcomeEmail(user)
+        }
+      }
+
+      // Check for redirect after login
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin")
+      if (redirectPath) {
+        sessionStorage.removeItem("redirectAfterLogin")
+        navigate(redirectPath)
+      } else {
+        navigate("/")
+      }
     } catch (err: any) {
       console.error("Login error:", err)
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
         setError("Invalid email or password.")
       } else if (err.code === "auth/too-many-requests") {
         setError("Too many failed login attempts. Please try again later.")
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your internet connection and try again.")
       } else {
-        setError("Failed to login. Please try again.")
+        setError(`Failed to login: ${err.message || "Unknown error"}`)
       }
       setLoggingIn(false)
     }
@@ -114,7 +174,7 @@ const Login = () => {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to send custom verification email")
+        throw new Error(`Failed to send custom verification email: ${await response.text()}`)
       }
 
       setVerificationSent(true)

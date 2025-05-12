@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
 import { db, auth } from "../services/firebase"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
-import Preloader from "../components/preloader"
 import { ArrowLeft, User, Ticket, Info, X } from "lucide-react"
 import ShareBtn from "../components/shareBtn"
 import LoginButton from "../components/loginBtn"
@@ -43,6 +42,46 @@ interface EventType {
   likedBy?: string[]
 }
 
+// Loading skeleton component
+const EventSkeleton = () => (
+  <div className="event-container-wrapper">
+    <div className="event-container animate-pulse">
+      <div className="event-header">
+        <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+        <div className="h-8 w-32 bg-gray-200 rounded-md"></div>
+      </div>
+
+      <div className="h-64 w-full bg-gray-200 rounded-md mb-4"></div>
+
+      <div className="flex space-x-2 mb-4">
+        <div className="h-10 w-1/3 bg-gray-200 rounded-md"></div>
+        <div className="h-10 w-1/3 bg-gray-200 rounded-md"></div>
+        <div className="h-10 w-1/3 bg-gray-200 rounded-md"></div>
+      </div>
+
+      <div className="space-y-4 p-4">
+        <div className="h-8 w-3/4 bg-gray-200 rounded-md"></div>
+
+        <div className="flex justify-between items-center">
+          <div className="h-6 w-24 bg-gray-200 rounded-md"></div>
+          <div className="h-6 w-24 bg-gray-200 rounded-md"></div>
+        </div>
+
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex justify-between">
+              <div className="h-6 w-1/3 bg-gray-200 rounded-md"></div>
+              <div className="h-6 w-1/2 bg-gray-200 rounded-md"></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="h-32 w-full bg-gray-200 rounded-md"></div>
+      </div>
+    </div>
+  </div>
+)
+
 const Event = () => {
   const { uid, id } = useParams<{ uid: string; id: string }>()
   const [eventData, setEventData] = useState<EventType | null>(null)
@@ -71,6 +110,20 @@ const Event = () => {
 
   // Use sessionStorage for caching
   const cacheKey = `event_${id}_${uid}`
+  const cacheDuration = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+  // Format number with commas
+  const formatNumber = useCallback((num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }, [])
+
+  // Format currency with commas
+  const formatCurrency = useCallback(
+    (amount: number): string => {
+      return `₦${formatNumber(Number.parseFloat(amount.toFixed(2)))}`
+    },
+    [formatNumber],
+  )
 
   useEffect(() => {
     // Check authentication status
@@ -103,6 +156,104 @@ const Event = () => {
     return () => unsubscribe()
   }, [])
 
+  const checkEventStatus = useCallback((data: EventType) => {
+    // Check if event is sold out
+    if (data.enableMaxSize && data.maxSize && data.ticketsSold) {
+      if (Number.parseInt(data.maxSize) <= data.ticketsSold) {
+        setIsSoldOut(true)
+      }
+    }
+
+    // Check if sales have ended
+    if (data.enableStopDate && data.stopDate) {
+      const stopDate = new Date(data.stopDate)
+      const now = new Date()
+      if (now > stopDate) {
+        setIsSaleEnded(true)
+      }
+    }
+
+    // Check if event date has passed
+    const eventDate = new Date(data.eventDate)
+    const now = new Date()
+    if (now > eventDate) {
+      setIsEventPassed(true)
+    }
+  }, [])
+
+  const checkLikeStatus = useCallback((data: EventType) => {
+    const user = auth.currentUser
+    if (!user) return
+
+    // Check if user has liked this event
+    const userLiked = data.likedBy?.includes(user.uid) || false
+    setIsLiked(userLiked)
+
+    // Set like count
+    setLikeCount(data.likes || 0)
+  }, [])
+
+  const fetchBookerDetails = useCallback(async (creatorId: string, bookerName: string) => {
+    try {
+      const bookerDocRef = doc(db, "users", creatorId)
+      const bookerDoc = await getDoc(bookerDocRef)
+
+      if (bookerDoc.exists()) {
+        const bookerData = bookerDoc.data()
+        setBookerDetails({
+          username: bookerName || bookerData.username || "Unknown",
+          email: bookerData.email || "Not provided",
+          phone: bookerData.phoneNumber || "Not provided",
+          isVerified: bookerData.isVerified || false,
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching booker details:", error)
+    }
+  }, [])
+
+  const fetchFreshData = useCallback(async () => {
+    try {
+      if (!uid || !id) {
+        setEventData(null)
+        setLoading(false)
+        return
+      }
+
+      const docRef = doc(db, "events", uid, "userEvents", id)
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        const data = docSnap.data() as EventType
+        const eventWithId = { ...data, id: docSnap.id }
+
+        // Cache the data with timestamp
+        const cacheData = {
+          data: eventWithId,
+          timestamp: Date.now(),
+        }
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData))
+
+        setEventData(eventWithId)
+
+        // Check event status
+        checkEventStatus(eventWithId)
+
+        // Check if current user has liked this event
+        checkLikeStatus(eventWithId)
+
+        // Fetch booker details
+        await fetchBookerDetails(eventWithId.createdBy, eventWithId.bookerName)
+      } else {
+        setEventData(null)
+      }
+    } catch (error) {
+      console.error("Error fetching event:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [uid, id, cacheKey, checkEventStatus, checkLikeStatus, fetchBookerDetails])
+
   useEffect(() => {
     const fetchEvent = async () => {
       if (!id || !uid) {
@@ -111,129 +262,36 @@ const Event = () => {
       }
 
       // Try to get from cache first
-      const cachedData = sessionStorage.getItem(cacheKey)
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData)
-        setEventData(parsedData)
-        checkEventStatus(parsedData)
-        await fetchBookerDetails(parsedData.createdBy, parsedData.bookerName)
+      const cachedDataString = sessionStorage.getItem(cacheKey)
 
-        // Check if current user has like  parsedData.bookerName)
+      if (cachedDataString) {
+        try {
+          const cachedData = JSON.parse(cachedDataString)
+          const now = Date.now()
 
-        // Check if current user has liked this event
-        const user = auth.currentUser
-        if (user) {
-          checkLikeStatus(parsedData)
+          // Check if cache is still valid
+          if (cachedData.timestamp && now - cachedData.timestamp < cacheDuration) {
+            setEventData(cachedData.data)
+            checkEventStatus(cachedData.data)
+            checkLikeStatus(cachedData.data)
+            await fetchBookerDetails(cachedData.data.createdBy, cachedData.data.bookerName)
+            setLoading(false)
+
+            // Refresh in background after using cache
+            fetchFreshData()
+            return
+          }
+        } catch (error) {
+          console.error("Error parsing cached data:", error)
         }
-
-        setLoading(false)
-
-        // Refresh in background
-        fetchFreshData()
-        return
       }
 
-      // No cache, fetch fresh data
+      // No valid cache, fetch fresh data
       fetchFreshData()
     }
 
-    const fetchFreshData = async () => {
-      try {
-        if (!uid || !id) {
-          setEventData(null)
-          setLoading(false)
-          return
-        }
-
-        const docRef = doc(db, "events", uid, "userEvents", id)
-        const docSnap = await getDoc(docRef)
-
-        if (docSnap.exists()) {
-          const data = docSnap.data() as EventType
-          setEventData(data)
-
-          // Cache the data
-          sessionStorage.setItem(cacheKey, JSON.stringify(data))
-
-          // Check event status
-          checkEventStatus(data)
-
-          // Check if current user has liked this event
-          const user = auth.currentUser
-          if (user) {
-            checkLikeStatus(data)
-          }
-
-          // Fetch booker details
-          await fetchBookerDetails(data.createdBy, data.bookerName)
-        } else {
-          setEventData(null)
-        }
-      } catch (error) {
-        console.error("Error fetching event:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const checkLikeStatus = (data: EventType) => {
-      const user = auth.currentUser
-      if (!user) return
-
-      // Check if user has liked this event
-      const userLiked = data.likedBy?.includes(user.uid) || false
-      setIsLiked(userLiked)
-
-      // Set like count
-      setLikeCount(data.likes || 0)
-    }
-
-    const checkEventStatus = (data: EventType) => {
-      // Check if event is sold out
-      if (data.enableMaxSize && data.maxSize && data.ticketsSold) {
-        if (Number.parseInt(data.maxSize) <= data.ticketsSold) {
-          setIsSoldOut(true)
-        }
-      }
-
-      // Check if sales have ended
-      if (data.enableStopDate && data.stopDate) {
-        const stopDate = new Date(data.stopDate)
-        const now = new Date()
-        if (now > stopDate) {
-          setIsSaleEnded(true)
-        }
-      }
-
-      // Check if event date has passed
-      const eventDate = new Date(data.eventDate)
-      const now = new Date()
-      if (now > eventDate) {
-        setIsEventPassed(true)
-      }
-    }
-
-    const fetchBookerDetails = async (creatorId: string, bookerName: string) => {
-      try {
-        const bookerDocRef = doc(db, "users", creatorId)
-        const bookerDoc = await getDoc(bookerDocRef)
-
-        if (bookerDoc.exists()) {
-          const bookerData = bookerDoc.data()
-          setBookerDetails({
-            username: bookerName || bookerData.username || "Unknown",
-            email: bookerData.email || "Not provided",
-            phone: bookerData.phoneNumber || "Not provided",
-            isVerified: bookerData.isVerified || false,
-          })
-        }
-      } catch (error) {
-        console.error("Error fetching booker details:", error)
-      }
-    }
-
     fetchEvent()
-  }, [id, uid, cacheKey])
+  }, [id, uid, cacheKey, cacheDuration, checkEventStatus, checkLikeStatus, fetchBookerDetails, fetchFreshData])
 
   const handleToggleLike = async () => {
     try {
@@ -266,6 +324,31 @@ const Event = () => {
         })
         setIsLiked(true)
         setLikeCount((prev) => prev + 1)
+      }
+
+      // Update cache with new like status
+      const cachedDataString = sessionStorage.getItem(cacheKey)
+      if (cachedDataString) {
+        try {
+          const cachedData = JSON.parse(cachedDataString)
+          const updatedEventData = {
+            ...cachedData.data,
+            likes: isLiked ? (cachedData.data.likes || 0) - 1 : (cachedData.data.likes || 0) + 1,
+            likedBy: isLiked
+              ? (cachedData.data.likedBy || []).filter((id: string) => id !== user.uid)
+              : [...(cachedData.data.likedBy || []), user.uid],
+          }
+
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              data: updatedEventData,
+              timestamp: cachedData.timestamp,
+            }),
+          )
+        } catch (error) {
+          console.error("Error updating cached data:", error)
+        }
       }
     } catch (error) {
       console.error("Error toggling like status:", error)
@@ -324,7 +407,13 @@ const Event = () => {
   }
 
   if (loading) {
-    return <Preloader loading={loading} />
+    return (
+      <>
+        <UserHeader />
+        <EventSkeleton />
+        <Footer />
+      </>
+    )
   }
 
   if (!eventData) {
@@ -353,7 +442,7 @@ const Event = () => {
               {isAuthenticated ? (
                 <>
                   <span className="wallet-label">Balance:</span>
-                  <span className="wallet-amount">₦{walletBalance.toFixed(2)}</span>
+                  <span className="wallet-amount">{formatCurrency(walletBalance)}</span>
                 </>
               ) : (
                 <LoginButton />
@@ -419,7 +508,7 @@ const Event = () => {
                         ) : (
                           <i className="bx bx-heart like-icon"></i>
                         )}
-                        <span className="like-count">{likeCount}</span>
+                        <span className="like-count">{formatNumber(likeCount)}</span>
                       </button>
                     </div>
                   </div>
@@ -474,7 +563,7 @@ const Event = () => {
                     <div className="detail-row">
                       <span className="detail-label">Maximum Attendees:</span>
                       <span className="detail-value">
-                        {eventData.ticketsSold || 0} / {eventData.maxSize}
+                        {formatNumber(eventData.ticketsSold || 0)} / {formatNumber(Number.parseInt(eventData.maxSize))}
                         {isSoldOut && <span className="sold-out-badge">SOLD OUT</span>}
                       </span>
                     </div>
@@ -543,7 +632,7 @@ const Event = () => {
                             <li key={index}>
                               <div className="ticket-info">
                                 <span className="policy">{ticket.policy}</span>
-                                <span className="price">₦{Number.parseFloat(String(ticket.price)).toFixed(2)}</span>
+                                <span className="price">{formatCurrency(Number.parseFloat(String(ticket.price)))}</span>
                               </div>
                               {isEventPassed ? (
                                 <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
