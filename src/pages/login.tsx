@@ -70,7 +70,7 @@ const Login = () => {
         const userName = userData.fullName || userData.username || user.displayName || "Valued Customer"
 
         // Send welcome email
-        const response = await fetch("/api/mail/email-verification", {
+        const response = await fetch("/api/mail/welcome-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -78,7 +78,6 @@ const Login = () => {
           body: JSON.stringify({
             email: user.email,
             name: userName,
-            welcome: true, // Flag to indicate this is a welcome email
           }),
         })
 
@@ -106,7 +105,7 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
-      // Check if email is verified
+      // Check if email is verified in Firebase
       if (!user.emailVerified) {
         setUnverifiedUser(user)
         setShowVerificationOption(true)
@@ -115,16 +114,25 @@ const Login = () => {
         return
       }
 
-      // Check if this is the first login after verification
+      // Check Firestore emailVerified status
       const userDocRef = doc(db, "users", user.uid)
       const userDoc = await getDoc(userDocRef)
 
       if (userDoc.exists()) {
         const userData = userDoc.data()
 
-        // If Firebase says email is verified but our DB doesn't, send welcome email
+        // If Firebase says email is verified but our DB doesn't, send welcome email and update DB
         if (user.emailVerified && userData.emailVerified === false) {
           await sendWelcomeEmail(user)
+        }
+
+        // If Firestore says email is not verified, deny login
+        if (userData.emailVerified === false) {
+          setUnverifiedUser(user)
+          setShowVerificationOption(true)
+          setError("Please verify your email before logging in.")
+          setLoggingIn(false)
+          return
         }
       }
 
@@ -160,22 +168,6 @@ const Login = () => {
     try {
       // Send Firebase verification email
       await sendEmailVerification(unverifiedUser)
-
-      // Also send our custom verification email
-      const response = await fetch("/api/mail/email-verification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: unverifiedUser.email,
-          name: unverifiedUser.displayName || "Valued Customer",
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to send custom verification email: ${await response.text()}`)
-      }
 
       setVerificationSent(true)
       setTimeout(() => {

@@ -26,7 +26,7 @@ const Events = () => {
     {
       id: "https://www.spotix.com.ng/event/oNUFwQ5pcwUee7pU45FJOC2TmiI3/5YPAcaetwwR0RtGD47bp",
       title: "FOSSSA Welcome Party",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1747052755/Events/NNAMDI_AZIKIWE_UNIVERSITY_1080_x_1280_px_cbgf8y.jpg?height=400&width=600",
+      image: "./fosssa.jpg?height=400&width=600",
       date: "Saturday, May 24, 2025",
       location: "Wintess Lounge",
       type: "Night Party",
@@ -56,7 +56,7 @@ const Events = () => {
     {
       id: "https://www.spotix.com.ng/event/oNUFwQ5pcwUee7pU45FJOC2TmiI3/5YPAcaetwwR0RtGD47bp",
       title: "FOSSSA Welcome Party",
-      image: "https://res.cloudinary.com/dyrdbgqyi/image/upload/v1747052755/Events/NNAMDI_AZIKIWE_UNIVERSITY_1080_x_1280_px_cbgf8y.jpg?height=200&width=300",
+      image: "./fosssa.jpg?height=200&width=300",
       date: "May 24, 2025",
       type: "Night Party",
     },

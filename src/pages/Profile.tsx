@@ -747,7 +747,7 @@ const Profile = () => {
   )
 }
 
-// Add this style at the end of the file or in your CSS
+
 const inputHintStyle = {
   fontSize: "12px",
   color: "#ff9800",

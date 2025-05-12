@@ -475,7 +475,7 @@ const Event = () => {
               onClick={() => setActiveTab("tickets")}
             >
               <Ticket size={16} />
-              Ticket Policy
+              Buy Ticket
             </button>
             <button
               className={`tab-button ${activeTab === "booker" ? "active" : ""}`}

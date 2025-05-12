@@ -57,38 +57,6 @@ const Signup = () => {
     return email.toLowerCase().endsWith(".com")
   }
 
-  // Function to send verification email using our custom API
-  const sendVerificationEmail = async (user: any, userName: string): Promise<boolean> => {
-    setSendingEmail(true)
-    try {
-      // First, send the Firebase verification email
-      await sendEmailVerification(user)
-
-      // Then send our custom welcome email
-      const response = await fetch("/api/mail/email-verification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: user.email,
-          name: userName,
-        }),
-      })
-
-      if (!response.ok) {
-        console.error("Failed to send custom verification email:", await response.text())
-      }
-
-      return true
-    } catch (error) {
-      console.error("Error sending verification email:", error)
-      return false
-    } finally {
-      setSendingEmail(false)
-    }
-  }
-
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -116,6 +84,10 @@ const Signup = () => {
       // Update profile with username
       await updateProfile(user, { displayName: username })
 
+      // Send Firebase verification email
+      setSendingEmail(true)
+      await sendEmailVerification(user)
+
       // Store user info in Firestore
       await setDoc(doc(db, "users", user.uid), {
         fullName,
@@ -128,13 +100,6 @@ const Signup = () => {
         emailVerified: false,
       })
 
-      // Send verification emails (both Firebase default and our custom one)
-      const emailSent = await sendVerificationEmail(user, fullName || username)
-
-      if (!emailSent) {
-        setSuccess("Account created, but we couldn't send the verification email. Please try logging in to resend it.")
-      }
-
       // Clear form
       setEmail("")
       setPassword("")
@@ -143,7 +108,7 @@ const Signup = () => {
       setUsername("")
       setReferral("")
 
-      // Always redirect to login with verification message
+      // Redirect to login with verification message
       navigate("/login", {
         state: {
           verificationMessage:
@@ -163,6 +128,9 @@ const Signup = () => {
       } else {
         setError(`Failed to create an account: ${err.message || "Unknown error"}`)
       }
+      setSigningUp(false)
+    } finally {
+      setSendingEmail(false)
       setSigningUp(false)
     }
   }
