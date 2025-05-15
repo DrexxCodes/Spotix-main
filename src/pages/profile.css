@@ -1,0 +1,68 @@
+/* Improved styles for the UID container */
+.uid-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+}
+
+.uid-input {
+  width: 100%;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  cursor: not-allowed;
+}
+
+.uid-copy-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.uid-copy-btn:hover {
+  background-color: #5a2589;
+}
+
+.uid-copy-btn.copy-success {
+  background-color: #4caf50;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.readonly-input {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  color: #333;
+}
+
+/* Ensure form sections are properly contained */
+.form-section {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .uid-copy-btn {
+    width: auto;
+    max-width: 150px;
+  }
+}

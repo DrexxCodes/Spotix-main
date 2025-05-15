@@ -20,6 +20,7 @@ import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import WalletDisplay from "../components/WalletDisplay"
 import LoginButton from "../components/loginBtn"
+import NotVerified from "../components/NotVerified"
 
 interface EventType {
   id: string
@@ -294,6 +295,7 @@ const Home = () => {
     <div className="flex flex-col min-h-screen">
   
       <UserHeader />
+      <NotVerified />
 
       <div className="p-6 home-container">
         <div className="text-center mb-8 home-header">

@@ -1,0 +1,763 @@
+.team-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.team-header {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 16px;
+}
+
+.team-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-title h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.team-icon {
+  color: #6b2fa5;
+}
+
+.new-tag {
+  background-color: #6b2fa5;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 10px;
+  position: relative;
+  top: -10px;
+  font-weight: 500;
+}
+
+.team-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.team-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.team-section h2 {
+  font-size: 1.4rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.team-section h3 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.team-section p {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.event-select-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.event-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  appearance: none;
+  font-size: 1rem;
+  background-color: white;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666;
+}
+
+.event-collaboration-toggle {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.toggle-container p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #6b2fa5;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toggle-button:hover {
+  background-color: #5a2589;
+}
+
+.toggle-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.event-team-management {
+  margin-top: 16px;
+}
+
+.team-management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.configure-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #6b2fa5;
+  background-color: white;
+  color: #6b2fa5;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.configure-button:hover {
+  background-color: #f0e6f7;
+}
+
+.configure-mode {
+  width: 100%;
+}
+
+.configure-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background-color: #f9f9f9;
+}
+
+.configure-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.uid-search-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.uid-search-container {
+  margin-top: 16px;
+}
+
+.uid-search-input-container {
+  display: flex;
+  gap: 8px;
+}
+
+.uid-search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.uid-search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #6b2fa5;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.uid-search-button:hover {
+  background-color: #5a2589;
+}
+
+.uid-search-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.uid-search-error {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background-color: #ffebee;
+  color: #d32f2f;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.found-user-container {
+  margin-top: 24px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.found-user-header {
+  margin-bottom: 16px;
+}
+
+.found-user-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #6b2fa5;
+}
+
+.found-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.user-avatar {
+  position: relative;
+}
+
+.user-avatar img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.verified-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background-color: #6b2fa5;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.user-username {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.user-email {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.role-selection-section {
+  margin-top: 16px;
+}
+
+.role-selection-section h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+.roles-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.role-option {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-option:hover {
+  border-color: #6b2fa5;
+  background-color: #f0e6f7;
+}
+
+.role-option.selected {
+  border-color: #6b2fa5;
+  background-color: #f0e6f7;
+  font-weight: 500;
+}
+
+.info-icon {
+  color: #666;
+}
+
+.role-info {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 250px;
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.role-info-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #6b2fa5;
+}
+
+.role-info p {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.role-info ul {
+  margin-top: 0;
+  margin-bottom: 8px;
+  padding-left: 20px;
+}
+
+.role-info li {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.add-found-user-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.add-found-user-button {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #6b2fa5;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-found-user-button:hover {
+  background-color: #5a2589;
+}
+
+.add-found-user-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #f9f9f9;
+}
+
+.no-collaborators {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.no-collab-icon {
+  color: #ddd;
+  margin-bottom: 16px;
+}
+
+.no-collaborators p {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.no-collaborators span {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.collaborators-table-container {
+  overflow-x: auto;
+}
+
+.collaborators-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.collaborators-table th,
+.collaborators-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.collaborators-table th {
+  font-weight: 600;
+  color: #666;
+  background-color: #f9f9f9;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.role-admin {
+  background-color: #e6f7ed;
+  color: #00875a;
+}
+
+.role-check-in {
+  background-color: #e6f0f7;
+  color: #0052cc;
+}
+
+.role-accountant {
+  background-color: #fff7e6;
+  color: #ff8c00;
+}
+
+.edit-role-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-role-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+}
+
+.edit-role-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.save-role-btn,
+.cancel-role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.save-role-btn {
+  background-color: #00875a;
+  color: white;
+}
+
+.cancel-role-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.collaborator-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-role-button,
+.remove-collaborator-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-role-button {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.edit-role-button:hover {
+  background-color: #e0e0e0;
+}
+
+.remove-collaborator-button {
+  background-color: #ffebee;
+  color: #f44336;
+}
+
+.remove-collaborator-button:hover {
+  background-color: #ffcdd2;
+}
+
+.roles-info-panel {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.roles-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.roles-info-header h3 {
+  margin: 0;
+  color: #6b2fa5;
+}
+
+.roles-info-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.role-card {
+  background-color: white;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.role-card h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #6b2fa5;
+}
+
+.role-card p {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.role-card ul {
+  margin-top: 0;
+  padding-left: 20px;
+}
+
+.role-card li {
+  margin-bottom: 4px;
+}
+
+.error-message,
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.close-error,
+.close-success {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.collaboration-disabled-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #fff7e6;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.collaboration-disabled-message h2 {
+  margin: 16px 0 8px;
+  color: #ff8c00;
+}
+
+.collaboration-disabled-message p {
+  margin-bottom: 20px;
+  max-width: 500px;
+}
+
+.enable-collaboration-button {
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.enable-collaboration-button:hover {
+  background-color: #5a2589;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .roles-info-content {
+    grid-template-columns: 1fr;
+  }
+
+  .roles-container {
+    flex-direction: column;
+  }
+
+  .role-option {
+    width: 100%;
+  }
+
+  .add-found-user-actions {
+    flex-direction: column;
+  }
+
+  .collaborators-table th:nth-child(4),
+  .collaborators-table td:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .uid-search-input-container {
+    flex-direction: column;
+  }
+
+  .uid-search-button {
+    width: 100%;
+  }
+
+  .found-user-info {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .collaborators-table th:nth-child(2),
+  .collaborators-table td:nth-child(2) {
+    display: none;
+  }
+}
+

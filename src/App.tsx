@@ -35,8 +35,12 @@ const BookerTicketInfo = lazy(() => import("./pages/BookerTicketInfo"))
 const VerifyTicket = lazy(() => import("./pages/VerifyTicket"))
 const Verification = lazy(() => import("./pages/Verification"))
 const TicketHistory = lazy(() => import("./pages/ticketHistory"))
+const Team = lazy(() => import("./pages/team"))
 const TicketHistoryInfo = lazy(() => import("./pages/ticketHistoryInfo"))
-const TailwindTest = lazy(() => import("./pages/TailwindTest"));
+const TailwindTest = lazy(() => import("./pages/TailwindTest"))
+const Collabs = lazy(() => import("./pages/collabs"))
+const CollabVerify = lazy(() => import("./pages/collab-verify"))
+const CollabPayout = lazy(() => import("./pages/collab-payout"))
 
 declare global {
   interface Window {
@@ -99,7 +103,6 @@ function App() {
             <Route path="/forgot-password" element={user ? <Navigate to="/home" /> : <ForgotPassword />} />
             <Route path="/LoginBooker" element={<LoginBooker />} />
             <Route path="/tailwind-test" element={<TailwindTest />} />
-
 
             {/* Modified to be public routes */}
             <Route path="/home" element={<Home />} />
@@ -176,6 +179,18 @@ function App() {
               }
             />
             <Route
+              path="/team"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <Team />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
               path="/bookerticketinfo/:id"
               element={
                 user ? (
@@ -205,6 +220,42 @@ function App() {
                 user ? (
                   <BookerRoute>
                     <Verification />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/collabs"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <Collabs />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/collab-verify"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <CollabVerify />
+                  </BookerRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/collab-payout"
+              element={
+                user ? (
+                  <BookerRoute>
+                    <CollabPayout />
                   </BookerRoute>
                 ) : (
                   <Navigate to="/login" />

@@ -31,6 +31,7 @@
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.485.0",
     "mailersend": "^2.5.0",
+    "node-mailjet": "^6.0.8",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

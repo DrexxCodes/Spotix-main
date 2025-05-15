@@ -11,6 +11,7 @@ import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
 import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
+import "./profile.css"
 
 interface UserProfile {
   uid: string
@@ -523,6 +524,32 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Add a new UID section after the User Details section */}
+        <div className="form-section">
+          <h2 className="section-title">User ID</h2>
+          <div className="form-group">
+            <label htmlFor="uid">Your User ID</label>
+            <div className="uid-container">
+              <input type="text" id="uid" value={user.uid} readOnly className="readonly-input uid-input" />
+              <button
+                type="button"
+                className={`uid-copy-btn ${copySuccess ? "copy-success" : ""}`}
+                onClick={() => {
+                  navigator.clipboard.writeText(user.uid)
+                  setCopySuccess(true)
+                  setTimeout(() => setCopySuccess(false), 3000)
+                  alert("Your UID is copied.")
+                }}
+              >
+                Copy UID
+              </button>
+            </div>
+            <p className="input-hint">
+              Your unique user identifier is needed when someone wants to add you as a team member
+            </p>
+          </div>
+        </div>
+
         {/* Auth Change Section */}
         <div className="form-section">
           <h2 className="section-title">Auth Change</h2>
@@ -746,7 +773,6 @@ const Profile = () => {
     </div>
   )
 }
-
 
 const inputHintStyle = {
   fontSize: "12px",

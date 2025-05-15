@@ -383,3 +383,116 @@ body .booker-tickets-container,
 .booker-tickets-container {
   z-index: 1 !important;
 }
+
+
+/* Booker Tickets Styles */
+.booker-tickets-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tickets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.team-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.team-button:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.new-tag {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff5722;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.section-title {
+  margin: 24px 0 16px;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.collaborated-title {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.collaborated-table {
+  margin-top: 16px;
+}
+
+.collaborated-card {
+  border-left: 3px solid #6b2fa5;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.role-admin {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.role-checkin {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.role-accountant {
+  background-color: #fff8e1;
+  color: #f57c00;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .team-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,119 @@
+.ticket-info-skeleton {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ticket-info-header-skeleton {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.ticket-title-skeleton {
+  width: 70%;
+  height: 28px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  margin: 0 auto 10px;
+  animation: pulse 1.5s infinite;
+}
+
+.ticket-subtitle-skeleton {
+  width: 50%;
+  height: 20px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  margin: 0 auto;
+  animation: pulse 1.5s infinite;
+}
+
+.ticket-details-skeleton {
+  margin-bottom: 25px;
+}
+
+.ticket-detail-item-skeleton {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detail-label-skeleton {
+  width: 30%;
+  height: 18px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite;
+}
+
+.detail-value-skeleton {
+  width: 60%;
+  height: 18px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite;
+}
+
+.ticket-actions-skeleton {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.action-button-skeleton {
+  width: 48%;
+  height: 40px;
+  background-color: #e9ecef;
+  border-radius: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+.ticket-qr-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-code-skeleton {
+  width: 200px;
+  height: 200px;
+  background-color: #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  animation: pulse 1.5s infinite;
+}
+
+.qr-label-skeleton {
+  width: 150px;
+  height: 16px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 768px) {
+  .ticket-info-skeleton {
+    padding: 15px;
+  }
+
+  .qr-code-skeleton {
+    width: 150px;
+    height: 150px;
+  }
+}
