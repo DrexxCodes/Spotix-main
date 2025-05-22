@@ -10,10 +10,10 @@ export default async function verifyRoute(fastify, options) {
     }
 
     const bankCodes = {
-      "Opay": "999991",
-      "Palmpay": "803",
-      "Moniepoint": "999992",
-      "Kuda": "902005",
+      "Opay": "999992",
+      "Palmpay": "999991",
+      "Moniepoint": "50515",
+      "Kuda": "50515",
       "First Bank": "011",
       "Access Bank": "044",
       "GT Bank": "058",
@@ -24,7 +24,7 @@ export default async function verifyRoute(fastify, options) {
       "Fidelity Bank": "070",
       "Union Bank": "032",
       "Stanbic IBTC": "221",
-      "Ecobank": "030",
+      "Ecobank": "050",
     }
 
     const bankCode = bankCodes[bankName]
