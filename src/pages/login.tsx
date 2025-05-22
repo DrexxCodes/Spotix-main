@@ -109,7 +109,7 @@ const Login = () => {
         sessionStorage.removeItem("redirectAfterLogin")
         navigate(redirectPath)
       } else {
-        navigate("/")
+        navigate("/home")
       }
     } catch (err: any) {
       console.error("Login error:", err)
@@ -248,3 +248,6 @@ const Login = () => {
 }
 
 export default Login
+
+
+// Push for modular regression of the logic responsible for bi modal authentication
