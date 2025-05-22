@@ -21,6 +21,8 @@ import Footer from "../components/footer"
 import WalletDisplay from "../components/WalletDisplay"
 import LoginButton from "../components/loginBtn"
 import NotVerified from "../components/NotVerified"
+import NoNetwork from "../components/noNetwork"
+import "./home.css"
 
 interface EventType {
   id: string
@@ -41,17 +43,17 @@ interface EventType {
 
 // Loading skeleton component for event cards
 const EventCardSkeleton = () => (
-  <div className="relative bg-white rounded-lg shadow-md p-4 flex flex-col animate-pulse">
-    <div className="absolute top-3 right-3 h-6 w-16 bg-gray-200 rounded-full"></div>
-    <div className="w-full h-40 bg-gray-200 rounded-md mb-4"></div>
-    <div className="h-6 w-3/4 bg-gray-200 rounded-md mb-2"></div>
-    <div className="h-4 w-1/2 bg-gray-200 rounded-md mb-1"></div>
-    <div className="h-4 w-2/3 bg-gray-200 rounded-md mb-1"></div>
-    <div className="h-4 w-1/2 bg-gray-200 rounded-md mb-4"></div>
-
-    <div className="flex justify-between items-center mt-auto">
-      <div className="h-6 w-16 bg-gray-200 rounded-full"></div>
-      <div className="h-6 w-12 bg-gray-200 rounded-md"></div>
+  <div className="event-card-skeleton animate-pulse">
+    <div className="skeleton-tag"></div>
+    <div className="skeleton-date"></div>
+    <div className="skeleton-image"></div>
+    <div className="skeleton-title"></div>
+    <div className="skeleton-type"></div>
+    <div className="skeleton-venue"></div>
+    <div className="skeleton-booker"></div>
+    <div className="skeleton-footer">
+      <div className="skeleton-price"></div>
+      <div className="skeleton-likes"></div>
     </div>
   </div>
 )
@@ -67,6 +69,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true)
   const [liking, setLiking] = useState<Record<string, boolean>>({})
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [networkFailed, setNetworkFailed] = useState(false)
 
   const navigate = useNavigate()
 
@@ -136,6 +139,13 @@ const Home = () => {
     }
   }, [])
 
+  const handleRetry = async () => {
+    setLoading(true)
+    setNetworkFailed(false)
+    const result = await fetchFreshEvents()
+    if (!result) setNetworkFailed(true)
+  }
+
   useEffect(() => {
     const fetchEvents = async () => {
       // Try to get from cache first
@@ -163,7 +173,8 @@ const Home = () => {
       }
 
       // No valid cache, fetch fresh data
-      await fetchFreshEvents()
+      const result = await fetchFreshEvents()
+      if (!result) setNetworkFailed(true)
     }
 
     fetchEvents()
@@ -244,39 +255,29 @@ const Home = () => {
   }
 
   const renderEventCard = (event: EventType, isPast = false) => (
-    <div
-      key={event.id}
-      onClick={() => navigateToEvent(event.createdBy, event.id)}
-      className="relative bg-white rounded-lg shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-300 ease-in-out p-4 flex flex-col cursor-pointer"
-    >
-      <div
-        className={`absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full ${isPast ? "bg-red-500 .event-date-box.past-event" : "bg-[#6b2fa5] event-date-box"} text-white`}
-      >
-        {new Date(event.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-      </div>
-      <img
-        src={event.eventImage || "/placeholder.svg"}
-        alt={event.eventName}
-        className="w-full h-40 object-cover rounded-md mb-4"
-      />
-      <h2 className="text-lg font-bold text-gray-800 mb-1">{event.eventName}</h2>
-      <p className="text-sm text-gray-500 mb-1">{event.eventType}</p>
-      <p className="text-sm text-gray-500 mb-1">{event.eventVenue}</p>
-      <p className="text-sm text-gray-500 mb-4">By: {event.bookerName}</p>
+    <div key={event.id} onClick={() => navigateToEvent(event.createdBy, event.id)} className="event-card">
+      <div className="event-card-header">
+        <span className={`event-price-tag ${event.isFree ? "free" : "paid"}`}>{event.isFree ? "Free" : "Paid"}</span>
 
-      <div className="flex justify-between items-center mt-auto">
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${event.isFree ? "bg-green-100 text-green-700 event-price-free" : "bg-[#6b2fa5] text-white event-price-paid"}`}
-        >
-          {event.isFree ? "Free" : "Paid"}
+        <span className={`event-date-tag ${isPast ? "past" : ""}`}>
+          {new Date(event.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </span>
+      </div>
 
-        <button
-          onClick={(e) => handleLikeEvent(event, e)}
-          className="flex items-center space-x-1 text-[#6b2fa5] text-sm"
-          disabled={liking[event.id]}
-        >
-          {event.isLiked ? <i className="bx bxs-heart text-lg"></i> : <i className="bx bx-heart text-lg"></i>}
+      <div className="event-card-image">
+        <img src={event.eventImage || "/placeholder.svg"} alt={event.eventName} />
+      </div>
+
+      <div className="event-card-content">
+        <h2 className="event-title">{event.eventName}</h2>
+        <p className="event-type">{event.eventType}</p>
+        <p className="event-venue">{event.eventVenue}</p>
+        <p className="event-booker">By: {event.bookerName}</p>
+      </div>
+
+      <div className="event-card-footer">
+        <button onClick={(e) => handleLikeEvent(event, e)} className="event-like-button" disabled={liking[event.id]}>
+          {event.isLiked ? <i className="bx bxs-heart"></i> : <i className="bx bx-heart"></i>}
           <span>{formatNumber(event.likes || 0)}</span>
         </button>
       </div>
@@ -293,31 +294,25 @@ const Home = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-  
       <UserHeader />
       <NotVerified />
+      {networkFailed && <NoNetwork retry={handleRetry} />}
 
-      <div className="p-6 home-container">
-        <div className="text-center mb-8 home-header">
-          <h1 className="text-3xl font-bold text-[#6b2fa5]">
-            Welcome{isAuthenticated ? `, ${username}` : ""} to Spotix!
-          </h1>
+      <div className="home-container">
+        <div className="home-header">
+          <h1>Welcome{isAuthenticated ? `, ${username}` : ""} to Spotix!</h1>
           {isAuthenticated ? <WalletDisplay /> : <LoginButton />}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 justify-center mb-40px search-filter-container">
+        <div className="search-filter-container">
           <input
             type="text"
             placeholder="Search by Event Name or ID"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="border rounded-lg px-4 py-2 w-full md:w-1/3 search-bar"
+            className="search-bar"
           />
-          <select
-            value={filterType || ""}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="border rounded-lg px-4 py-2 w-full md:w-1/4 filter-dropdown"
-          >
+          <select value={filterType || ""} onChange={(e) => setFilterType(e.target.value)} className="filter-dropdown">
             <option value="">All Types</option>
             <option value="Night party">Night Party</option>
             <option value="Concert">Concert</option>
@@ -329,7 +324,7 @@ const Home = () => {
           <select
             value={priceFilter || ""}
             onChange={(e) => setPriceFilter(e.target.value)}
-            className="border rounded-lg px-4 py-2 w-full md:w-1/4 filter-dropdown"
+            className="filter-dropdown"
           >
             <option value="">All Prices</option>
             <option value="free">Free Events</option>
@@ -337,25 +332,25 @@ const Home = () => {
           </select>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Upcoming Events</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+        <h2 className="section-title">Upcoming Events</h2>
+        <div className="events-grid">
           {loading ? (
             renderSkeletons(8)
           ) : filteredUpcomingEvents.length > 0 ? (
             filteredUpcomingEvents.map((event) => renderEventCard(event))
           ) : (
-            <p className="text-center text-gray-500 col-span-full">No upcoming events found.</p>
+            <p className="no-events-message">No upcoming events found.</p>
           )}
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 past-events-title">Past Events</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <h2 className="section-title past-events-title">Past Events</h2>
+        <div className="events-grid">
           {loading ? (
             renderSkeletons(4)
           ) : filteredPastEvents.length > 0 ? (
             filteredPastEvents.map((event) => renderEventCard(event, true))
           ) : (
-            <p className="text-center text-gray-500 col-span-full">No past events found.</p>
+            <p className="no-events-message">No past events found.</p>
           )}
         </div>
       </div>

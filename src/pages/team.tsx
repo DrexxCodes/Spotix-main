@@ -33,6 +33,7 @@ interface EventOption {
   id: string
   name: string
   enabledCollaboration?: boolean
+  allowAgents?: boolean
 }
 
 interface Collaborator {
@@ -64,6 +65,7 @@ const Team = () => {
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   const [selectedEventName, setSelectedEventName] = useState<string>("")
   const [selectedEventCollaboration, setSelectedEventCollaboration] = useState<boolean>(false)
+  const [allowAgents, setAllowAgents] = useState<boolean>(false)
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [searchResults, setSearchResults] = useState<SearchedUser[]>([])
   const [searching, setSearching] = useState<boolean>(false)
@@ -77,6 +79,7 @@ const Team = () => {
   const [editingCollaborator, setEditingCollaborator] = useState<string | null>(null)
   const [editingRole, setEditingRole] = useState<"Admin" | "Check-in" | "Accountant">("Check-in")
   const [updatingEventCollaboration, setUpdatingEventCollaboration] = useState<boolean>(false)
+  const [updatingAgentActivity, setUpdatingAgentActivity] = useState<boolean>(false)
   const [configureMode, setConfigureMode] = useState<boolean>(false)
   const [uidSearchTerm, setUidSearchTerm] = useState<string>("")
   const [uidSearching, setUidSearching] = useState<boolean>(false)
@@ -113,6 +116,7 @@ const Team = () => {
             id: doc.id,
             name: data.eventName || "Unnamed Event",
             enabledCollaboration: data.enabledCollaboration === true,
+            allowAgents: data.allowAgents === true,
           })
         })
 
@@ -123,6 +127,7 @@ const Team = () => {
           setSelectedEventId(eventsData[0].id)
           setSelectedEventName(eventsData[0].name)
           setSelectedEventCollaboration(eventsData[0].enabledCollaboration === true)
+          setAllowAgents(eventsData[0].allowAgents === true)
           await fetchCollaborators(user.uid, eventsData[0].id)
         }
       } catch (error) {
@@ -185,6 +190,7 @@ const Team = () => {
     const selectedEvent = events.find((event) => event.id === eventId)
     setSelectedEventName(selectedEvent?.name || "")
     setSelectedEventCollaboration(selectedEvent?.enabledCollaboration === true)
+    setAllowAgents(selectedEvent?.allowAgents === true)
 
     if (eventId) {
       const user = auth.currentUser
@@ -229,6 +235,38 @@ const Team = () => {
       setErrorMessage("Failed to update event collaboration. Please try again.")
     } finally {
       setUpdatingEventCollaboration(false)
+    }
+  }
+
+  const handleToggleAgentActivity = async () => {
+    if (!selectedEventId) return
+
+    try {
+      setUpdatingAgentActivity(true)
+      setErrorMessage("")
+
+      const user = auth.currentUser
+      if (!user) return
+
+      // Update the event document
+      const eventDocRef = doc(db, "events", user.uid, "userEvents", selectedEventId)
+      await updateDoc(eventDocRef, {
+        allowAgents: !allowAgents,
+      })
+
+      // Update local state
+      setAllowAgents(!allowAgents)
+      setEvents(events.map((event) => (event.id === selectedEventId ? { ...event, allowAgents: !allowAgents } : event)))
+
+      setSuccessMessage(`Agent activity ${!allowAgents ? "enabled" : "disabled"} for this event.`)
+      setTimeout(() => {
+        setSuccessMessage("")
+      }, 3000)
+    } catch (error) {
+      console.error("Error updating agent activity:", error)
+      setErrorMessage("Failed to update agent activity. Please try again.")
+    } finally {
+      setUpdatingAgentActivity(false)
     }
   }
 
@@ -1053,6 +1091,32 @@ const Team = () => {
                         className="toggle-button"
                       >
                         {selectedEventCollaboration ? (
+                          <>
+                            <ToggleRight size={20} /> Disable
+                          </>
+                        ) : (
+                          <>
+                            <ToggleLeft size={20} /> Enable
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="event-agent-toggle">
+                    <h3>Agent Activity</h3>
+                    <div className="toggle-container">
+                      <p>
+                        {allowAgents
+                          ? "Agents can sell tickets for this event"
+                          : "Agents cannot sell tickets for this event"}
+                      </p>
+                      <button
+                        onClick={handleToggleAgentActivity}
+                        disabled={updatingAgentActivity}
+                        className="toggle-button"
+                      >
+                        {allowAgents ? (
                           <>
                             <ToggleRight size={20} /> Disable
                           </>

@@ -57,6 +57,29 @@ const Signup = () => {
     return email.toLowerCase().endsWith(".com")
   }
 
+  // Send welcome email after successful registration
+  const sendWelcomeEmail = async (user: any) => {
+    try {
+      // Send welcome email
+      const response = await fetch("https://spotix-backend.onrender.com/api/mail/welcome-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: fullName || username || user.displayName || "Valued Customer",
+        }),
+      })
+
+      if (!response.ok) {
+        console.error("Failed to send welcome email:", await response.text())
+      }
+    } catch (error) {
+      console.error("Error sending welcome email:", error)
+    }
+  }
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -99,6 +122,9 @@ const Signup = () => {
         createdAt: new Date(),
         emailVerified: false,
       })
+
+      // Send welcome email
+      await sendWelcomeEmail(user)
 
       // Clear form
       setEmail("")

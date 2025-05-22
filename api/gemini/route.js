@@ -13,14 +13,10 @@ const eventSchema = z.object({
 export default async function enhanceRoute(fastify, options) {
   fastify.post("/enhance", async (request, reply) => {
     try {
-      // Log incoming body
-      request.log.info("Received request body:", request.body)
-
       // Validate request body using Zod
       const validation = eventSchema.safeParse(request.body)
 
       if (!validation.success) {
-        request.log.warn("Validation failed:", validation.error)
         return reply.code(400).send({
           error: "Validation failed",
           issues: validation.error.errors.map(e => ({
@@ -33,7 +29,7 @@ export default async function enhanceRoute(fastify, options) {
       const { eventName, eventDescription, eventDate, eventVenue, eventType } = validation.data
 
       const prompt = `
-Rewrite this event description to be more professional, engaging, and exciting. It should be about 200 words long.
+You are a professional event copywriter. Rewrite the following event description to make it more professional, exciting, and engaging. Include key details and help potential attendees understand why they should attend. Keep it around 150–250 words.
 
 Event Name: ${eventName}
 Event Type: ${eventType}
@@ -44,12 +40,8 @@ Original Description: "${eventDescription}"
 Enhanced Description:
       `
 
-      // Log prompt being sent to Hugging Face
-      request.log.info("Sending prompt to Hugging Face API...")
-      request.log.debug("Prompt content:", prompt)
-
       const hfResponse = await axios.post(
-        "https://api-inference.huggingface.co/models/google/flan-t5-large",
+        "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct",
         {
           inputs: prompt,
         },
@@ -58,13 +50,9 @@ Enhanced Description:
             Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
             "Content-Type": "application/json",
           },
-          timeout: 20000,
+          timeout: 20000, // optional: 20s timeout for slow models
         }
       )
-
-      // Log Hugging Face response structure
-      request.log.info("Hugging Face API responded successfully.")
-      request.log.debug("Response data:", hfResponse.data)
 
       if (hfResponse.data?.error) {
         throw new Error(hfResponse.data.error)
@@ -82,3 +70,16 @@ Enhanced Description:
     }
   })
 }
+
+
+
+
+// npm install @fastify/env
+// npm install @fastify/axios
+// npm install @fastify/plugin
+// npm install @huggingface/inference --save
+// npm install @huggingface/hub --save
+// npm install @huggingface/node-hub --save
+// npm install dotenv
+// npm install @huggingface/inference --save
+// npm install @huggingface/transformers --save

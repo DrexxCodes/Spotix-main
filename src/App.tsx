@@ -18,6 +18,15 @@ const Home = lazy(() => import("./pages/home"))
 const ForgotPassword = lazy(() => import("./pages/forgot-password"))
 const AdminPermissions = lazy(() => import("./pages/AdminPermissions"))
 const AdminSuite = lazy(() => import("./pages/AdminSuite"))
+const AgentOnboard = lazy(() => import("./pages/agent-onboard"))
+const AgentFunding = lazy(() => import("./pages/agent-funding"))
+const AgentPayout = lazy(() => import("./pages/agent-payout"))
+const Agent = lazy(() => import("./pages/agent"))
+const AgentTransactions = lazy(() => import("./pages/agent-transactions"))
+const AgentAuth = lazy(() => import("./pages/agentAuth"))
+const AgentVAuth = lazy(() => import("./pages/agent-v-auth"))
+const UserAuth = lazy(() => import("./pages/user-v-auth"))
+const AgentPay = lazy(() => import("./pages/agent-pay"))
 const BookerRole = lazy(() => import("./pages/bookerRole"))
 const CreateEvent = lazy(() => import("./pages/createEvent"))
 const Success = lazy(() => import("./pages/success"))
@@ -103,6 +112,7 @@ function App() {
             <Route path="/forgot-password" element={user ? <Navigate to="/home" /> : <ForgotPassword />} />
             <Route path="/LoginBooker" element={<LoginBooker />} />
             <Route path="/tailwind-test" element={<TailwindTest />} />
+            <Route path="/agentAuth" element={<AgentAuth />} />
 
             {/* Modified to be public routes */}
             <Route path="/home" element={<Home />} />
@@ -116,6 +126,11 @@ function App() {
             <Route path="/paystack-success" element={user ? <PaystackSuccess /> : <Navigate to="/login" />} />
             <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
+            <Route path="/agent" element={user ? <Agent /> : <Navigate to="/login" />} />
+            <Route path="/agent-v-auth" element={user ? <AgentVAuth /> : <Navigate to="/login" />} />
+            <Route path="/user-v-auth" element={user ? <UserAuth /> : <Navigate to="/login" />} />
+            <Route path="/agent-pay" element={user ? <AgentPay /> : <Navigate to="/login" />} />
+
 
             {/* Booker-only routes */}
             <Route
@@ -263,6 +278,7 @@ function App() {
               }
             />
 
+            {/* Admin-only routes */}
             <Route
               path="/admin"
               element={
@@ -282,6 +298,58 @@ function App() {
                 user ? (
                   <AdminRoute>
                     <AdminPermissions />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/agent-onboard"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AgentOnboard />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+            <Route
+              path="/agent-funding"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AgentFunding />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+              <Route
+              path="/agent-payout"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AgentPayout />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+              <Route
+              path="/agent-transactions"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AgentTransactions />
                   </AdminRoute>
                 ) : (
                   <Navigate to="/login" />

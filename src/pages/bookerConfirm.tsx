@@ -150,7 +150,7 @@ const BookerConfirm = () => {
   const sendConfirmationEmail = async (name: string, email: string) => {
     setEmailSending(true)
     try {
-      const response = await fetch("/api/mail/booker-confirmation", {
+      const response = await fetch("https://spotix-backend.onrender.com/api/mail/booker-confirmation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

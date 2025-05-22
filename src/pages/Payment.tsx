@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
-import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail, HeartHandshake } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -143,6 +143,11 @@ const Payment = () => {
       isMounted = false // Set the flag to false when the component unmounts
     }
   }, [location, navigate])
+
+  // Format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
 
   // Fetch event details
   const fetchEventDetails = async (creatorId: string, eventId: string) => {
@@ -476,6 +481,14 @@ const Payment = () => {
     }
   }
 
+  const handleAgentPay = () => {
+    if (!paymentData) return
+
+    // Open agent-pay.tsx in a new tab with the necessary data
+    const url = `/agent-pay?eventId=${paymentData.eventId}&eventCreatorId=${paymentData.eventCreatorId}&eventName=${encodeURIComponent(paymentData.eventName)}&ticketType=${encodeURIComponent(paymentData.ticketType)}&ticketPrice=${finalPrice}`
+    window.open(url, "_blank")
+  }
+
   const handleStartPayment = async () => {
     if (!paymentData) return
 
@@ -485,6 +498,9 @@ const Payment = () => {
       return
     } else if (paymentMethod === "bitcoin") {
       setShowBitcoinDialog(true)
+      return
+    } else if (paymentMethod === "agent") {
+      handleAgentPay()
       return
     }
 
@@ -754,8 +770,8 @@ const Payment = () => {
                   <p>
                     Discount applied:{" "}
                     {appliedDiscount.type === "percentage"
-                      ? `${appliedDiscount.value}% off (₦${discountAmount.toFixed(2)})`
-                      : `₦${appliedDiscount.value.toFixed(2)} off`}
+                      ? `${appliedDiscount.value}% off (₦${formatNumber(discountAmount)})`
+                      : `₦${formatNumber(appliedDiscount.value)} off`}
                   </p>
                   <button
                     className="remove-discount-btn"
@@ -778,7 +794,7 @@ const Payment = () => {
               >
                 <div className="payment-method-icon">💰</div>
                 <div className="payment-method-name">My Wallet</div>
-                <div className="payment-method-balance">₦{walletBalance.toFixed(2)}</div>
+                <div className="payment-method-balance">₦{formatNumber(walletBalance)}</div>
               </div>
               <div
                 className={`payment-method ${paymentMethod === "paystack" ? "selected" : ""}`}
@@ -787,6 +803,17 @@ const Payment = () => {
                 <div className="payment-method-icon">💳</div>
                 <div className="payment-method-name">Paystack</div>
                 <div className="payment-method-description">Card Payment</div>
+              </div>
+              <div
+                className={`payment-method ${paymentMethod === "agent" ? "selected" : ""}`}
+                onClick={() => setPaymentMethod("agent")}
+              >
+                <div className="payment-method-icon">
+                  <HeartHandshake size={24} />
+                </div>
+                <div className="payment-method-name">Agent Pay</div>
+                <div className="payment-method-description">Pay via Agent</div>
+                <div className="new-tag">NEW</div>
               </div>
               <div
                 className={`payment-method ${paymentMethod === "bitcoin" ? "selected" : ""}`}
@@ -820,14 +847,14 @@ const Payment = () => {
                 <>
                   <div className="payment-summary-row original-price">
                     <span>Original Price:</span>
-                    <span>₦{Number(paymentData.ticketPrice).toFixed(2)}</span>
+                    <span>₦{formatNumber(Number(paymentData.ticketPrice))}</span>
                   </div>
                   <div className="payment-summary-row discount">
                     <span>Discount:</span>
                     <span>
                       {appliedDiscount.type === "percentage"
-                        ? `${appliedDiscount.value}% (₦${discountAmount.toFixed(2)})`
-                        : `₦${appliedDiscount.value.toFixed(2)}`}
+                        ? `${appliedDiscount.value}% (₦${formatNumber(discountAmount)})`
+                        : `₦${formatNumber(appliedDiscount.value)}`}
                     </span>
                   </div>
                 </>
@@ -835,7 +862,7 @@ const Payment = () => {
 
               <div className="payment-summary-row total">
                 <span>Total Price:</span>
-                <span>₦{finalPrice.toFixed(2)}</span>
+                <span>₦{formatNumber(finalPrice)}</span>
               </div>
             </div>
             <div className="payment-actions">
@@ -913,7 +940,7 @@ const Payment = () => {
                     )}
                     <div className="ticket-detail-row">
                       <span>Amount Paid:</span>
-                      <span>₦{finalPrice.toFixed(2)}</span>
+                      <span>₦{formatNumber(finalPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -1038,7 +1065,7 @@ const Payment = () => {
                   {currentStep === "charging" && stepStatus === "success" && <CheckCircle className="text-green-500" />}
                   {currentStep === "charging" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
-                <div className="step-label">Charging ₦{finalPrice.toFixed(2)} from Wallet</div>
+                <div className="step-label">Charging ₦{formatNumber(finalPrice)} from Wallet</div>
               </div>
 
               <div

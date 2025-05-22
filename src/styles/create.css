@@ -1,0 +1,99 @@
+/* Additional CSS for the collaboration and agent settings */
+
+.collaboration-settings {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.settings-subheader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 16px;
+}
+
+.settings-icon {
+  margin-right: 8px;
+  color: #6b2fa5;
+}
+
+.collaboration-disabled-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+  margin-bottom: 15px;
+  background-color: #fff4e5;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+}
+
+.collaboration-disabled-notice .alert-icon {
+  color: #ff9800;
+  margin-right: 8px;
+}
+
+.collaboration-disabled-notice p {
+  margin: 8px 0;
+  color: #664d03;
+}
+
+.profile-settings-button {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.profile-settings-button:hover {
+  background-color: #5a2589;
+}
+
+.agent-info-message {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+}
+
+.agent-info-message .check-icon {
+  color: #4caf50;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.agent-info-message p {
+  margin: 0;
+  color: #1b5e20;
+  font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .collaboration-settings {
+    padding: 12px;
+  }
+
+  .settings-subheader {
+    font-size: 15px;
+  }
+
+  .collaboration-disabled-notice,
+  .agent-info-message {
+    padding: 10px;
+  }
+
+  .profile-settings-button {
+    width: 100%;
+  }
+}

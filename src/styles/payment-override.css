@@ -42,3 +42,31 @@
     transform: rotate(360deg);
   }
 }
+
+.payment-method {
+  position: relative;
+}
+
+.new-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: #ff4d4f;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.payment-method-icon svg {
+  color: #6b2fa5;
+}
+
+.payment-summary-row span:last-child,
+.payment-method-balance,
+.ticket-detail-row span:last-child {
+  font-family: monospace;
+}
+

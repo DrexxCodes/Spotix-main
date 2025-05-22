@@ -1,0 +1,249 @@
+.agent-v-auth-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.auth-icon {
+  color: #6b2fa5;
+  margin-right: 1rem;
+  width: 32px;
+  height: 32px;
+}
+
+.auth-header h1 {
+  font-size: 1.8rem;
+  color: #333;
+  margin: 0;
+}
+
+.error-message,
+.success-message {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.success-message {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.error-message svg,
+.success-message svg {
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.agent-info-section {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.agent-info-section h2 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #4b5563;
+}
+
+.agent-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.auth-form {
+  margin-bottom: 2rem;
+}
+
+.auth-form h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.form-description {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.form-group label svg {
+  margin-right: 0.5rem;
+  color: #6b2fa5;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #6b2fa5;
+  box-shadow: 0 0 0 3px rgba(107, 47, 165, 0.1);
+}
+
+.create-auth-button {
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.create-auth-button:hover {
+  background-color: #5a2589;
+}
+
+.create-auth-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.generated-key-section {
+  background-color: #f0f9ff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #6b2fa5;
+}
+
+.generated-key-section h2 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.key-instructions {
+  color: #4b5563;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.key-display {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px dashed #6b2fa5;
+  margin-bottom: 1rem;
+}
+
+.key-value {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6b2fa5;
+  flex-grow: 1;
+  word-break: break-all;
+}
+
+.copy-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #4b5563;
+  margin-left: 1rem;
+  white-space: nowrap;
+}
+
+.copy-button:hover {
+  background-color: #e5e7eb;
+}
+
+.key-info {
+  background-color: #fffbeb;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+}
+
+.key-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+@media (max-width: 768px) {
+  .agent-v-auth-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .agent-info {
+    grid-template-columns: 1fr;
+  }
+}

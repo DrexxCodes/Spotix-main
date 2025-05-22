@@ -1,0 +1,496 @@
+.agent-transactions-container {
+  max-width: 1200px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.agent-transactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.agent-transactions-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+}
+
+.agent-info {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.agent-id,
+.agent-wallet,
+.agent-earnings {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #f5f5f5;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.agent-id {
+  color: #4a6cf7;
+}
+
+.agent-wallet {
+  color: #2e7d32;
+}
+
+.agent-earnings {
+  color: #f57c00;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  background-color: #fdecea;
+  color: #d32f2f;
+  border-left: 4px solid #d32f2f;
+}
+
+.transaction-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.summary-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.summary-icon.funding {
+  background-color: #4a6cf7;
+}
+
+.summary-icon.sales {
+  background-color: #2e7d32;
+}
+
+.summary-icon.commission {
+  background-color: #f57c00;
+}
+
+.summary-icon.payouts {
+  background-color: #d32f2f;
+}
+
+.summary-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-details h3 {
+  margin: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-amount {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transactions-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  background-color: #f5f5f5;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex: 1 0 auto;
+  text-align: center;
+  min-width: 120px;
+}
+
+.tab-button:hover {
+  background-color: #e0e0e0;
+}
+
+.tab-button.active {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.transactions-section {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.section-header:not(:first-child) {
+  margin-top: 2rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transaction-table-container {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  table-layout: auto;
+}
+
+.transaction-table th {
+  background-color: #f9f9f9;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.transaction-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.transaction-table tr:last-child td {
+  border-bottom: none;
+}
+
+.transaction-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.amount-cell {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.amount-cell.positive {
+  color: #2e7d32;
+}
+
+.amount-cell.negative {
+  color: #d32f2f;
+}
+
+.commission-cell {
+  color: #f57c00;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.event-name {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reference {
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.no-data {
+  text-align: center;
+  color: #888;
+  padding: 2rem !important;
+}
+
+/* Scroll indicator for tables */
+.transaction-table-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.05));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.transaction-table-container:hover::after {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .agent-transactions-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .transaction-summary {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .summary-card {
+    padding: 1.25rem;
+  }
+
+  .transactions-section {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .agent-transactions-container {
+    margin: 1rem auto;
+  }
+
+  .agent-transactions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 0.75rem;
+  }
+
+  .agent-transactions-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .agent-info {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .agent-id,
+  .agent-wallet,
+  .agent-earnings {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    flex: 1 0 auto;
+    max-width: calc(50% - 0.375rem);
+  }
+
+  .transaction-summary {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .summary-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .summary-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .summary-details h3 {
+    font-size: 0.9rem;
+  }
+
+  .summary-amount {
+    font-size: 1.2rem;
+  }
+
+  .transactions-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .tab-button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    min-width: 0;
+  }
+
+  .transactions-section {
+    padding: 1rem;
+  }
+
+  .section-header {
+    padding: 0.75rem 0;
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  /* Show scroll indicator text on mobile */
+  .transaction-table-container::after {
+    content: "← Swipe →";
+    width: auto;
+    background: rgba(255, 255, 255, 0.8);
+    color: #888;
+    font-size: 0.8rem;
+    font-style: italic;
+    text-align: center;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    top: auto;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .agent-transactions-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .agent-info {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agent-id,
+  .agent-wallet,
+  .agent-earnings {
+    max-width: 100%;
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+
+  .transaction-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .transactions-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-button {
+    width: 100%;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+  }
+
+  .section-header h2 {
+    font-size: 1rem;
+  }
+
+  .toggle-button {
+    padding: 0.8rem;
+  }
+
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}

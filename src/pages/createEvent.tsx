@@ -6,11 +6,11 @@ import { useState, useEffect, useRef } from "react"
 import { db, auth } from "../services/firebase"
 import { collection, addDoc, doc, getDoc, setDoc } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
-import { Plus, HelpCircle, Wand2, Check, Calendar, Clock, Upload, X } from "lucide-react"
+import { Plus, HelpCircle, Wand2, Check, Upload, X, Users, AlertCircle, UserCheck } from "lucide-react"
 import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
 import { uploadImage } from "../utils/imageUploader"
-// import "../styles/create.css"
+import "../styles/create.css"
 
 const CreateEvent = () => {
   const [currentDateTime, setCurrentDateTime] = useState("")
@@ -46,6 +46,12 @@ const CreateEvent = () => {
 
   const [enableMaxSize, setEnableMaxSize] = useState(false)
   const [maxSize, setMaxSize] = useState("")
+
+  // New state variables for collaboration and agent settings
+  const [enabledCollaboration, setEnabledCollaboration] = useState(false)
+  const [allowAgents, setAllowAgents] = useState(false)
+  const [isCollaborationEnabled, setIsCollaborationEnabled] = useState(false)
+  const [collaborationMessage, setCollaborationMessage] = useState("")
 
   const [loading, setLoading] = useState(true)
   const [enhancing, setEnhancing] = useState(false)
@@ -91,6 +97,13 @@ const CreateEvent = () => {
             navigate("/bookerRole")
           } else {
             // User is a booker, allow access to page
+            // Check if collaboration is enabled for this user
+            setIsCollaborationEnabled(userData.enabledCollaboration === true)
+            if (userData.enabledCollaboration !== true) {
+              setCollaborationMessage(
+                "Collaboration is disabled. Enable it in your booker profile settings to add team members.",
+              )
+            }
             setLoading(false)
           }
         } else {
@@ -416,6 +429,9 @@ const CreateEvent = () => {
         ticketsSold: 0,
         totalRevenue: 0,
         status: "active",
+        // Add collaboration and agent settings
+        enabledCollaboration: enabledCollaboration,
+        allowAgents: allowAgents,
       }
 
       // Add event to the events collection under the user's UID
@@ -733,6 +749,74 @@ const CreateEvent = () => {
                   min="1"
                   required={enableMaxSize}
                 />
+              )}
+            </div>
+
+            {/* Collaboration Settings */}
+            <div className="collaboration-settings">
+              <h4 className="settings-subheader">
+                <Users size={18} className="settings-icon" />
+                Team Collaboration Settings
+              </h4>
+
+              {!isCollaborationEnabled ? (
+                <div className="collaboration-disabled-notice">
+                  <AlertCircle size={16} className="alert-icon" />
+                  <p>{collaborationMessage}</p>
+                  <button type="button" className="profile-settings-button" onClick={() => navigate("/bookerprofile")}>
+                    Go to Profile Settings
+                  </button>
+                </div>
+              ) : (
+                <div className="option-row switch-container">
+                  <label>
+                    Enable Team Collaboration for this Event
+                    <div className="switch">
+                      <input
+                        type="checkbox"
+                        checked={enabledCollaboration}
+                        onChange={() => setEnabledCollaboration(!enabledCollaboration)}
+                      />
+                      <span className="slider round"></span>
+                    </div>
+                  </label>
+                  <span title="Allow other users to help manage this event">
+                    <HelpCircle size={16} />
+                  </span>
+                </div>
+              )}
+
+                            {enabledCollaboration && (
+                <div className="agent-info-message">
+                  <Check size={16} className="check-icon" />
+                  <p>You can now add Team members after creating the event from the Teams page.</p>
+                </div>
+              )}
+
+              {/* Agent Activity Settings */}
+              <h4 className="settings-subheader">
+                <UserCheck size={18} className="settings-icon" />
+                Agent Activity Settings
+              </h4>
+
+              <div className="option-row switch-container">
+                <label>
+                  Allow Agent Ticket Sales for this Event
+                  <div className="switch">
+                    <input type="checkbox" checked={allowAgents} onChange={() => setAllowAgents(!allowAgents)} />
+                    <span className="slider round"></span>
+                  </div>
+                </label>
+                <span title="Enable agents to sell tickets for this event">
+                  <HelpCircle size={16} />
+                </span>
+              </div>
+
+              {allowAgents && (
+                <div className="agent-info-message">
+                  <Check size={16} className="check-icon" />
+                  <p>Agents will be able to sell tickets for this event and earn commission.</p>
+                </div>
               )}
             </div>
           </div>

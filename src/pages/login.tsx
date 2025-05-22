@@ -59,42 +59,6 @@ const Login = () => {
     }
   }, [location])
 
-  // Send welcome email after successful verification
-  const sendWelcomeEmail = async (user: any) => {
-    try {
-      const userDocRef = doc(db, "users", user.uid)
-      const userDoc = await getDoc(userDocRef)
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data()
-        const userName = userData.fullName || userData.username || user.displayName || "Valued Customer"
-
-        // Send welcome email
-        const response = await fetch("/api/mail/welcome-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: user.email,
-            name: userName,
-          }),
-        })
-
-        if (!response.ok) {
-          console.error("Failed to send welcome email:", await response.text())
-        }
-
-        // Update user's emailVerified status in Firestore
-        await updateDoc(userDocRef, {
-          emailVerified: true,
-        })
-      }
-    } catch (error) {
-      console.error("Error sending welcome email:", error)
-    }
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -121,9 +85,12 @@ const Login = () => {
       if (userDoc.exists()) {
         const userData = userDoc.data()
 
-        // If Firebase says email is verified but our DB doesn't, send welcome email and update DB
+        // If Firebase says email is verified but our DB doesn't, update DB
         if (user.emailVerified && userData.emailVerified === false) {
-          await sendWelcomeEmail(user)
+          // Update user's emailVerified status in Firestore
+          await updateDoc(userDocRef, {
+            emailVerified: true,
+          })
         }
 
         // If Firestore says email is not verified, deny login

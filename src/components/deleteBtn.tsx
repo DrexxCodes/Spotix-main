@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Button = () => {
+const delButton = () => {
   return (
     <StyledWrapper>
       <button className="button">
@@ -68,4 +68,4 @@ const StyledWrapper = styled.div`
     transition-duration: .3s;
   }`;
 
-export default Button;
+export default delButton;
