@@ -6,6 +6,7 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firest
 import { db, auth } from "../services/firebase"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
+import { Helmet } from "react-helmet"
 import { ArrowLeft, User, Ticket, Info, X } from "lucide-react"
 import ShareBtn from "../components/shareBtn"
 import LoginButton from "../components/loginBtn"
@@ -431,6 +432,17 @@ const Event = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{eventData.eventName} - Event Details</title>
+        <meta name="description" content={`Details about the event: ${eventData.eventName}`} />
+        <link rel="canonical" href={eventUrl} />
+        <meta property="og:title" content={eventData.eventName} />
+        <meta property="og:description" content={`Details about the event: ${eventData.eventName}`} />
+        <meta property="og:image" content={eventData.eventImage || "/placeholder.svg"} />
+        <meta property="og:url" content={eventUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Spotix" />
+        </ Helmet>  
       <UserHeader />
       <div className="event-container-wrapper">
         <div className="event-container" style={eventStyle}>

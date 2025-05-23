@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import UserHeader from "../components/UserHeader"
+import { Helmet } from "react-helmet"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import DownloadButton from "../components/DownloadButton"
@@ -496,6 +497,7 @@ const TicketHistoryInfo = () => {
   if (error || !ticketDetails) {
     return (
       <>
+      
         <UserHeader />
         <div className="error-container">
           <h2>{error || "An error occurred"}</h2>
@@ -510,7 +512,36 @@ const TicketHistoryInfo = () => {
 
   return (
     <>
+
       <UserHeader />
+      <Helmet>
+        <title>{ticketDetails.eventName} Ticket Details | Spotix</title>
+        <meta name="description" content="View your ticket details" />
+        <link rel="canonical" href={`/ticket-history/${id}`} />
+        <meta property="og:title" content="Ticket Details | Spotix" />
+        <meta property="og:description" content="View your ticket details" />
+        <meta property="og:url" content={`/ticket-history/${id}`} />
+        <meta property="og:image" content="/logo.svg" />
+        <meta property="og:image:alt" content="Spotix Logo" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Spotix" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale:alternate" content="en_GB" />
+        <meta property="og:locale:alternate" content="en_NG" />
+        <meta property="og:locale:alternate" content="en_CA" />
+        <meta property="og:locale:alternate" content="en_AU" />
+        <meta property="og:locale:alternate" content="en_IN" />
+        <meta property="og:locale:alternate" content="en_PH" />
+        <meta property="og:locale:alternate" content="en_SG" />
+        <meta property="og:locale:alternate" content="en_ZA" />
+        <meta property="og:locale:alternate" content="en_IE" />
+        <meta property="og:locale:alternate" content="en_NZ" />
+      </Helmet>
+
+
+
+
+
       <div className="ticket-info-container">
         <div className="ticket-info-header">
           <button className="back-button" onClick={handleBackClick}>

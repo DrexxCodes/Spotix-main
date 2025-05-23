@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { Eye, EyeOff, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
@@ -163,6 +164,10 @@ const Signup = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Spotix - Sign Up</title>
+        <meta name="description" content="Sign up to begin your Spotix Adventure." />
+      </Helmet>
       <Preloader loading={loading || signingUp} />
       <div className="auth-container">
         <div className="auth-form">

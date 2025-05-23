@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
@@ -145,6 +146,22 @@ const TicketHistory = () => {
   return (
 
     <div className="flex flex-col min-h-screen bg-gray-50">
+            <Helmet>
+  <title>Spotix Ticket History</title>
+  <meta name="description" content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix." />
+  {/* Open Graph for social media */}
+  <meta property="og:title" content="Spotix | Discover and Book Campus Events" />
+  <meta property="og:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
+  <meta property="og:image" content="/meta.png" />
+  <meta property="og:url" content="https://spotix.com.ng" />
+  <meta property="og:type" content="website" />
+
+  {/* Twitter Card */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
+  <meta name="twitter:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
+  <meta name="twitter:image" content="/meta.png" />
+</Helmet>
       <UserHeader />
 
 

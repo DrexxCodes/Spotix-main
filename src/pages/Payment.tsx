@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
 import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail, HeartHandshake } from "lucide-react"
 import UserHeader from "../components/UserHeader"
@@ -732,6 +733,13 @@ const Payment = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{paymentData.eventName} Payment - Spotix</title>
+        <meta name="description" content="Secure payment for your event tickets on Spotix." />
+        <link rel="canonical" href={`${window.location.origin}/payment`} />
+        <meta property="og:title" content="Payment - Spotix" />
+        <meta property="og:description" content="Secure payment for your event tickets on Spotix." />
+        </Helmet>
       <UserHeader />
       <div className="payment-page-container">
         {!paymentStarted ? (

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { doc, setDoc, Timestamp, getDoc } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
 import AgentHeader from "../components/AgentHeader"
@@ -183,6 +184,23 @@ const AgentVAuth = () => {
 
   return (
     <>
+    
+    <Helmet>
+  <title>Agent Virtual Auth</title>
+  <meta name="description" content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix." />
+  {/* Open Graph for social media */}
+  <meta property="og:title" content="Spotix | Discover and Book Campus Events" />
+  <meta property="og:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
+  <meta property="og:image" content="/meta.png" />
+  <meta property="og:url" content="https://spotix.com.ng" />
+  <meta property="og:type" content="website" />
+
+  {/* Twitter Card */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
+  <meta name="twitter:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
+  <meta name="twitter:image" content="/meta.png" />
+</Helmet>
       <AgentHeader />
       <div className="agent-v-auth-container">
         <div className="auth-header">

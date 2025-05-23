@@ -296,7 +296,7 @@ const Home = () => {
     <div className="flex flex-col min-h-screen">
       
       <Helmet>
-  <title>Spotix | Discover and Book Campus Events</title>
+  <title>Spotix Event Home</title>
   <meta name="description" content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix." />
   {/* Open Graph for social media */}
   <meta property="og:title" content="Spotix | Discover and Book Campus Events" />

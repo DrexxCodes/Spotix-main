@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { Eye, EyeOff, AlertCircle, Mail, Loader2, CheckCircle } from "lucide-react"
@@ -150,6 +151,14 @@ const Login = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Login | Spotix</title>
+        <meta name="description" content="Login to Spotix" />
+        <link rel="canonical" href="/login" />
+        <meta property="og:title" content="Login | Spotix" />
+        <meta property="og:description" content="Login to Spotix" />
+        <meta property="og:url" content="/login" />
+        </Helmet>
       <div className="fix-login">
         <Preloader loading={loading || loggingIn} />
         <div className="auth-container">
