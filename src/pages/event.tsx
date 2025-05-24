@@ -12,7 +12,7 @@ import ShareBtn from "../components/shareBtn"
 import LoginButton from "../components/loginBtn"
 import "boxicons/css/boxicons.min.css"
 import "../responsive.css"
-// import "../styles/event-override.css"
+import "./event.css"
 
 interface EventType {
   id: string
@@ -41,6 +41,7 @@ interface EventType {
   createdBy: string
   likes?: number
   likedBy?: string[]
+  allowAgents?: boolean
 }
 
 // Loading skeleton component
@@ -92,6 +93,7 @@ const Event = () => {
   const [isSoldOut, setIsSoldOut] = useState(false)
   const [isSaleEnded, setIsSaleEnded] = useState(false)
   const [isEventPassed, setIsEventPassed] = useState(false)
+  const [isEventToday, setIsEventToday] = useState(false)
   const [bookerDetails, setBookerDetails] = useState<{
     username: string
     email: string
@@ -158,6 +160,17 @@ const Event = () => {
   }, [])
 
   const checkEventStatus = useCallback((data: EventType) => {
+    const now = new Date()
+    const eventDate = new Date(data.eventDate)
+
+    // Check if event is happening today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const eventDateOnly = new Date(eventDate)
+    eventDateOnly.setHours(0, 0, 0, 0)
+    const isToday = today.getTime() === eventDateOnly.getTime()
+    setIsEventToday(isToday)
+
     // Check if event is sold out
     if (data.enableMaxSize && data.maxSize && data.ticketsSold) {
       if (Number.parseInt(data.maxSize) <= data.ticketsSold) {
@@ -168,16 +181,20 @@ const Event = () => {
     // Check if sales have ended
     if (data.enableStopDate && data.stopDate) {
       const stopDate = new Date(data.stopDate)
-      const now = new Date()
       if (now > stopDate) {
+        setIsSaleEnded(true)
+      }
+    } else {
+      // If no stop date specified, allow sales until 11:59pm of event date
+      const salesEndTime = new Date(eventDate)
+      salesEndTime.setHours(23, 59, 59, 999)
+      if (now > salesEndTime) {
         setIsSaleEnded(true)
       }
     }
 
-    // Check if event date has passed
-    const eventDate = new Date(data.eventDate)
-    const now = new Date()
-    if (now > eventDate) {
+    // Check if event date has passed (but not if it's today)
+    if (!isToday && now > eventDate) {
       setIsEventPassed(true)
     }
   }, [])
@@ -442,7 +459,7 @@ const Event = () => {
         <meta property="og:url" content={eventUrl} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Spotix" />
-        </ Helmet>  
+      </Helmet>
       <UserHeader />
       <div className="event-container-wrapper">
         <div className="event-container" style={eventStyle}>
@@ -595,6 +612,18 @@ const Event = () => {
                     <div className="event-description">
                       <h3>Description</h3>
                       <p>{eventData.eventDescription}</p>
+                      <div className="detail-row">
+                        <span className="detail-label">Agent Activity:</span>
+                        <span className="detail-value">
+                          {eventData.allowAgents ? (
+                            <span className="agent-status enabled">
+                              Enabled - Agents can sell tickets for this event
+                            </span>
+                          ) : (
+                            <span className="agent-status disabled">Disabled - Only organizer can sell tickets</span>
+                          )}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -603,6 +632,10 @@ const Event = () => {
               {activeTab === "tickets" && (
                 <div className="tickets-tab">
                   <h2>Ticket Information</h2>
+
+                  {isEventToday && !isEventPassed && (
+                    <div className="event-today-message">Event is happening today! Grab your tickets now</div>
+                  )}
 
                   {isSoldOut && (
                     <div className="sold-out-message">This event is sold out! No more tickets are available.</div>
@@ -631,7 +664,7 @@ const Event = () => {
                           onClick={() => handleBuyTicket("Free Admission", 0)}
                           disabled={isSoldOut || isSaleEnded}
                         >
-                          Get Free Ticket
+                          {isEventToday ? "Get Tickets Today" : "Get Free Ticket"}
                         </button>
                       )}
                     </div>
@@ -656,7 +689,7 @@ const Event = () => {
                                   onClick={() => handleBuyTicket(ticket.policy, ticket.price)}
                                   disabled={isSoldOut || isSaleEnded}
                                 >
-                                  Buy
+                                  {isEventToday ? "Get Tickets Today" : "Buy"}
                                 </button>
                               )}
                             </li>

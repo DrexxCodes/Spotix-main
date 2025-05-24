@@ -350,3 +350,110 @@
     height: 140px;
   }
 }
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.search-suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.today-date-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  margin: 20px auto;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  font-weight: 500;
+}
+
+.today-label {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.today-date {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.events-today-title {
+  color: #ff6b35;
+  border-bottom: 2px solid #ff6b35;
+}
+
+.event-price-tag.free {
+  background-color: #22c55e;
+  color: white;
+}
+
+.event-price-tag.paid {
+  background-color: #6b2fa5;
+  color: white;
+}
+
+.event-date-tag.today {
+  background-color: #ff6b35;
+  color: white;
+  font-weight: 600;
+}
+
+.event-date-tag.past {
+  background-color: #6b7280;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-filter-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .today-date-block {
+    margin: 15px auto;
+    padding: 10px 20px;
+  }
+
+  .today-label,
+  .today-date {
+    font-size: 14px;
+  }
+}

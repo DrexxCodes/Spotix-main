@@ -1,0 +1,55 @@
+/* Event Today Styles */
+.event-today-message {
+  background: linear-gradient(135deg, #ff6b35, #ff8c42);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  animation: pulse-orange 2s infinite;
+}
+
+@keyframes pulse-orange {
+  0% {
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(255, 107, 53, 0.5);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  }
+}
+
+/* Agent Activity Styles */
+.agent-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.agent-status.enabled {
+  background-color: #22c55e;
+  color: white;
+}
+
+.agent-status.disabled {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .event-today-message {
+    padding: 10px 12px;
+    font-size: 0.9em;
+  }
+
+  .agent-status {
+    font-size: 0.8em;
+    padding: 3px 6px;
+  }
+}

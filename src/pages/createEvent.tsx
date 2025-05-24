@@ -133,14 +133,7 @@ const CreateEvent = () => {
   }
 
   const generateUniqueId = () => {
-    const date = new Date()
-    const year = date.getFullYear()
-    const month = `0${date.getMonth() + 1}`.slice(-2)
-    const day = `0${date.getDate()}`.slice(-2)
-    const randomNumbers = Math.floor(100000 + Math.random() * 900000)
-    const randomLetters = Math.random().toString(36).substring(2, 4).toUpperCase()
     return {
-      eventId: `SPTX-${year}${month}${day}-${randomNumbers}${randomLetters}`,
       payId: `SPTXP-${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
     }
   }
@@ -336,7 +329,7 @@ const CreateEvent = () => {
       const user = auth.currentUser
       if (!user) throw new Error("User not authenticated")
 
-      const { eventId, payId } = generateUniqueId()
+      const { payId } = generateUniqueId()
       const isFree = !enablePricing
 
       // Use the already uploaded image URL if available, otherwise wait for upload to complete
@@ -402,7 +395,9 @@ const CreateEvent = () => {
       const userData = userDoc.exists() ? userDoc.data() : {}
       const bookerName = userData.username || userData.fullName || "Unknown Booker"
 
-      const eventData = {
+      // STEP 1: Add event to the standard nested location first (without eventId initially)
+      const eventsCollectionRef = collection(db, "events", user.uid, "userEvents")
+      const docRef = await addDoc(eventsCollectionRef, {
         eventName,
         eventDescription,
         eventDate,
@@ -421,7 +416,6 @@ const CreateEvent = () => {
         enableMaxSize,
         maxSize: enableMaxSize ? maxSize : null,
         isFree,
-        eventId,
         payId,
         createdBy: user.uid,
         bookerName,
@@ -429,30 +423,59 @@ const CreateEvent = () => {
         ticketsSold: 0,
         totalRevenue: 0,
         status: "active",
-        // Add collaboration and agent settings
         enabledCollaboration: enabledCollaboration,
         allowAgents: allowAgents,
-      }
+      })
 
-      // Add event to the events collection under the user's UID
-      const eventsCollectionRef = collection(db, "events", user.uid, "userEvents")
-      const docRef = await addDoc(eventsCollectionRef, eventData)
+      // Now use the document ID as the eventId
+      const eventId = docRef.id
 
-      // Update the document with its ID
+      // Update the document with its ID and the eventId
       await setDoc(
         doc(db, "events", user.uid, "userEvents", docRef.id),
         {
-          ...eventData,
+          eventId: eventId, // Use the document ID as eventId
           id: docRef.id,
         },
         { merge: true },
       )
+
+      console.log("✅ Event successfully created in standard location:", docRef.id)
+
+      // STEP 2: Create duplicate in publicEvents collection at root level
+      try {
+        const publicEventData = {
+          imageURL: imageUrl,
+          eventType: eventType,
+          venue: eventVenue,
+          eventStartDate: eventDate,
+          eventName: eventName,
+          freeOrPaid:
+            enablePricing && ticketPrices.length > 0 && ticketPrices.some((ticket) => ticket.policy && ticket.price), // true for paid, false for free
+          timestamp: new Date(),
+          creatorID: user.uid,
+          eventId: eventId, // Use the actual document ID from nested collection
+        }
+
+        // Create document in publicEvents collection with eventName as document ID
+        const publicEventDocRef = doc(db, "publicEvents", eventName)
+        await setDoc(publicEventDocRef, publicEventData)
+
+        console.log("✅ Event successfully duplicated to publicEvents collection:", eventName)
+      } catch (publicEventError) {
+        console.error("❌ Error creating publicEvents document:", publicEventError)
+        // Don't throw error here as the main event was created successfully
+        // Just log the error and continue
+        console.warn("Main event was created successfully, but publicEvents creation failed")
+      }
 
       // Store the created event data for success page
       setCreatedEventData({
         eventId,
         payId,
       })
+
+      console.log("🎉 Event creation process completed successfully")
 
       // Navigate to success page
       navigate("/success", { state: { eventId, payId } })
@@ -786,7 +809,7 @@ const CreateEvent = () => {
                 </div>
               )}
 
-                            {enabledCollaboration && (
+              {enabledCollaboration && (
                 <div className="agent-info-message">
                   <Check size={16} className="check-icon" />
                   <p>You can now add Team members after creating the event from the Teams page.</p>
