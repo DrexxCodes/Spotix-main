@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { db, auth } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { collection, addDoc, doc, getDoc, setDoc } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
 import { Plus, HelpCircle, Wand2, Check, Upload, X, Users, AlertCircle, UserCheck } from "lucide-react"
@@ -11,6 +12,7 @@ import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
 import { uploadImage } from "../utils/imageUploader"
 import "../styles/create.css"
+
 
 const CreateEvent = () => {
   const [currentDateTime, setCurrentDateTime] = useState("")
@@ -490,6 +492,31 @@ const CreateEvent = () => {
     <>
       <Preloader loading={loading} />
       <BookersHeader />
+            <Helmet>
+              <title>Create Event</title>
+              <meta
+                name="description"
+                content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix."
+              />
+              {/* Open Graph for social media */}
+              <meta property="og:title" content="Spotix | Discover and Book Campus Events" />
+              <meta
+                property="og:description"
+                content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix."
+              />
+              <meta property="og:image" content="/meta.png" />
+              <meta property="og:url" content="https://spotix.com.ng" />
+              <meta property="og:type" content="website" />
+      
+              {/* Twitter Card */}
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
+              <meta
+                name="twitter:description"
+                content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix."
+              />
+              <meta name="twitter:image" content="/meta.png" />
+            </Helmet>
       <div className="create-event-container">
         <div className="current-datetime">Current Date and Time: {currentDateTime}</div>
         <img src="/create-event.svg" alt="Create Event" className="event-image" />

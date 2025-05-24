@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore"
 import BookersHeader from "../components/BookersHeader"
+import { Helmet } from "react-helmet"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { Users } from 'lucide-react'
@@ -236,6 +237,10 @@ const BookerTickets = () => {
   return (
     <>
       <BookersHeader />
+      <Helmet>
+        <title>My Events - Booker</title>
+        <meta name="description" content="Manage your events, view tickets sold, and collaborate with others." />
+      </Helmet>
       <div className="booker-tickets-container">
         <div className="tickets-header">
           <h1>My Events</h1>

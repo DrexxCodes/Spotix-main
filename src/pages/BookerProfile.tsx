@@ -8,6 +8,7 @@ import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import Valid from "../components/valid"
+import { Helmet } from "react-helmet"
 import { Users, AlertCircle } from "lucide-react"
 import "./bookerprofile.css"
 
@@ -157,6 +158,10 @@ const BookerProfile = () => {
   return (
     <>
       <BookersHeader />
+      <Helmet>
+        <title>Booker Profile - Event Management</title>
+        <meta name="description" content="View and manage your Booker profile, including verification status, events created, and personal information." />
+      </Helmet>
       <div className="booker-profile-container">
         <h1 className="page-title">Booker Profile</h1>
 

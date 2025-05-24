@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { collection, getDocs, doc, getDoc } from "firebase/firestore"
 import Footer from "../components/footer"
 import { PlusCircle, User, Ticket, BarChart2, Calendar, DollarSign, Tag, Clock, RefreshCw } from "lucide-react"
@@ -407,6 +408,10 @@ const BookerDashboard = () => {
   return (
     <>
       <BookersHeader />
+      <Helmet>
+        <title>Booker Dashboard</title>
+        <meta name="description" content="Manage your events, view stats, and more." />
+      </Helmet>
       <div className="booker-dashboard-container">
         <div className="dashboard-header-container">
           <div className="dashboard-header">

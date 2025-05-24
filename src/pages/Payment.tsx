@@ -778,8 +778,8 @@ const Payment = () => {
                   <p>
                     Discount applied:{" "}
                     {appliedDiscount.type === "percentage"
-                      ? `${appliedDiscount.value}% off (₦${formatNumber(discountAmount)})`
-                      : `₦${formatNumber(appliedDiscount.value)} off`}
+                      ? `${appliedDiscount.value}% off (NGN${formatNumber(discountAmount)})`
+                      : `NGN${formatNumber(appliedDiscount.value)} off`}
                   </p>
                   <button
                     className="remove-discount-btn"
@@ -802,7 +802,7 @@ const Payment = () => {
               >
                 <div className="payment-method-icon">💰</div>
                 <div className="payment-method-name">My Wallet</div>
-                <div className="payment-method-balance">₦{formatNumber(walletBalance)}</div>
+                <div className="payment-method-balance">NGN{formatNumber(walletBalance)}</div>
               </div>
               <div
                 className={`payment-method ${paymentMethod === "paystack" ? "selected" : ""}`}
@@ -855,14 +855,14 @@ const Payment = () => {
                 <>
                   <div className="payment-summary-row original-price">
                     <span>Original Price:</span>
-                    <span>₦{formatNumber(Number(paymentData.ticketPrice))}</span>
+                    <span>NGN{formatNumber(Number(paymentData.ticketPrice))}</span>
                   </div>
                   <div className="payment-summary-row discount">
                     <span>Discount:</span>
                     <span>
                       {appliedDiscount.type === "percentage"
-                        ? `${appliedDiscount.value}% (₦${formatNumber(discountAmount)})`
-                        : `₦${formatNumber(appliedDiscount.value)}`}
+                        ? `${appliedDiscount.value}% (NGN${formatNumber(discountAmount)})`
+                        : `NGN${formatNumber(appliedDiscount.value)}`}
                     </span>
                   </div>
                 </>
@@ -870,7 +870,7 @@ const Payment = () => {
 
               <div className="payment-summary-row total">
                 <span>Total Price:</span>
-                <span>₦{formatNumber(finalPrice)}</span>
+                <span>NGN{formatNumber(finalPrice)}</span>
               </div>
             </div>
             <div className="payment-actions">
@@ -948,7 +948,7 @@ const Payment = () => {
                     )}
                     <div className="ticket-detail-row">
                       <span>Amount Paid:</span>
-                      <span>₦{formatNumber(finalPrice)}</span>
+                      <span>NGN{formatNumber(finalPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -1073,7 +1073,7 @@ const Payment = () => {
                   {currentStep === "charging" && stepStatus === "success" && <CheckCircle className="text-green-500" />}
                   {currentStep === "charging" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
-                <div className="step-label">Charging ₦{formatNumber(finalPrice)} from Wallet</div>
+                <div className="step-label">Charging NGN{formatNumber(finalPrice)} from Wallet</div>
               </div>
 
               <div

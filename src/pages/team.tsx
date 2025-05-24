@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
+import { Helmet } from "react-helmet"
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, setDoc } from "firebase/firestore"
 import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
@@ -791,6 +792,10 @@ const Team = () => {
   return (
     <>
       <BookersHeader />
+      <Helmet>
+        <title>Team Collaboration - Spotix Booker</title>
+        <meta name="description" content="Manage your event team and collaborators on Spotix Booker." />
+      </Helmet>
       <div className="team-container">
         <div className="team-header">
           <div className="team-title">
