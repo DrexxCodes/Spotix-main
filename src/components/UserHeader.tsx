@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow } from "lucide-react"
+import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key } from "lucide-react"
 import {
   HeaderContainer,
   LogoSection,
@@ -66,6 +66,11 @@ const UserHeader: React.FC = () => {
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
+              <a href="/bookerdashboard">
+                Auth Key
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
               <a href="https://t.me/SpotixNG_bot">
                 Telegram Bot
               </a>
@@ -97,6 +102,10 @@ const UserHeader: React.FC = () => {
           <NavItem onClick={() => setMenuOpen(false)}>
             <AppWindow size={20} />
             <a href="/bookerdashboard">Dashboard</a>
+          </NavItem>
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <Key size={20} />
+            <a href="/user-v-auth">Auth Key</a>
           </NavItem>
           <NavItem onClick={() => setMenuOpen(false)}>
             <Bot size={20} />

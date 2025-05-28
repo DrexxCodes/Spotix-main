@@ -1522,7 +1522,7 @@ input:checked+.slider:before {
   color: #495057;
 }
 
-.close-dialog-btn {
+/* .close-dialog-btn {
   position: absolute;
   top: 15px;
   right: 15px;
@@ -1531,10 +1531,10 @@ input:checked+.slider:before {
   cursor: pointer;
   color: #6c757d;
   padding: 5px;
-}
+} */
 
 .close-dialog-btn:hover {
-  color: #343a40;
+  color: #c4daf0;
 }
 
 .browse-events-btn {

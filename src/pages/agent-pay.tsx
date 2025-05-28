@@ -290,3 +290,8 @@ const AgentPay = () => {
 }
 
 export default AgentPay
+
+
+// Create an array that enables the backend to access event credentials withot caching issues. 
+
+// Stop access to the main stream server for unauthenticated user if the logic doesn't allow for multiple 

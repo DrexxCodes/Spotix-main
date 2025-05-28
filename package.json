@@ -43,6 +43,7 @@
     "recharts": "^2.15.1",
     "router": "^2.2.0",
     "styled-components": "^6.1.16",
+    "undici": "^7.10.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {

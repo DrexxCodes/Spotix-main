@@ -32,6 +32,9 @@ const Footer = () => {
               <Link to="/home">Events</Link>
             </li>
             <li>
+              <Link to="/createevent">Create Event</Link>
+            </li>
+            <li>
               <Link to="/my-tickets">My Tickets</Link>
             </li>
             <li>

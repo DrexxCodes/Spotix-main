@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
-import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail, HeartHandshake } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -445,7 +445,7 @@ const Payment = () => {
             key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
             email: userData.email,
             amount: amountInKobo, // Convert to kobo
-            currency: "NGN", // Nigerian Naira
+            currency: "NGN ", // Nigerian Naira
             ref: generateReference(),
             metadata: paymentMetadata,
             callback: (response) => {
@@ -778,8 +778,8 @@ const Payment = () => {
                   <p>
                     Discount applied:{" "}
                     {appliedDiscount.type === "percentage"
-                      ? `${appliedDiscount.value}% off (NGN${formatNumber(discountAmount)})`
-                      : `NGN${formatNumber(appliedDiscount.value)} off`}
+                      ? `${appliedDiscount.value}% off (NGN ${formatNumber(discountAmount)})`
+                      : `NGN ${formatNumber(appliedDiscount.value)} off`}
                   </p>
                   <button
                     className="remove-discount-btn"
@@ -802,7 +802,7 @@ const Payment = () => {
               >
                 <div className="payment-method-icon">💰</div>
                 <div className="payment-method-name">My Wallet</div>
-                <div className="payment-method-balance">NGN{formatNumber(walletBalance)}</div>
+                <div className="payment-method-balance">NGN {formatNumber(walletBalance)}</div>
               </div>
               <div
                 className={`payment-method ${paymentMethod === "paystack" ? "selected" : ""}`}
@@ -817,7 +817,7 @@ const Payment = () => {
                 onClick={() => setPaymentMethod("agent")}
               >
                 <div className="payment-method-icon">
-                  <HeartHandshake size={24} />
+                  🙍🏻‍♂️
                 </div>
                 <div className="payment-method-name">Agent Pay</div>
                 <div className="payment-method-description">Pay via Agent</div>
@@ -855,14 +855,14 @@ const Payment = () => {
                 <>
                   <div className="payment-summary-row original-price">
                     <span>Original Price:</span>
-                    <span>NGN{formatNumber(Number(paymentData.ticketPrice))}</span>
+                    <span>NGN {formatNumber(Number(paymentData.ticketPrice))}</span>
                   </div>
                   <div className="payment-summary-row discount">
                     <span>Discount:</span>
                     <span>
                       {appliedDiscount.type === "percentage"
-                        ? `${appliedDiscount.value}% (NGN${formatNumber(discountAmount)})`
-                        : `NGN${formatNumber(appliedDiscount.value)}`}
+                        ? `${appliedDiscount.value}% (NGN ${formatNumber(discountAmount)})`
+                        : `NGN ${formatNumber(appliedDiscount.value)}`}
                     </span>
                   </div>
                 </>
@@ -870,7 +870,7 @@ const Payment = () => {
 
               <div className="payment-summary-row total">
                 <span>Total Price:</span>
-                <span>NGN{formatNumber(finalPrice)}</span>
+                <span>NGN {formatNumber(finalPrice)}</span>
               </div>
             </div>
             <div className="payment-actions">
@@ -948,7 +948,7 @@ const Payment = () => {
                     )}
                     <div className="ticket-detail-row">
                       <span>Amount Paid:</span>
-                      <span>NGN{formatNumber(finalPrice)}</span>
+                      <span>NGN {formatNumber(finalPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -1073,7 +1073,7 @@ const Payment = () => {
                   {currentStep === "charging" && stepStatus === "success" && <CheckCircle className="text-green-500" />}
                   {currentStep === "charging" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
-                <div className="step-label">Charging NGN{formatNumber(finalPrice)} from Wallet</div>
+                <div className="step-label">Charging NGN {formatNumber(finalPrice)} from Wallet</div>
               </div>
 
               <div

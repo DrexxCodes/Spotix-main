@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 // Import route handlers
 import enhanceRoute from "./api/gemini/enhance.js";
 import paymentRoute from "./api/payment.js";
-import webhookRoute from "./api/payment.js";
+// import webhookRoute from "./api/payment.js";
 import verifyRoute from "./api/verify.js";
 import sendMailRoutes from "./api/mail.js";
 import notifyRoutes from "./api/notify.js";
@@ -46,7 +46,7 @@ fastify.get("/api/test", async (request, reply) => {
 // Register API routes
 fastify.register(enhanceRoute, { prefix: "/api/gemini" });
 fastify.register(paymentRoute, { prefix: "/api" });
-fastify.register(webhookRoute, { prefix: "/api/payment" });
+// fastify.register(webhookRoute, { prefix: "/api/payment" });
 fastify.register(verifyRoute, { prefix: "/api" });
 fastify.register(sendMailRoutes, { prefix: "/api/mail" });
 fastify.register(notifyRoutes, { prefix: "/api/notify" });
