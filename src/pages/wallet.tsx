@@ -156,13 +156,13 @@ const Wallet = () => {
   useEffect(() => {
     return () => {
       isMounted.current = false
-      Logger.info("Component unmounting")
+      Logger.info("IWSS Instance Unmounting")
     }
   }, [])
 
   // Initialize component with payment data
   useEffect(() => {
-    Logger.info("Wallet component mounted")
+    Logger.info("IWSS Instance Mounted")
 
     const initializeComponent = async () => {
       try {
@@ -179,7 +179,7 @@ const Wallet = () => {
 
         // Check if we already have event details from the previous page
         if (paymentInfo.eventDetails) {
-          Logger.info("Using event details from location state")
+          Logger.info("IWSS object reading event details")
           setEventDetails(paymentInfo.eventDetails)
         }
 
@@ -247,7 +247,7 @@ const Wallet = () => {
       setUserData(userDataFromDb)
       setWalletBalance(userDataFromDb.wallet || 0)
 
-      Logger.success("User data fetched successfully")
+      Logger.success("IWSS fetched user data successfully")
       return userDataFromDb
     } catch (error) {
       Logger.error("Error fetching user data", error)
@@ -740,7 +740,7 @@ const Wallet = () => {
       <div className="payment-page-container">
         {!paymentStarted ? (
           <div className="payment-method-selection">
-            <h2>Wallet Payment</h2>
+            <h2>Spotix IWSS Checkout</h2>
 
             <div className="payment-summary">
               <h3>Payment Summary</h3>

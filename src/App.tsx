@@ -127,7 +127,7 @@ function App() {
             <Route path="/booker-confirm" element={user ? <BookerConfirm /> : <Navigate to="/login" />} />
             <Route path="/payment" element={user ? <Payment /> : <Navigate to="/login" />} />
             <Route path="/paystack-success" element={user ? <PaystackSuccess /> : <Navigate to="/login" />} />
-            <Route path="/wallet-history" element={user ? <WalletHistory /> : <Navigate to="/login" />} />
+            <Route path="/wallet" element={user ? <Wallet /> : <Navigate to="/login" />} />
             <Route path="/wallet-history" element={user ? <WalletHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
