@@ -70,6 +70,10 @@ const Payment = () => {
   const [stepStatus, setStepStatus] = useState<"loading" | "success" | "error" | null>(null)
   const [walletBalance, setWalletBalance] = useState<number>(0)
 
+  // Paystack popup status states
+  const [paystackPopupStatus, setPaystackPopupStatus] = useState<string | null>(null)
+  const [showPaystackStatus, setShowPaystackStatus] = useState(false)
+
   // Add PaystackPop script to the document
   useEffect(() => {
     const script = document.createElement("script")
@@ -144,6 +148,18 @@ const Payment = () => {
       isMounted = false // Set the flag to false when the component unmounts
     }
   }, [location, navigate])
+
+  // Auto-hide Paystack status messages after 5 seconds
+  useEffect(() => {
+    if (showPaystackStatus) {
+      const timer = setTimeout(() => {
+        setShowPaystackStatus(false)
+        setPaystackPopupStatus(null)
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [showPaystackStatus])
 
   // Format number with commas
   const formatNumber = (num: number): string => {
@@ -409,16 +425,23 @@ const Payment = () => {
           // Calculate amount in kobo (smallest currency unit)
           const amountInKobo = Math.round(totalWithFee * 100)
 
+          // Show popup active status
+          setPaystackPopupStatus("Paystack popup is active")
+          setShowPaystackStatus(true)
+
           // @ts-ignore - PaystackPop is loaded from the script
           const handler = window.PaystackPop.setup({
             key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
             email: userData.email,
             amount: amountInKobo, // Convert to kobo
-            currency: "NGN ", // Nigerian Naira
+            currency: "NGN", // Nigerian Naira (fixed - removed trailing space)
             ref: generateReference(),
             metadata: paymentMetadata,
             callback: (response) => {
               // Handle success - this must be a regular function, not an arrow function
+              setPaystackPopupStatus(null)
+              setShowPaystackStatus(false)
+
               if (appliedDiscount) {
                 // Update discount usage in a separate call
                 updateDiscountUsage()
@@ -436,6 +459,8 @@ const Payment = () => {
             onClose: () => {
               // Handle when user closes payment modal
               console.log("Payment window closed")
+              setPaystackPopupStatus("Payment Closed: User closed the transaction on Paystack")
+              setShowPaystackStatus(true)
             },
           })
 
@@ -562,6 +587,27 @@ const Payment = () => {
       </Helmet>
       <UserHeader />
       <div className="payment-page-container">
+        {/* Paystack Status Message */}
+        {showPaystackStatus && paystackPopupStatus && (
+          <div className={`paystack-status-message ${paystackPopupStatus.includes("active") ? "active" : "closed"}`}>
+            <div className="status-content">
+              <div className="status-icon">
+                {paystackPopupStatus.includes("active") ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+              </div>
+              <span className="status-text">{paystackPopupStatus}</span>
+              <button
+                className="status-close"
+                onClick={() => {
+                  setShowPaystackStatus(false)
+                  setPaystackPopupStatus(null)
+                }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {!paymentStarted ? (
           <div className="payment-method-selection">
             <h2>Choose your payment method</h2>
@@ -738,6 +784,98 @@ const Payment = () => {
         )}
       </div>
       <Footer />
+
+      {/* Additional styles for Paystack status messages */}
+      <style>{`
+        .paystack-status-message {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          max-width: 400px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          animation: slideInRight 0.3s ease-out;
+        }
+
+        .paystack-status-message.active {
+          background: linear-gradient(135deg, #d4edda, #c3e6cb);
+          border: 1px solid #c3e6cb;
+          color: #155724;
+        }
+
+        .paystack-status-message.closed {
+          background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+          border: 1px solid #f5c6cb;
+          color: #721c24;
+        }
+
+        .status-content {
+          display: flex;
+          align-items: center;
+          padding: 12px 16px;
+          gap: 10px;
+        }
+
+        .status-icon {
+          flex-shrink: 0;
+        }
+
+        .status-text {
+          flex-grow: 1;
+          font-weight: 500;
+          font-size: 14px;
+        }
+
+        .status-close {
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          color: inherit;
+          padding: 0;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: background-color 0.2s;
+        }
+
+        .status-close:hover {
+          background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+          .paystack-status-message {
+            top: 10px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+          }
+
+          .status-content {
+            padding: 10px 12px;
+          }
+
+          .status-text {
+            font-size: 13px;
+          }
+        }
+      `}</style>
     </>
   )
 }
