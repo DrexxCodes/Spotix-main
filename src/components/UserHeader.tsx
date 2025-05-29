@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key } from "lucide-react"
+import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key, History } from "lucide-react"
 import {
   HeaderContainer,
   LogoSection,
@@ -61,6 +61,11 @@ const UserHeader: React.FC = () => {
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
+              <a href="/wallet-history">
+                Wallet History
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
               <a href="/bookerdashboard">
                 Dashboard
               </a>
@@ -98,6 +103,10 @@ const UserHeader: React.FC = () => {
           <NavItem onClick={() => setMenuOpen(false)}>
             <CreditCard size={20} />
             <a href="/ticket-history">My Tickets</a>
+          </NavItem>
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <History size={20} />
+            <a href="/wallet-history">Wallet History</a>
           </NavItem>
           <NavItem onClick={() => setMenuOpen(false)}>
             <AppWindow size={20} />

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
-import { CheckCircle, XCircle, Loader2, AlertCircle, Tag, Share2, Mail } from "lucide-react"
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore"
+import { CheckCircle, Loader2, AlertCircle, Tag } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -320,44 +320,6 @@ const Payment = () => {
     }
   }
 
-  // Send confirmation email
-  const sendConfirmationEmail = async (ticketId: string, ticketReference: string, userData: any) => {
-    if (!paymentData || !eventDetails) return
-
-    try {
-      setEmailSending(true)
-
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/payment-confirmation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userData.email,
-          name: userData.fullName || userData.username || "Valued Customer",
-          ticket_ID: ticketId,
-          event_host: eventDetails.bookerName || "Event Host",
-          event_name: paymentData.eventName,
-          payment_ref: ticketReference,
-          ticket_type: paymentData.ticketType,
-          booker_email: eventDetails.bookerEmail || "support@spotix.com.ng",
-          ticket_price: finalPrice.toFixed(2),
-          payment_method: "IWSS", // In-Wallet Spotix System
-        }),
-      })
-
-      if (response.ok) {
-        setEmailSent(true)
-      } else {
-        console.error("Failed to send confirmation email")
-      }
-    } catch (error) {
-      console.error("Error sending confirmation email:", error)
-    } finally {
-      setEmailSending(false)
-    }
-  }
-
   // Initialize Paystack client-side
   const initializePaystack = () => {
     try {
@@ -385,6 +347,9 @@ const Payment = () => {
 
           const userData = userDoc.data()
 
+          // Add transaction fee to the final price
+          const totalWithFee = finalPrice + 150
+
           // Prepare payment metadata with discount information and event details
           const paymentMetadata = {
             userId: user.uid,
@@ -394,6 +359,8 @@ const Payment = () => {
             eventName: paymentData.eventName,
             originalPrice: paymentData.ticketPrice,
             ticketPrice: finalPrice,
+            transactionFee: 150,
+            totalAmount: totalWithFee,
             discountApplied: appliedDiscount ? true : false,
             discountCode: appliedDiscount ? appliedDiscount.code : null,
             discountType: appliedDiscount ? appliedDiscount.type : null,
@@ -418,6 +385,8 @@ const Payment = () => {
             JSON.stringify({
               ...paymentData,
               ticketPrice: finalPrice,
+              transactionFee: 150,
+              totalAmount: totalWithFee,
               originalPrice: paymentData.ticketPrice,
               discountApplied: appliedDiscount ? true : false,
               discountCode: appliedDiscount ? appliedDiscount.code : null,
@@ -438,7 +407,7 @@ const Payment = () => {
           )
 
           // Calculate amount in kobo (smallest currency unit)
-          const amountInKobo = Math.round(finalPrice * 100)
+          const amountInKobo = Math.round(totalWithFee * 100)
 
           // @ts-ignore - PaystackPop is loaded from the script
           const handler = window.PaystackPop.setup({
@@ -485,8 +454,11 @@ const Payment = () => {
   const handleAgentPay = () => {
     if (!paymentData) return
 
+    // Add transaction fee to the final price
+    const totalWithFee = finalPrice + 150
+
     // Open agent-pay.tsx in a new tab with the necessary data
-    const url = `/agent-pay?eventId=${paymentData.eventId}&eventCreatorId=${paymentData.eventCreatorId}&eventName=${encodeURIComponent(paymentData.eventName)}&ticketType=${encodeURIComponent(paymentData.ticketType)}&ticketPrice=${finalPrice}`
+    const url = `/agent-pay?eventId=${paymentData.eventId}&eventCreatorId=${paymentData.eventCreatorId}&eventName=${encodeURIComponent(paymentData.eventName)}&ticketType=${encodeURIComponent(paymentData.ticketType)}&ticketPrice=${totalWithFee}&transactionFee=150`
     window.open(url, "_blank")
   }
 
@@ -503,176 +475,24 @@ const Payment = () => {
     } else if (paymentMethod === "agent") {
       handleAgentPay()
       return
-    }
-
-    setPaymentStarted(true)
-    await processPayment(paymentData)
-  }
-
-  const processPayment = async (paymentData: PaymentPageProps) => {
-    setCurrentStep("initializing")
-    setStepStatus("loading")
-
-    try {
-      const user = auth.currentUser
-      if (!user || !eventDetails) {
-        throw new Error("User not authenticated or event details missing")
-      }
-
-      // Simulate initializing payment
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      setStepStatus("success")
-
-      // Read wallet
-      setCurrentStep("reading")
-      setStepStatus("loading")
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      const userDocRef = doc(db, "users", user.uid)
-      const userDoc = await getDoc(userDocRef)
-
-      if (!userDoc.exists()) {
-        throw new Error("User data not found")
-      }
-
-      const userData = userDoc.data()
-      const walletBalance = userData.wallet || 0
-      setStepStatus("success")
-
-      // Charge wallet
-      setCurrentStep("charging")
-      setStepStatus("loading")
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      if (walletBalance < finalPrice) {
-        setStepStatus("error")
-        setPaymentResult({
-          success: false,
-          message: "Insufficient funds in wallet",
-        })
-        return
-      }
-
-      // Update wallet balance
-      const newBalance = walletBalance - finalPrice
-      await updateDoc(userDocRef, {
-        wallet: newBalance,
-      })
-
-      // Update discount usage if a discount was applied
-      if (appliedDiscount) {
-        await updateDiscountUsage()
-      }
-
-      setStepStatus("success")
-      setCurrentStep("finalizing")
-      setStepStatus("loading")
-
-      // Generate ticket ID and reference
-      const ticketId = generateTicketId()
-      const ticketReference = generateReference()
-
-      // Get current date and time
-      const now = new Date()
-      const purchaseDate = now.toLocaleDateString()
-      const purchaseTime = now.toLocaleTimeString()
-
-      // Find the section where we prepare the ticket data before adding to Firestore
-      // Replace the ticket data preparation with this code that handles undefined values properly
-
-      // Prepare ticket data with discount information and event details
-      const ticketData = {
-        uid: user.uid,
-        fullName: userData.fullName || "",
-        email: userData.email || "",
-        ticketType: paymentData.ticketType,
-        ticketId,
-        ticketReference,
-        purchaseDate,
-        purchaseTime,
-        verified: false,
-        paymentMethod: "Wallet",
-        originalPrice: paymentData.ticketPrice,
-        ticketPrice: finalPrice,
-        discountApplied: appliedDiscount ? true : false,
-        discountCode: appliedDiscount ? appliedDiscount.code : null,
-        discountType: appliedDiscount ? appliedDiscount.type : null,
-        discountValue: appliedDiscount ? appliedDiscount.value : null,
-        // Add event details with null checks to avoid undefined values
-        eventVenue: eventDetails.eventVenue || null,
-        eventType: eventDetails.eventType || null,
-        eventDate: eventDetails.eventDate || null,
-        eventEndDate: eventDetails.eventEndDate || null,
-        eventStart: eventDetails.eventStart || null,
-        eventEnd: eventDetails.eventEnd || null,
-        // Only include stopDate if it exists
-        ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
-      }
-
-      // Add to attendees collection for the event
-      const attendeesCollectionRef = collection(
-        db,
-        "events",
-        paymentData.eventCreatorId,
-        "userEvents",
-        paymentData.eventId,
-        "attendees",
-      )
-
-      await addDoc(attendeesCollectionRef, ticketData)
-
-      // Add to user's ticket history
-      const ticketHistoryRef = collection(db, "TicketHistory", user.uid, "tickets")
-      await addDoc(ticketHistoryRef, {
-        ...ticketData,
-        eventId: paymentData.eventId,
-        eventName: paymentData.eventName,
-        eventCreatorId: paymentData.eventCreatorId,
-      })
-
-      // Update event stats (increment tickets sold and revenue)
-      const eventDocRef = doc(db, "events", paymentData.eventCreatorId, "userEvents", paymentData.eventId)
-
-      const eventDoc = await getDoc(eventDocRef)
-      if (eventDoc.exists()) {
-        const eventData = eventDoc.data()
-        await updateDoc(eventDocRef, {
-          ticketsSold: (eventData.ticketsSold || 0) + 1,
-          totalRevenue: (eventData.totalRevenue || 0) + finalPrice,
-        })
-      }
-
-      setStepStatus("success")
-
-      // Send confirmation email
-      await sendConfirmationEmail(ticketId, ticketReference, userData)
-
-      setPaymentResult({
-        success: true,
-        message: "Payment successful",
-        ticketId,
-        ticketReference,
-        userData: {
-          fullName: userData.fullName || "",
-          email: userData.email || "",
+    } else if (paymentMethod === "wallet") {
+      // Redirect to Wallet.tsx with necessary data
+      navigate("/wallet", {
+        state: {
+          ...paymentData,
+          finalPrice: finalPrice,
+          transactionFee: 150,
+          totalAmount: finalPrice + 150,
+          appliedDiscount: appliedDiscount,
+          eventDetails: eventDetails,
         },
       })
-    } catch (error) {
-      console.error("Payment processing error:", error)
-      setStepStatus("error")
-      setPaymentResult({
-        success: false,
-        message: "An error occurred during payment processing",
-      })
+      return
     }
   }
 
   const handleGoHome = () => {
     navigate("/home")
-  }
-
-  const handleViewTickets = () => {
-    navigate("/ticket-history")
   }
 
   const handleCloseBitcoinDialog = () => {
@@ -739,7 +559,7 @@ const Payment = () => {
         <link rel="canonical" href={`${window.location.origin}/payment`} />
         <meta property="og:title" content="Payment - Spotix" />
         <meta property="og:description" content="Secure payment for your event tickets on Spotix." />
-        </Helmet>
+      </Helmet>
       <UserHeader />
       <div className="payment-page-container">
         {!paymentStarted ? (
@@ -816,9 +636,7 @@ const Payment = () => {
                 className={`payment-method ${paymentMethod === "agent" ? "selected" : ""}`}
                 onClick={() => setPaymentMethod("agent")}
               >
-                <div className="payment-method-icon">
-                  🙍🏻‍♂️
-                </div>
+                <div className="payment-method-icon">🙍🏻‍♂️</div>
                 <div className="payment-method-name">Agent Pay</div>
                 <div className="payment-method-description">Pay via Agent</div>
                 <div className="new-tag">NEW</div>
@@ -868,9 +686,19 @@ const Payment = () => {
                 </>
               )}
 
+              <div className="payment-summary-row">
+                <span>Ticket Price:</span>
+                <span>NGN {formatNumber(finalPrice)}</span>
+              </div>
+
+              <div className="payment-summary-row">
+                <span>Transaction Fee:</span>
+                <span>NGN 150</span>
+              </div>
+
               <div className="payment-summary-row total">
                 <span>Total Price:</span>
-                <span>NGN {formatNumber(finalPrice)}</span>
+                <span>NGN {formatNumber(finalPrice + 150)}</span>
               </div>
             </div>
             <div className="payment-actions">
@@ -882,223 +710,11 @@ const Payment = () => {
               </button>
             </div>
           </div>
-        ) : paymentResult ? (
-          <div className="payment-result">
-            {paymentResult.success ? (
-              <div className="payment-success">
-                <div className="success-icon">
-                  <CheckCircle size={60} className="text-green-500" />
-                </div>
-                <h2>Payment Successful!</h2>
-
-                {emailSent && (
-                  <div className="email-confirmation-message">
-                    <Mail size={18} className="email-icon" />
-                    <p>A confirmation email has been sent to your registered email address.</p>
-                  </div>
-                )}
-
-                <div className="ticket-preview">
-                  <div className="ticket-header">
-                    <img src="/logo.svg" alt="Spotix Logo" className="ticket-logo" />
-                    <h3>SPOTIX</h3>
-                  </div>
-                  <div className="ticket-details">
-                    <div className="ticket-detail-row">
-                      <span>Name:</span>
-                      <span>{paymentResult.userData?.fullName}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Email:</span>
-                      <span>{paymentResult.userData?.email}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Event:</span>
-                      <span>{paymentData.eventName}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Venue:</span>
-                      <span>{eventDetails?.eventVenue || "Not specified"}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Date:</span>
-                      <span>
-                        {eventDetails?.eventDate
-                          ? new Date(eventDetails.eventDate).toLocaleDateString()
-                          : "Not specified"}
-                      </span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Ticket Type:</span>
-                      <span>{paymentData.ticketType}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Ticket ID:</span>
-                      <span className="ticket-id">{paymentResult.ticketId}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Reference:</span>
-                      <span>{paymentResult.ticketReference}</span>
-                    </div>
-                    {appliedDiscount && (
-                      <div className="ticket-detail-row">
-                        <span>Discount Applied:</span>
-                        <span>{appliedDiscount.code}</span>
-                      </div>
-                    )}
-                    <div className="ticket-detail-row">
-                      <span>Amount Paid:</span>
-                      <span>NGN {formatNumber(finalPrice)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Social Share Section */}
-                <div className="social-share-container">
-                  <h3>Share Your Ticket</h3>
-                  <p>Let your friends know about this event!</p>
-
-                  <div className="share-buttons">
-                    <button className="share-button" onClick={handleShare}>
-                      <Share2 size={18} />
-                      Share
-                    </button>
-
-                    {showShareOptions && (
-                      <div className="share-options">
-                        <button className="share-option whatsapp" onClick={() => shareToSocialMedia("whatsapp")}>
-                          <i className="bx bxl-whatsapp"></i>
-                          WhatsApp
-                        </button>
-                        <button className="share-option twitter" onClick={() => shareToSocialMedia("twitter")}>
-                          <i className="bx bxl-twitter"></i>
-                          Twitter
-                        </button>
-                        <button className="share-option facebook" onClick={() => shareToSocialMedia("facebook")}>
-                          <i className="bx bxl-facebook"></i>
-                          Facebook
-                        </button>
-                        <button className={`share-option copy ${copySuccess ? "success" : ""}`} onClick={copyShareLink}>
-                          {copySuccess ? (
-                            <>
-                              <CheckCircle size={16} />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <i className="bx bx-link"></i>
-                              Copy Link
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="success-actions">
-                  <button className="view-tickets-btn" onClick={handleViewTickets}>
-                    View My Tickets
-                  </button>
-                  <button className="home-btn" onClick={handleGoHome}>
-                    Go to Home
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="payment-failed">
-                <div className="error-icon">
-                  <XCircle size={60} className="text-red-500" />
-                </div>
-                <h2>Payment Failed</h2>
-                <p className="error-message">{paymentResult.message}</p>
-                <button className="close-dialog-btn" onClick={handleGoHome}>
-                  Back to Home
-                </button>
-              </div>
-            )}
-          </div>
         ) : (
           <div className="payment-processing">
-            <h2>Processing Payment</h2>
-
-            <div className="payment-steps">
-              <div
-                className={`payment-step ${currentStep === "initializing" ? "active" : ""} ${
-                  currentStep === "initializing" && stepStatus === "success"
-                    ? "completed"
-                    : currentStep === "initializing" && stepStatus === "error"
-                      ? "error"
-                      : ""
-                }`}
-              >
-                <div className="step-status">
-                  {currentStep === "initializing" && stepStatus === "loading" && <Loader2 className="animate-spin" />}
-                  {currentStep === "initializing" && stepStatus === "success" && (
-                    <CheckCircle className="text-green-500" />
-                  )}
-                  {currentStep === "initializing" && stepStatus === "error" && <XCircle className="text-red-500" />}
-                </div>
-                <div className="step-label">Initializing Payment</div>
-              </div>
-
-              <div
-                className={`payment-step ${currentStep === "reading" ? "active" : ""} ${
-                  currentStep === "reading" && stepStatus === "success"
-                    ? "completed"
-                    : currentStep === "reading" && stepStatus === "error"
-                      ? "error"
-                      : ""
-                }`}
-              >
-                <div className="step-status">
-                  {currentStep === "reading" && stepStatus === "loading" && <Loader2 className="animate-spin" />}
-                  {currentStep === "reading" && stepStatus === "success" && <CheckCircle className="text-green-500" />}
-                  {currentStep === "reading" && stepStatus === "error" && <XCircle className="text-red-500" />}
-                </div>
-                <div className="step-label">Reading Wallet</div>
-              </div>
-
-              <div
-                className={`payment-step ${currentStep === "charging" ? "active" : ""} ${
-                  currentStep === "charging" && stepStatus === "success"
-                    ? "completed"
-                    : currentStep === "charging" && stepStatus === "error"
-                      ? "error"
-                      : ""
-                }`}
-              >
-                <div className="step-status">
-                  {currentStep === "charging" && stepStatus === "loading" && <Loader2 className="animate-spin" />}
-                  {currentStep === "charging" && stepStatus === "success" && <CheckCircle className="text-green-500" />}
-                  {currentStep === "charging" && stepStatus === "error" && <XCircle className="text-red-500" />}
-                </div>
-                <div className="step-label">Charging NGN {formatNumber(finalPrice)} from Wallet</div>
-              </div>
-
-              <div
-                className={`payment-step ${currentStep === "finalizing" ? "active" : ""} ${
-                  currentStep === "finalizing" && stepStatus === "success" ? "completed" : ""
-                } ${
-                  currentStep === "finalizing" && stepStatus === "success"
-                    ? "completed"
-                    : currentStep === "finalizing" && stepStatus === "error"
-                      ? "error"
-                      : ""
-                }`}
-              >
-                <div className="step-status">
-                  {currentStep === "finalizing" && stepStatus === "loading" && <Loader2 className="animate-spin" />}
-                  {currentStep === "finalizing" && stepStatus === "success" && (
-                    <CheckCircle className="text-green-500" />
-                  )}
-                  {currentStep === "finalizing" && stepStatus === "error" && <XCircle className="text-red-500" />}
-                </div>
-                <div className="step-label">Finalizing Payment</div>
-              </div>
-            </div>
-
-            <p className="processing-message">Please wait while we process your payment...</p>
+            <h2>Redirecting to payment...</h2>
+            <div className="processing-message">Please wait while we prepare your payment...</div>
+            <Loader2 className="animate-spin mx-auto mt-4" size={40} />
           </div>
         )}
 

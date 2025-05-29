@@ -21,6 +21,7 @@ const AdminSuite = lazy(() => import("./pages/AdminSuite"))
 const AgentOnboard = lazy(() => import("./pages/agent-onboard"))
 const AgentFunding = lazy(() => import("./pages/agent-funding"))
 const AgentPayout = lazy(() => import("./pages/agent-payout"))
+const WalletFund = lazy(() => import("./pages/wallet-fund"))
 const Agent = lazy(() => import("./pages/agent"))
 const AgentTransactions = lazy(() => import("./pages/agent-transactions"))
 const AgentAuth = lazy(() => import("./pages/agentAuth"))
@@ -32,6 +33,8 @@ const CreateEvent = lazy(() => import("./pages/createEvent"))
 const Success = lazy(() => import("./pages/success"))
 const Event = lazy(() => import("./pages/event"))
 const Payment = lazy(() => import("./pages/Payment"))
+const Wallet = lazy(() => import("./pages/wallet"))
+const WalletHistory = lazy(() => import("./pages/wallet-history"))
 const PaystackSuccess = lazy(() => import("./pages/paystack-success"))
 const UserProfile = lazy(() => import("./pages/Profile"))
 const BookerConfirm = lazy(() => import("./pages/bookerConfirm"))
@@ -124,6 +127,8 @@ function App() {
             <Route path="/booker-confirm" element={user ? <BookerConfirm /> : <Navigate to="/login" />} />
             <Route path="/payment" element={user ? <Payment /> : <Navigate to="/login" />} />
             <Route path="/paystack-success" element={user ? <PaystackSuccess /> : <Navigate to="/login" />} />
+            <Route path="/wallet-history" element={user ? <WalletHistory /> : <Navigate to="/login" />} />
+            <Route path="/wallet-history" element={user ? <WalletHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
             <Route path="/agent" element={user ? <Agent /> : <Navigate to="/login" />} />
@@ -337,6 +342,19 @@ function App() {
                 user ? (
                   <AdminRoute>
                     <AgentPayout />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+              <Route
+              path="/wallet-fund"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <WalletFund />
                   </AdminRoute>
                 ) : (
                   <Navigate to="/login" />
