@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore"
 import { checkCurrentUserIsAdmin } from "../services/admin"
-import UserHeader from "../components/UserHeader"
+// import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import { Search, UserCheck, AlertTriangle, CheckCircle, Loader2, XCircle, Calendar, User } from "lucide-react"
 import Preloader from "../components/preloader"
@@ -203,7 +203,7 @@ const AgentOnboard = () => {
 
   return (
     <>
-      <UserHeader />
+      {/* <UserHeader /> */}
       <div className="agent-onboard-container">
         <div className="agent-header">
           <h1>Agent Management</h1>

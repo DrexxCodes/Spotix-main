@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore"
 import { checkCurrentUserIsAdmin } from "../services/admin"
-import UserHeader from "../components/UserHeader"
+// import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { Search, AlertCircle, CheckCircle, User, Wallet, DollarSign, Loader2, Tag, X } from "lucide-react"
@@ -191,7 +191,7 @@ const AgentFunding = () => {
 
   return (
     <>
-      <UserHeader />
+      {/* <UserHeader /> */}
       <div className="agent-funding-container">
         <div className="agent-funding-header">
           <h1>Agent Wallet Funding</h1>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, query, orderBy, type Timestamp } from "firebase/firestore"
 import { checkCurrentUserIsAdmin } from "../services/admin"
-import UserHeader from "../components/UserHeader"
+// import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import {
   UserPlus,
@@ -339,7 +339,7 @@ const AdminPermissions = () => {
   if (!currentUserAddedBySetup && !loading) {
     return (
       <>
-        <UserHeader />
+        {/* <UserHeader /> */}
         <div className="admin-permissions-container">
           <div className="admin-header">
             <h1>Admin Permissions Management</h1>
@@ -368,7 +368,7 @@ const AdminPermissions = () => {
 
   return (
     <>
-      <UserHeader />
+      {/* <UserHeader /> */}
       <div className="admin-permissions-container">
         <div className="admin-header">
           <h1>Admin Permissions Management</h1>

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore"
-import { ArrowLeft, Search, Loader2, UserCheck, AlertCircle, CheckCircle } from "lucide-react"
+import { ArrowLeft, Search, Loader2, UserCheck, AlertCircle, CheckCircle, MinusCircle } from "lucide-react"
 // import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -21,17 +21,32 @@ interface UserData {
   wallet?: number
 }
 
-const WalletFund = () => {
+type ChargeType =
+  | "Ad payment"
+  | "Themed Event Payment"
+  | "Featured Event Payment"
+  | "Featured + Theme payment"
+  | "Spotix Ad API"
+  | "Spotix Event API"
+  | "Charge Back"
+  | "Special Event Page"
+  | "Event Image design"
+  | "Other"
+
+const WalletDebit = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState("")
-  const [fundAmount, setFundAmount] = useState("")
+  const [debitAmount, setDebitAmount] = useState("")
   const [searchingUser, setSearchingUser] = useState(false)
   const [userData, setUserData] = useState<UserData | null>(null)
   const [message, setMessage] = useState({ text: "", type: "" })
-  const [fundingInProgress, setFundingInProgress] = useState(false)
-  const [fundingSuccess, setFundingSuccess] = useState(false)
+  const [debitingInProgress, setDebitingInProgress] = useState(false)
+  const [debitSuccess, setDebitSuccess] = useState(false)
   const [adminName, setAdminName] = useState("")
+  const [chargeType, setChargeType] = useState<ChargeType>("Ad payment")
+  const [customChargeType, setCustomChargeType] = useState("")
+  const [chargeDescription, setChargeDescription] = useState("")
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -103,22 +118,37 @@ const WalletFund = () => {
     }
   }
 
-  const handleFundWallet = async () => {
+  const handleDebitWallet = async () => {
     if (!userData) {
       setMessage({ text: "Please search for a user first", type: "error" })
       return
     }
 
-    if (!fundAmount || isNaN(Number(fundAmount)) || Number(fundAmount) <= 0) {
+    if (!debitAmount || isNaN(Number(debitAmount)) || Number(debitAmount) <= 0) {
       setMessage({ text: "Please enter a valid amount", type: "error" })
       return
     }
 
-    setFundingInProgress(true)
+    if (chargeType === "Other" && !customChargeType.trim()) {
+      setMessage({ text: "Please specify the custom charge type", type: "error" })
+      return
+    }
+
+    const amount = Number(debitAmount)
+
+    // Check if user has sufficient funds
+    if (userData.wallet && userData.wallet < amount) {
+      setMessage({
+        text: `Insufficient funds. User only has NGN ${formatNumber(userData.wallet)} in their wallet.`,
+        type: "error",
+      })
+      return
+    }
+
+    setDebitingInProgress(true)
     setMessage({ text: "", type: "" })
 
     try {
-      const amount = Number(fundAmount)
       const currentUser = auth.currentUser
 
       if (!currentUser) {
@@ -129,7 +159,7 @@ const WalletFund = () => {
       const generateTransactionId = () => {
         const timestamp = Date.now()
         const random = Math.random().toString(36).substring(2, 9)
-        return `wallet-fund-${timestamp}-${random}`
+        return `wallet-debit-${timestamp}-${random}`
       }
 
       const transactionId = generateTransactionId()
@@ -146,7 +176,17 @@ const WalletFund = () => {
       }
 
       const currentWalletBalance = userDoc.data().wallet || 0
-      const newWalletBalance = currentWalletBalance + amount
+
+      if (currentWalletBalance < amount) {
+        setMessage({
+          text: `Insufficient funds. User only has NGN ${formatNumber(currentWalletBalance)} in their wallet.`,
+          type: "error",
+        })
+        setDebitingInProgress(false)
+        return
+      }
+
+      const newWalletBalance = currentWalletBalance - amount
 
       // Create wallet-pay entry
       const walletPayCollectionRef = collection(db, "users", userData.uid, "wallet-pay")
@@ -154,9 +194,10 @@ const WalletFund = () => {
         transactionId,
         transactionDate,
         transactionTime,
-        transactionType: "Wallet Funding",
+        transactionType: chargeType === "Other" ? customChargeType : chargeType,
+        description: chargeDescription || `Wallet debit for ${chargeType === "Other" ? customChargeType : chargeType}`,
         amount,
-        tag: "credit",
+        tag: "debit",
         status: "completed",
         adminId: currentUser.uid,
         adminName: adminName,
@@ -178,19 +219,21 @@ const WalletFund = () => {
         wallet: newWalletBalance,
       })
 
-      setFundingSuccess(true)
+      setDebitSuccess(true)
       setMessage({
-        text: `Successfully funded ${userData.fullName}'s wallet with NGN ${formatNumber(amount)}`,
+        text: `Successfully debited NGN ${formatNumber(amount)} from ${userData.fullName}'s wallet for ${
+          chargeType === "Other" ? customChargeType : chargeType
+        }`,
         type: "success",
       })
     } catch (error) {
-      console.error("Error funding wallet:", error)
+      console.error("Error debiting wallet:", error)
       setMessage({
-        text: `Failed to fund wallet: ${error instanceof Error ? error.message : "Unknown error"}`,
+        text: `Failed to debit wallet: ${error instanceof Error ? error.message : "Unknown error"}`,
         type: "error",
       })
     } finally {
-      setFundingInProgress(false)
+      setDebitingInProgress(false)
     }
   }
 
@@ -200,10 +243,13 @@ const WalletFund = () => {
 
   const resetForm = () => {
     setUserId("")
-    setFundAmount("")
+    setDebitAmount("")
     setUserData(null)
-    setFundingSuccess(false)
+    setDebitSuccess(false)
     setMessage({ text: "", type: "" })
+    setChargeType("Ad payment")
+    setCustomChargeType("")
+    setChargeDescription("")
   }
 
   if (loading) {
@@ -213,18 +259,18 @@ const WalletFund = () => {
   return (
     <>
       <Helmet>
-        <title>Fund User Wallet - Admin Suite - Spotix</title>
-        <meta name="description" content="Fund user wallets in the Spotix admin suite." />
+        <title>Debit User Wallet - Admin Suite - Spotix</title>
+        <meta name="description" content="Debit funds from user wallets in the Spotix admin suite." />
       </Helmet>
       {/* <UserHeader /> */}
-      <div className="wallet-fund-container">
-        <div className="wallet-fund-header">
+      <div className="wallet-debit-container">
+        <div className="wallet-debit-header">
           <div className="header-top">
             <button className="back-button" onClick={handleGoBack}>
               <ArrowLeft size={20} />
               Back
             </button>
-            <h1>Fund User Wallet</h1>
+            <h1>Debit User Wallet</h1>
           </div>
         </div>
 
@@ -242,7 +288,7 @@ const WalletFund = () => {
           </div>
         )}
 
-        <div className="wallet-fund-content">
+        <div className="wallet-debit-content">
           <div className="search-user-section">
             <h2>Search User</h2>
             <div className="search-form">
@@ -255,12 +301,12 @@ const WalletFund = () => {
                     placeholder="Enter user ID"
                     value={userId}
                     onChange={(e) => setUserId(e.target.value)}
-                    disabled={searchingUser || fundingSuccess}
+                    disabled={searchingUser || debitSuccess}
                   />
                   <button
                     className="search-button"
                     onClick={searchUser}
-                    disabled={searchingUser || !userId.trim() || fundingSuccess}
+                    disabled={searchingUser || !userId.trim() || debitSuccess}
                   >
                     {searchingUser ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
                     Search
@@ -290,41 +336,97 @@ const WalletFund = () => {
                 </div>
               </div>
 
-              <div className="fund-wallet-section">
-                <h2>Fund Wallet</h2>
-                <div className="fund-form">
+              <div className="debit-wallet-section">
+                <h2>Debit Wallet</h2>
+                <div className="debit-form">
                   <div className="input-group">
-                    <label htmlFor="fundAmount">Amount (NGN)</label>
-                    <input
-                      type="number"
-                      id="fundAmount"
-                      placeholder="Enter amount to fund"
-                      value={fundAmount}
-                      onChange={(e) => setFundAmount(e.target.value)}
-                      disabled={fundingInProgress || fundingSuccess}
+                    <label htmlFor="chargeType">Charge Type</label>
+                    <select
+                      id="chargeType"
+                      value={chargeType}
+                      onChange={(e) => setChargeType(e.target.value as ChargeType)}
+                      disabled={debitingInProgress || debitSuccess}
+                      className="charge-type-select"
+                    >
+                      <option value="Ad payment">Ad payment</option>
+                      <option value="Themed Event Payment">Themed Event Payment</option>
+                      <option value="Featured Event Payment">Featured Event Payment</option>
+                      <option value="Featured + Theme payment">Featured + Theme payment</option>
+                      <option value="Spotix Ad API">Spotix Ad API</option>
+                      <option value="Spotix Event API">Spotix Event API</option>
+                      <option value="Charge Back">Charge Back</option>
+                      <option value="Special Event Page">Special Event Page</option>
+                      <option value="Event Image design">Event Image design</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {chargeType === "Other" && (
+                    <div className="input-group">
+                      <label htmlFor="customChargeType">Specify Charge Type</label>
+                      <input
+                        type="text"
+                        id="customChargeType"
+                        placeholder="Enter custom charge type"
+                        value={customChargeType}
+                        onChange={(e) => setCustomChargeType(e.target.value)}
+                        disabled={debitingInProgress || debitSuccess}
+                      />
+                    </div>
+                  )}
+
+                  <div className="input-group">
+                    <label htmlFor="chargeDescription">Description (Optional)</label>
+                    <textarea
+                      id="chargeDescription"
+                      placeholder="Enter additional details about this charge"
+                      value={chargeDescription}
+                      onChange={(e) => setChargeDescription(e.target.value)}
+                      disabled={debitingInProgress || debitSuccess}
+                      rows={3}
+                      className="charge-description"
                     />
                   </div>
 
-                  <div className="fund-actions">
-                    {fundingSuccess ? (
+                  <div className="input-group">
+                    <label htmlFor="debitAmount">Amount to Debit (NGN)</label>
+                    <input
+                      type="number"
+                      id="debitAmount"
+                      placeholder="Enter amount to debit"
+                      value={debitAmount}
+                      onChange={(e) => setDebitAmount(e.target.value)}
+                      disabled={debitingInProgress || debitSuccess}
+                    />
+                  </div>
+
+                  <div className="debit-actions">
+                    {debitSuccess ? (
                       <button className="new-transaction-btn" onClick={resetForm}>
                         New Transaction
                       </button>
                     ) : (
                       <button
-                        className="fund-button"
-                        onClick={handleFundWallet}
+                        className="debit-button"
+                        onClick={handleDebitWallet}
                         disabled={
-                          fundingInProgress || !fundAmount || isNaN(Number(fundAmount)) || Number(fundAmount) <= 0
+                          debitingInProgress ||
+                          !debitAmount ||
+                          isNaN(Number(debitAmount)) ||
+                          Number(debitAmount) <= 0 ||
+                          (chargeType === "Other" && !customChargeType.trim())
                         }
                       >
-                        {fundingInProgress ? (
+                        {debitingInProgress ? (
                           <>
                             <Loader2 className="animate-spin" size={18} />
                             Processing...
                           </>
                         ) : (
-                          "Fund Wallet"
+                          <>
+                            <MinusCircle size={18} />
+                            Debit Wallet
+                          </>
                         )}
                       </button>
                     )}
@@ -338,7 +440,7 @@ const WalletFund = () => {
       <Footer />
 
       <style>{`
-        .wallet-fund-container {
+        .wallet-debit-container {
           min-height: 100vh;
           background-color: #f8f9fa;
           padding: 2rem 1rem;
@@ -346,7 +448,7 @@ const WalletFund = () => {
           margin: 0 auto;
         }
 
-        .wallet-fund-header {
+        .wallet-debit-header {
           background: white;
           border-radius: 12px;
           padding: 2rem;
@@ -376,7 +478,7 @@ const WalletFund = () => {
           background-color: #f5f5f5;
         }
 
-        .wallet-fund-header h1 {
+        .wallet-debit-header h1 {
           margin: 0;
           color: #333;
           font-size: 2rem;
@@ -423,7 +525,7 @@ const WalletFund = () => {
           padding: 0 0.5rem;
         }
 
-        .wallet-fund-content {
+        .wallet-debit-content {
           background: white;
           border-radius: 12px;
           padding: 2rem;
@@ -432,7 +534,7 @@ const WalletFund = () => {
 
         .search-user-section h2,
         .user-details-section h2,
-        .fund-wallet-section h2 {
+        .debit-wallet-section h2 {
           margin-top: 0;
           margin-bottom: 1.5rem;
           color: #333;
@@ -560,15 +662,17 @@ const WalletFund = () => {
           color: #6b2fa5;
         }
 
-        .fund-wallet-section {
+        .debit-wallet-section {
           margin-top: 1rem;
         }
 
-        .fund-form {
+        .debit-form {
           max-width: 600px;
         }
 
-        .fund-form input {
+        .debit-form input,
+        .debit-form select,
+        .debit-form textarea {
           width: 100%;
           padding: 0.75rem;
           border: 1px solid #ddd;
@@ -576,15 +680,25 @@ const WalletFund = () => {
           font-size: 1rem;
         }
 
-        .fund-actions {
+        .charge-type-select {
+          background-color: white;
+          cursor: pointer;
+        }
+
+        .charge-description {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        .debit-actions {
           margin-top: 1.5rem;
         }
 
-        .fund-button {
+        .debit-button {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          background: #6b2fa5;
+          background: #dc3545;
           color: white;
           border: none;
           padding: 0.75rem 2rem;
@@ -595,11 +709,11 @@ const WalletFund = () => {
           font-weight: 500;
         }
 
-        .fund-button:hover:not(:disabled) {
-          background: #5a2589;
+        .debit-button:hover:not(:disabled) {
+          background: #c82333;
         }
 
-        .fund-button:disabled {
+        .debit-button:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
@@ -622,11 +736,11 @@ const WalletFund = () => {
 
         /* Responsive styles */
         @media (max-width: 768px) {
-          .wallet-fund-header {
+          .wallet-debit-header {
             padding: 1.5rem;
           }
 
-          .wallet-fund-content {
+          .wallet-debit-content {
             padding: 1.5rem;
           }
 
@@ -635,7 +749,7 @@ const WalletFund = () => {
             align-items: flex-start;
           }
 
-          .wallet-fund-header h1 {
+          .wallet-debit-header h1 {
             font-size: 1.5rem;
             margin-top: 1rem;
           }
@@ -670,4 +784,4 @@ const WalletFund = () => {
   )
 }
 
-export default WalletFund
+export default WalletDebit

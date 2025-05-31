@@ -426,7 +426,7 @@ const Payment = () => {
           const amountInKobo = Math.round(totalWithFee * 100)
 
           // Show popup active status
-          setPaystackPopupStatus("Paystack popup is active")
+          setPaystackPopupStatus("Paystack popup is being called")
           setShowPaystackStatus(true)
 
           // @ts-ignore - PaystackPop is loaded from the script
@@ -881,3 +881,5 @@ const Payment = () => {
 }
 
 export default Payment
+
+

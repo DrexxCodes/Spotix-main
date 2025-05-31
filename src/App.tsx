@@ -21,6 +21,8 @@ const AdminSuite = lazy(() => import("./pages/AdminSuite"))
 const AgentOnboard = lazy(() => import("./pages/agent-onboard"))
 const AgentFunding = lazy(() => import("./pages/agent-funding"))
 const AgentPayout = lazy(() => import("./pages/agent-payout"))
+const EventAdmin = lazy(() => import("./pages/Event-admin"))
+const WalletDebit = lazy(() => import("./pages/wallet-debit"))
 const WalletFund = lazy(() => import("./pages/wallet-fund"))
 const Agent = lazy(() => import("./pages/agent"))
 const AgentTransactions = lazy(() => import("./pages/agent-transactions"))
@@ -374,6 +376,31 @@ function App() {
                 )
               }
             />
+            <Route
+              path="/wallet-debit"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <WalletDebit />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/event-admin"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <EventAdmin />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
 
             {/* 404 route - must be last */}
             <Route path="*" element={<NotFound />} />

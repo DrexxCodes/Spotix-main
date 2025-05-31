@@ -1,13 +1,15 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import type React from "react"
+
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
 import { db, auth } from "../services/firebase"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import { Helmet } from "react-helmet"
-import { ArrowLeft, User, Ticket, Info, X } from "lucide-react"
+import { ArrowLeft, User, Ticket, Info, X, Wallet } from "lucide-react"
 import ShareBtn from "../components/shareBtn"
 import LoginButton from "../components/loginBtn"
 import "boxicons/css/boxicons.min.css"
@@ -42,6 +44,96 @@ interface EventType {
   likes?: number
   likedBy?: string[]
   allowAgents?: boolean
+}
+
+// Network speed detection
+const getNetworkSpeed = (): "slow" | "medium" | "fast" => {
+  // @ts-ignore
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+
+  if (connection) {
+    const effectiveType = connection.effectiveType
+    if (effectiveType === "slow-2g" || effectiveType === "2g") return "slow"
+    if (effectiveType === "3g") return "medium"
+    return "fast"
+  }
+
+  // Fallback: detect based on device type
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  return isMobile ? "medium" : "fast"
+}
+
+// Lazy loading hook
+const useLazyLoading = (ref: React.RefObject<HTMLElement | null>, threshold = 0.1) => {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const currentRef = ref.current
+
+    if (!currentRef) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold },
+    )
+
+    observer.observe(currentRef)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [ref, threshold])
+
+  return isVisible
+}
+
+// Lazy Image Component
+const LazyImage: React.FC<{
+  src: string
+  alt: string
+  className?: string
+}> = ({ src, alt, className }) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLDivElement>(null)
+  const isVisible = useLazyLoading(imgRef)
+
+  return (
+    <div ref={imgRef} className={`lazy-image-container ${className || ""}`}>
+      {isVisible && (
+        <>
+          {!isLoaded && !hasError && (
+            <div className="image-placeholder">
+              <div className="image-skeleton"></div>
+            </div>
+          )}
+          <img
+            src={src || "/placeholder.svg"}
+            alt={alt}
+            onLoad={() => setIsLoaded(true)}
+            onError={() => {
+              setHasError(true)
+              setIsLoaded(true)
+            }}
+            style={{
+              opacity: isLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease-in-out",
+            }}
+          />
+          {hasError && (
+            <div className="image-error">
+              <span>Failed to load image</span>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 }
 
 // Loading skeleton component
@@ -469,10 +561,11 @@ const Event = () => {
             </button>
             <div className="wallet-display">
               {isAuthenticated ? (
-                <>
-                  <span className="wallet-label">Balance:</span>
-                  <span className="wallet-amount">{formatCurrency(walletBalance)}</span>
-                </>
+                <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 px-3 py-1.5 rounded-lg shadow-md">
+                  <Wallet size={16} className="text-white" />
+                  <span className="wallet-label event-white font-medium">Balance:</span>
+                  <span className="wallet-amount event-white font-bold">₦{formatNumber(walletBalance)}</span>
+                </div>
               ) : (
                 <LoginButton />
               )}
@@ -489,7 +582,14 @@ const Event = () => {
             </div>
           </div>
 
-          <img src={eventData.eventImage || "/placeholder.svg"} alt={eventData.eventName} className="event-image" />
+          {/* Lazy loaded event image */}
+          <div className="event-image-container">
+            <LazyImage
+              src={eventData.eventImage || "/placeholder.svg"}
+              alt={eventData.eventName}
+              className="event-image"
+            />
+          </div>
 
           <div className="event-tabs">
             <button
@@ -771,6 +871,90 @@ const Event = () => {
         </div>
       </div>
       <Footer />
+
+      {/* Additional styles for lazy loading */}
+      <style>{`
+        .lazy-image-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+
+        .lazy-image-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: opacity 0.3s ease-in-out;
+        }
+
+        .image-placeholder {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f0f0f0;
+        }
+
+        .image-skeleton {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+        }
+
+        .image-error {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.1);
+          color: #666;
+          font-size: 14px;
+        }
+
+        .event-image-container {
+          width: 100%;
+          height: 300px;
+          overflow: hidden;
+          position: relative;
+          border-radius: 8px;
+          margin-bottom: 1rem;
+        }
+
+        @keyframes loading {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+
+        /* Wallet display styling */
+        .wallet-display {
+          display: flex;
+          align-items: center;
+        }
+
+        /* Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+          .lazy-image-container img,
+          .image-skeleton {
+            animation: none;
+            transition: none;
+          }
+        }
+      `}</style>
     </>
   )
 }

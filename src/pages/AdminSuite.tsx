@@ -18,7 +18,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore"
 import { checkCurrentUserIsAdmin } from "../services/admin"
-import UserHeader from "../components/UserHeader"
+// import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import {
   UserPlus,
@@ -896,7 +896,7 @@ const AdminSuite = () => {
 
   return (
     <>
-      <UserHeader />
+      {/* <UserHeader /> */}
       <div className="admin-dashboard-container">
         <div className="admin-header">
           <h1>Admin Dashboard</h1>

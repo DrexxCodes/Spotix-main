@@ -1,21 +1,10 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { Helmet } from "react-helmet"
 import { auth, db } from "../services/firebase"
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  doc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-} from "firebase/firestore"
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
@@ -35,15 +24,148 @@ interface PublicEventType {
   timestamp: any
   creatorID: string
   eventId: string
-  likes?: number
-  likedBy?: string[]
-  isLiked?: boolean
 }
 
 interface SearchSuggestion {
   eventName: string
   creatorID: string
   eventId: string
+}
+
+// Network speed detection
+const getNetworkSpeed = (): "slow" | "medium" | "fast" => {
+  // @ts-ignore
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+
+  if (connection) {
+    const effectiveType = connection.effectiveType
+    if (effectiveType === "slow-2g" || effectiveType === "2g") return "slow"
+    if (effectiveType === "3g") return "medium"
+    return "fast"
+  }
+
+  // Fallback: detect based on device type
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  return isMobile ? "medium" : "fast"
+}
+
+// Image optimization function
+const optimizeImageUrl = (originalUrl: string, width = 400): string => {
+  if (!originalUrl || originalUrl.includes("/placeholder.svg")) {
+    return originalUrl
+  }
+
+  const networkSpeed = getNetworkSpeed()
+
+  // Quality settings based on network speed
+  const qualityMap = {
+    slow: 60,
+    medium: 75,
+    fast: 85,
+  }
+
+  // Width settings based on network speed
+  const widthMap = {
+    slow: Math.min(width, 300),
+    medium: Math.min(width, 400),
+    fast: width,
+  }
+
+  const quality = qualityMap[networkSpeed]
+  const optimizedWidth = widthMap[networkSpeed]
+
+  // For Firebase Storage URLs, add transformation parameters
+  if (originalUrl.includes("firebasestorage.googleapis.com")) {
+    const url = new URL(originalUrl)
+    url.searchParams.set("w", optimizedWidth.toString())
+    url.searchParams.set("q", quality.toString())
+    url.searchParams.set("fm", "webp") // Use WebP format for better compression
+    return url.toString()
+  }
+
+  // For other URLs, try to add Cloudinary-style parameters if possible
+  if (originalUrl.includes("cloudinary.com")) {
+    return originalUrl.replace("/upload/", `/upload/w_${optimizedWidth},q_${quality},f_auto/`)
+  }
+
+  // For other services, return original URL
+  return originalUrl
+}
+
+// Lazy loading hook - FIXED TYPE ISSUES
+const useLazyLoading = (ref: React.RefObject<HTMLElement | null>, threshold = 0.1) => {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const currentRef = ref.current
+
+    if (!currentRef) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold },
+    )
+
+    observer.observe(currentRef)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [ref, threshold])
+
+  return isVisible
+}
+
+// Lazy Image Component
+const LazyImage: React.FC<{
+  src: string
+  alt: string
+  className?: string
+  width?: number
+}> = ({ src, alt, className, width = 400 }) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLDivElement>(null)
+  const isVisible = useLazyLoading(imgRef)
+
+  const optimizedSrc = optimizeImageUrl(src, width)
+
+  return (
+    <div ref={imgRef} className={`lazy-image-container ${className || ""}`}>
+      {isVisible && (
+        <>
+          {!isLoaded && !hasError && (
+            <div className="image-placeholder">
+              <div className="image-skeleton"></div>
+            </div>
+          )}
+          <img
+            src={optimizedSrc || "/placeholder.svg"}
+            alt={alt}
+            onLoad={() => setIsLoaded(true)}
+            onError={() => {
+              setHasError(true)
+              setIsLoaded(true)
+            }}
+            style={{
+              opacity: isLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease-in-out",
+            }}
+          />
+          {hasError && (
+            <div className="image-error">
+              <span>Failed to load image</span>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 }
 
 // Loading skeleton component for event cards
@@ -56,12 +178,51 @@ const EventCardSkeleton = () => (
     <div className="skeleton-type"></div>
     <div className="skeleton-venue"></div>
     <div className="skeleton-booker"></div>
-    <div className="skeleton-footer">
-      <div className="skeleton-price"></div>
-      <div className="skeleton-likes"></div>
-    </div>
   </div>
 )
+
+// Lazy Event Card Component
+const LazyEventCard: React.FC<{
+  event: PublicEventType
+  isPast?: boolean
+  isToday?: boolean
+  onClick: () => void
+}> = ({ event, isPast = false, isToday = false, onClick }) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const isVisible = useLazyLoading(cardRef, 0.1)
+
+  if (!isVisible) {
+    return (
+      <div ref={cardRef} className="event-card-placeholder">
+        <EventCardSkeleton />
+      </div>
+    )
+  }
+
+  return (
+    <div ref={cardRef} onClick={onClick} className="event-card">
+      <div className="event-card-header">
+        <span className={`event-price-tag ${!event.freeOrPaid ? "free" : "paid"}`}>
+          {!event.freeOrPaid ? "Free" : "Paid"}
+        </span>
+
+        <span className={`event-date-tag ${isPast ? "past" : ""} ${isToday ? "today" : ""}`}>
+          {new Date(event.eventStartDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+        </span>
+      </div>
+
+      <div className="event-card-image">
+        <LazyImage src={event.imageURL || "/placeholder.svg"} alt={event.eventName} width={400} />
+      </div>
+
+      <div className="event-card-content">
+        <h2 className="event-title">{event.eventName}</h2>
+        <p className="event-type">{event.eventType}</p>
+        <p className="event-venue">{event.venue}</p>
+      </div>
+    </div>
+  )
+}
 
 const Home = () => {
   const [username, setUsername] = useState("")
@@ -75,7 +236,6 @@ const Home = () => {
   const [filterType, setFilterType] = useState<string | null>(null)
   const [priceFilter, setPriceFilter] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [liking, setLiking] = useState<Record<string, boolean>>({})
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [networkFailed, setNetworkFailed] = useState(false)
 
@@ -131,8 +291,6 @@ const Home = () => {
 
   const fetchFreshEvents = useCallback(async () => {
     try {
-      const user = auth.currentUser
-
       // Fetch from publicEvents collection with limit for upcoming events
       const publicEventsQuery = query(
         collection(db, "publicEvents"),
@@ -143,12 +301,8 @@ const Home = () => {
 
       const eventList: PublicEventType[] = eventsSnapshot.docs.map((doc) => {
         const event = doc.data() as PublicEventType
-        const isLiked = user && event.likedBy ? event.likedBy.includes(user.uid) : false
         return {
           ...event,
-          likes: event.likes || 0,
-          likedBy: event.likedBy || [],
-          isLiked,
         }
       })
 
@@ -284,69 +438,6 @@ const Home = () => {
     navigate(`/event/${suggestion.creatorID}/${suggestion.eventId}`)
   }
 
-  const handleLikeEvent = async (event: PublicEventType, e: React.MouseEvent) => {
-    e.stopPropagation()
-    try {
-      const user = auth.currentUser
-      if (!user) {
-        navigate("/login")
-        return
-      }
-
-      setLiking((prev) => ({ ...prev, [event.eventId]: true }))
-
-      // Update in the original nested structure for likes
-      const eventRef = doc(db, "events", event.creatorID, "userEvents", event.eventId)
-      const isLiked = event.isLiked
-
-      if (isLiked) {
-        await updateDoc(eventRef, {
-          likes: (event.likes || 0) - 1,
-          likedBy: arrayRemove(user.uid),
-        })
-      } else {
-        await updateDoc(eventRef, {
-          likes: (event.likes || 0) + 1,
-          likedBy: arrayUnion(user.uid),
-        })
-      }
-
-      // Update state
-      const updateEvents = (events: PublicEventType[]) =>
-        events.map((e) =>
-          e.eventId === event.eventId
-            ? { ...e, isLiked: !isLiked, likes: isLiked ? (e.likes || 0) - 1 : (e.likes || 0) + 1 }
-            : e,
-        )
-
-      setUpcomingEvents(updateEvents)
-      setEventsToday(updateEvents)
-      setPassedEvents(updateEvents)
-      setEvents(updateEvents)
-
-      // Update cache
-      const cachedDataString = sessionStorage.getItem(cacheKey)
-      if (cachedDataString) {
-        try {
-          const cachedData = JSON.parse(cachedDataString)
-
-          cachedData.events = updateEvents(cachedData.events)
-          cachedData.upcoming = updateEvents(cachedData.upcoming)
-          cachedData.today = updateEvents(cachedData.today || [])
-          cachedData.past = updateEvents(cachedData.past)
-
-          sessionStorage.setItem(cacheKey, JSON.stringify(cachedData))
-        } catch (error) {
-          console.error("Error updating cached data:", error)
-        }
-      }
-    } catch (error) {
-      console.error("Error liking event:", error)
-    } finally {
-      setLiking((prev) => ({ ...prev, [event.eventId]: false }))
-    }
-  }
-
   const navigateToEvent = (creatorId: string, eventId: string) => {
     navigate(`/event/${creatorId}/${eventId}`)
   }
@@ -364,41 +455,6 @@ const Home = () => {
       return matchesSearch && matchesType && matchesPrice
     })
   }
-
-  const renderEventCard = (event: PublicEventType, isPast = false, isToday = false) => (
-    <div key={event.eventId} onClick={() => navigateToEvent(event.creatorID, event.eventId)} className="event-card">
-      <div className="event-card-header">
-        <span className={`event-price-tag ${!event.freeOrPaid ? "free" : "paid"}`}>
-          {!event.freeOrPaid ? "Free" : "Paid"}
-        </span>
-
-        <span className={`event-date-tag ${isPast ? "past" : ""} ${isToday ? "today" : ""}`}>
-          {new Date(event.eventStartDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-        </span>
-      </div>
-
-      <div className="event-card-image">
-        <img src={event.imageURL || "/placeholder.svg"} alt={event.eventName} />
-      </div>
-
-      <div className="event-card-content">
-        <h2 className="event-title">{event.eventName}</h2>
-        <p className="event-type">{event.eventType}</p>
-        <p className="event-venue">{event.venue}</p>
-      </div>
-
-      <div className="event-card-footer">
-        <button
-          onClick={(e) => handleLikeEvent(event, e)}
-          className="event-like-button"
-          disabled={liking[event.eventId]}
-        >
-          {event.isLiked ? <i className="bx bxs-heart"></i> : <i className="bx bx-heart"></i>}
-          <span>{formatNumber(event.likes || 0)}</span>
-        </button>
-      </div>
-    </div>
-  )
 
   const renderSkeletons = (count: number) =>
     Array(count)
@@ -503,7 +559,14 @@ const Home = () => {
               {loading ? (
                 renderSkeletons(4)
               ) : filteredTodayEvents.length > 0 ? (
-                filteredTodayEvents.map((event) => renderEventCard(event, false, true))
+                filteredTodayEvents.map((event) => (
+                  <LazyEventCard
+                    key={event.eventId}
+                    event={event}
+                    isToday={true}
+                    onClick={() => navigateToEvent(event.creatorID, event.eventId)}
+                  />
+                ))
               ) : (
                 <p className="no-events-message">No events happening today match your filters.</p>
               )}
@@ -516,7 +579,13 @@ const Home = () => {
           {loading ? (
             renderSkeletons(8)
           ) : filteredUpcomingEvents.length > 0 ? (
-            filteredUpcomingEvents.map((event) => renderEventCard(event))
+            filteredUpcomingEvents.map((event) => (
+              <LazyEventCard
+                key={event.eventId}
+                event={event}
+                onClick={() => navigateToEvent(event.creatorID, event.eventId)}
+              />
+            ))
           ) : (
             <p className="no-events-message">No upcoming events found.</p>
           )}
@@ -527,7 +596,14 @@ const Home = () => {
           {loading ? (
             renderSkeletons(4)
           ) : filteredPastEvents.length > 0 ? (
-            filteredPastEvents.map((event) => renderEventCard(event, true))
+            filteredPastEvents.map((event) => (
+              <LazyEventCard
+                key={event.eventId}
+                event={event}
+                isPast={true}
+                onClick={() => navigateToEvent(event.creatorID, event.eventId)}
+              />
+            ))
           ) : (
             <p className="no-events-message">No past events found.</p>
           )}
@@ -535,6 +611,97 @@ const Home = () => {
       </div>
 
       <Footer />
+
+      {/* Additional styles for lazy loading and image optimization */}
+      <style>{`
+        .lazy-image-container {
+          position: relative;
+          width: 100%;
+          height: 200px;
+          overflow: hidden;
+          border-radius: 8px;
+        }
+
+        .lazy-image-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: opacity 0.3s ease-in-out;
+        }
+
+        .image-placeholder {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f0f0f0;
+        }
+
+        .image-skeleton {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+        }
+
+        .image-error {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f5f5f5;
+          color: #666;
+          font-size: 14px;
+        }
+
+        .event-card-placeholder {
+          min-height: 350px;
+        }
+
+        @keyframes loading {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+
+        /* Ensure event tags are included in blur effect */
+        .event-card .event-price-tag,
+        .event-card .event-date-tag {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Performance optimizations */
+        .events-grid {
+          contain: layout style paint;
+        }
+
+        .event-card {
+          contain: layout style paint;
+          will-change: transform;
+        }
+
+        /* Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+          .lazy-image-container img,
+          .image-skeleton {
+            animation: none;
+            transition: none;
+          }
+        }
+      `}</style>
     </div>
   )
 }
