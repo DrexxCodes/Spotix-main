@@ -31,6 +31,7 @@ const AgentVAuth = lazy(() => import("./pages/agent-v-auth"))
 const UserAuth = lazy(() => import("./pages/user-v-auth"))
 const AgentPay = lazy(() => import("./pages/agent-pay"))
 const BookerRole = lazy(() => import("./pages/bookerRole"))
+const Referrals = lazy(() => import("./pages/Referrals"))
 const CreateEvent = lazy(() => import("./pages/createEvent"))
 const Success = lazy(() => import("./pages/success"))
 const Event = lazy(() => import("./pages/event"))
@@ -134,6 +135,7 @@ function App() {
             <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
             <Route path="/agent" element={user ? <Agent /> : <Navigate to="/login" />} />
+            <Route path="/referrals" element={user ? <Referrals /> : <Navigate to="/login" />} />
             <Route path="/agent-v-auth" element={user ? <AgentVAuth /> : <Navigate to="/login" />} />
             <Route path="/user-v-auth" element={user ? <UserAuth /> : <Navigate to="/login" />} />
             <Route path="/agent-pay" element={user ? <AgentPay /> : <Navigate to="/login" />} />

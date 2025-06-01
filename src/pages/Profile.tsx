@@ -11,7 +11,7 @@ import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
-import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
+import { Eye, EyeOff, AlertCircle, CheckCircle, Users } from "lucide-react"
 import "./profile.css"
 
 interface UserProfile {
@@ -25,6 +25,7 @@ interface UserProfile {
   bankName: string
   referralCode: string
   isBooker: boolean
+  referredBy?: string
 }
 
 interface ConfirmDialogProps {
@@ -68,6 +69,8 @@ const Profile = () => {
   const [showDialog, setShowDialog] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
   const [uploadProvider, setUploadProvider] = useState<string | null>(null)
+  const [referralListed, setReferralListed] = useState(false)
+  const [referrerUsername, setReferrerUsername] = useState<string | null>(null)
   const navigate = useNavigate()
 
   // Auth change states
@@ -124,6 +127,7 @@ const Profile = () => {
                 bankName: userData.bankName || "",
                 referralCode: userData.referralCode || "",
                 isBooker: userData.isBooker || false,
+                referredBy: userData.referredBy || "",
               })
 
               if (userData.bankName) {
@@ -133,6 +137,18 @@ const Profile = () => {
               // Initialize new email field with current email
               if (authUser.email) {
                 setNewEmail(authUser.email)
+              }
+
+              // Check if referral code exists and is listed in the referrals collection
+              if (userData.referralCode) {
+                const referralDocRef = doc(db, "referrals", userData.referralCode)
+                const referralDoc = await getDoc(referralDocRef)
+                setReferralListed(referralDoc.exists())
+              }
+
+              // Check if user was referred by someone
+              if (userData.referredBy) {
+                setReferrerUsername(userData.referredBy)
               }
             } else {
               // Create a new user document if it doesn't exist
@@ -347,12 +363,30 @@ const Profile = () => {
         referralCode,
       })
 
-      alert("Referral code generated successfully!")
+      // Check if the referral code is already listed
+      const isListed = await checkReferralListed(referralCode)
+      if (isListed) {
+        alert("Referral code generated successfully and is already listed in our system!")
+      } else {
+        alert("Referral code generated successfully! Visit the Referrals page to list it and start earning.")
+      }
     } catch (error) {
       console.error("Error generating referral code:", error)
       alert("Failed to generate referral code. Please try again.")
     } finally {
       setGeneratingCode(false)
+    }
+  }
+
+  // Check if the referral code is already listed
+  const checkReferralListed = async (referralCode: string) => {
+    try {
+      const referralDocRef = doc(db, "referrals", referralCode)
+      const referralDoc = await getDoc(referralDocRef)
+      return referralDoc.exists()
+    } catch (error) {
+      console.error("Error checking referral status:", error)
+      return false
     }
   }
 
@@ -471,6 +505,10 @@ const Profile = () => {
     return accountVerificationStatus === "verified" && user?.accountNumber && user?.bankName && user?.accountName
   }
 
+  const goToReferrals = () => {
+    navigate("/referrals")
+  }
+
   if (loading || !user) {
     return <Preloader loading={loading} />
   }
@@ -478,22 +516,31 @@ const Profile = () => {
   return (
     <div className="profile-container">
       <UserHeader />
-            <Helmet>
-  <title>User Profile</title>
-  <meta name="description" content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix." />
-  {/* Open Graph for social media */}
-  <meta property="og:title" content="Spotix | User Profile" />
-  <meta property="og:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
-  <meta property="og:image" content="/meta.png" />
-  <meta property="og:url" content="https://spotix.com.ng" />
-  <meta property="og:type" content="website" />
+      <Helmet>
+        <title>User Profile</title>
+        <meta
+          name="description"
+          content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix."
+        />
+        {/* Open Graph for social media */}
+        <meta property="og:title" content="Spotix | User Profile" />
+        <meta
+          property="og:description"
+          content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix."
+        />
+        <meta property="og:image" content="/meta.png" />
+        <meta property="og:url" content="https://spotix.com.ng" />
+        <meta property="og:type" content="website" />
 
-  {/* Twitter Card */}
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
-  <meta name="twitter:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
-  <meta name="twitter:image" content="/meta.png" />
-</Helmet>
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
+        <meta
+          name="twitter:description"
+          content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix."
+        />
+        <meta name="twitter:image" content="/meta.png" />
+      </Helmet>
       <form onSubmit={handleSubmit} className="profile-form">
         {/* Profile Picture Section with Role Tag */}
         <div className="profile-picture-section">
@@ -760,10 +807,24 @@ const Profile = () => {
                 </button>
               )}
             </div>
-            {!user.referralCode && (
+            {!user.referralCode ? (
               <button type="button" className="generate-btn" onClick={generateReferralCode} disabled={generatingCode}>
                 {generatingCode ? "Generating..." : "Generate"}
               </button>
+            ) : (
+              <button type="button" className="referrals-btn" onClick={goToReferrals}>
+                <Users size={16} /> Manage Referrals
+              </button>
+            )}
+          </div>
+
+          <div className="referral-status">
+            {referrerUsername ? (
+              <p className="referred-by">
+                You were referred by <span className="referrer-name">{referrerUsername}</span>
+              </p>
+            ) : (
+              <p className="not-referred">You weren't referred by a user on Spotix</p>
             )}
           </div>
         </div>

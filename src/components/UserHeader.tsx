@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key, History } from "lucide-react"
+import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key, History, ClipboardCheck } from "lucide-react"
 import {
   HeaderContainer,
   LogoSection,
@@ -61,13 +61,13 @@ const UserHeader: React.FC = () => {
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
-              <a href="/wallet-history">
-                Wallet History
+              <a href="/Referrals">
+                Referrals
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
-              <a href="/bookerdashboard">
-                Dashboard
+              <a href="/wallet-history">
+                Wallet History
               </a>
             </DesktopNavItem>
             <DesktopNavItem>
@@ -78,6 +78,11 @@ const UserHeader: React.FC = () => {
             <DesktopNavItem>
               <a href="https://t.me/SpotixNG_bot">
                 Telegram Bot
+              </a>
+            </DesktopNavItem>
+            <DesktopNavItem>
+              <a href="/bookerdashboard">
+                Dashboard
               </a>
             </DesktopNavItem>
           </DesktopNavList>
@@ -105,12 +110,12 @@ const UserHeader: React.FC = () => {
             <a href="/ticket-history">My Tickets</a>
           </NavItem>
           <NavItem onClick={() => setMenuOpen(false)}>
-            <History size={20} />
-            <a href="/wallet-history">Wallet History</a>
+            <ClipboardCheck size={20} />
+            <a href="/referrals">Referrals</a>
           </NavItem>
           <NavItem onClick={() => setMenuOpen(false)}>
-            <AppWindow size={20} />
-            <a href="/bookerdashboard">Dashboard</a>
+            <History size={20} />
+            <a href="/wallet-history">Wallet History</a>
           </NavItem>
           <NavItem onClick={() => setMenuOpen(false)}>
             <Key size={20} />
@@ -119,6 +124,10 @@ const UserHeader: React.FC = () => {
           <NavItem onClick={() => setMenuOpen(false)}>
             <Bot size={20} />
             <a href="https://t.me/SpotixNG_bot">Telegram Bot</a>
+          </NavItem>
+          <NavItem onClick={() => setMenuOpen(false)}>
+            <AppWindow size={20} />
+            <a href="/bookerdashboard">Dashboard</a>
           </NavItem>
         </NavList>
 

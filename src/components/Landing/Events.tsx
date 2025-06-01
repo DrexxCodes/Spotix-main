@@ -734,7 +734,6 @@ const Events = () => {
           align-items: center;
           gap: 0.5rem;
           font-size: 0.9rem;
-          color: #666;
         }
 
         .event-price-tag {

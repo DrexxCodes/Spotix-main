@@ -66,3 +66,48 @@
     max-width: 150px;
   }
 }
+
+.referral-status {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #6b2fa5;
+}
+
+.referred-by {
+  color: #555;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.referrer-name {
+  font-weight: 600;
+  color: #6b2fa5;
+}
+
+.not-referred {
+  color: #777;
+  margin: 0;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.referrals-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(45deg, #6b2fa5, #9b59b6);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.referrals-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(107, 47, 165, 0.3);
+}

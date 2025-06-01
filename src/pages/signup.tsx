@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore"
 import { Eye, EyeOff, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import Preloader from "../components/preloader"
@@ -24,6 +24,9 @@ const Signup = () => {
   const [loading, setLoading] = useState(true) // Page load preloader
   const [signingUp, setSigningUp] = useState(false) // Signup action preloader
   const [sendingEmail, setSendingEmail] = useState(false) // Email sending indicator
+  const [verifyingReferral, setVerifyingReferral] = useState(false) // Referral verification indicator
+  const [referralVerified, setReferralVerified] = useState(false) // Referral verification status
+  const [referrerUsername, setReferrerUsername] = useState("") // Username of the referrer
   const navigate = useNavigate()
 
   // Words for animation
@@ -81,6 +84,47 @@ const Signup = () => {
     }
   }
 
+  // Check if a referral code exists and get the referrer's username
+  const checkReferralCode = async (referralCode: string) => {
+    if (!referralCode.trim()) return { valid: true, username: "" } // No referral code provided, continue signup
+
+    setVerifyingReferral(true)
+    try {
+      // Check if the referral code exists in the referrals collection
+      const referralDocRef = doc(db, "referrals", referralCode.trim())
+      const referralDoc = await getDoc(referralDocRef)
+
+      if (!referralDoc.exists()) {
+        setError("The provided referral code doesn't exist. You can still sign up without a referral code.")
+        setReferralVerified(false)
+        setReferrerUsername("")
+        return { valid: false, username: "" }
+      }
+
+      // Get the referrer's username
+      const referralData = referralDoc.data()
+      setReferralVerified(true)
+      setReferrerUsername(referralData.username || "")
+      return { valid: true, username: referralData.username || "" }
+    } catch (error) {
+      console.error("Error checking referral code:", error)
+      setReferralVerified(false)
+      setReferrerUsername("")
+      return { valid: true, username: "" } // Continue signup even if there's an error checking the code
+    } finally {
+      setVerifyingReferral(false)
+    }
+  }
+
+  const handleReferralBlur = async () => {
+    if (referral.trim()) {
+      await checkReferralCode(referral)
+    } else {
+      setReferralVerified(false)
+      setReferrerUsername("")
+    }
+  }
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -96,6 +140,15 @@ const Signup = () => {
     if (!validateEmail(email)) {
       setError("Invalid email format. Email must end with .com")
       return
+    }
+
+    // Check if referral code is valid if provided
+    if (referral.trim()) {
+      const { valid, username } = await checkReferralCode(referral)
+      if (!valid) {
+        return
+      }
+      setReferrerUsername(username)
     }
 
     setSigningUp(true)
@@ -118,11 +171,36 @@ const Signup = () => {
         username,
         email,
         referral,
+        referredBy: referrerUsername || null, // Store the referrer's username
         isBooker: false,
         wallet: 0.0,
         createdAt: new Date(),
         emailVerified: false,
       })
+
+      // Process referral if provided
+      if (referral.trim() && referralVerified) {
+        try {
+          const referralDocRef = doc(db, "referrals", referral.trim())
+          const referralDoc = await getDoc(referralDocRef)
+
+          if (referralDoc.exists()) {
+            const referralData = referralDoc.data()
+
+            // Add the new user to the referred users list
+            await updateDoc(referralDocRef, {
+              referredUsers: arrayUnion({
+                username: username,
+                joinedAt: serverTimestamp(),
+              }),
+              refGain: (referralData.refGain || 0) + 200, // Add 200 to the referrer's earnings
+            })
+          }
+        } catch (referralError) {
+          console.error("Error processing referral:", referralError)
+          // Continue with signup even if referral processing fails
+        }
+      }
 
       // Send welcome email
       await sendWelcomeEmail(user)
@@ -242,12 +320,29 @@ const Signup = () => {
               required
               minLength={6}
             />
-            <input
-              type="text"
-              placeholder="Referral Code (Optional)"
-              value={referral}
-              onChange={(e) => setReferral(e.target.value)}
-            />
+
+            <div className="referral-input-container">
+              <input
+                type="text"
+                placeholder="Referral Code (Optional)"
+                value={referral}
+                onChange={(e) => setReferral(e.target.value)}
+                onBlur={handleReferralBlur}
+                className={referralVerified ? "referral-verified" : ""}
+              />
+              {verifyingReferral && (
+                <div className="referral-verifying">
+                  <Loader2 size={16} className="loading-icon" />
+                  <span>Verifying...</span>
+                </div>
+              )}
+              {referralVerified && referrerUsername && (
+                <div className="referral-success">
+                  <CheckCircle size={16} className="success-icon" />
+                  <span>Valid code from {referrerUsername}</span>
+                </div>
+              )}
+            </div>
 
             <button type="submit" disabled={signingUp || sendingEmail}>
               {signingUp ? "Creating Account..." : "Sign Up"}
@@ -263,6 +358,44 @@ const Signup = () => {
           Use Spotix to Book That <span id="animated-text">Event</span>
         </div>
       </div>
+
+      <style>{`
+        /* Add these styles for the referral verification */
+        .referral-input-container {
+          position: relative;
+          margin-bottom: 15px;
+        }
+
+        .referral-verified {
+          border-color: #28a745 !important;
+          background-color: rgba(40, 167, 69, 0.05) !important;
+        }
+
+        .referral-verifying, .referral-success {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 5px;
+          font-size: 0.85rem;
+        }
+
+        .referral-verifying {
+          color: #6b2fa5;
+        }
+
+        .referral-success {
+          color: #28a745;
+        }
+
+        .loading-icon {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   )
 }
