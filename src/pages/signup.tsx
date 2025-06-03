@@ -170,16 +170,16 @@ const Signup = () => {
         fullName,
         username,
         email,
-        referral,
+        referralCodeUsed: referral.trim() || null, // Store the referral code that was used
         referredBy: referrerUsername || null, // Store the referrer's username
         isBooker: false,
         wallet: 0.0,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(), // Use serverTimestamp for consistency
         emailVerified: false,
       })
 
-      // Process referral if provided
-      if (referral.trim() && referralVerified) {
+      // Process referral if provided - verify again to ensure accuracy
+      if (referral.trim()) {
         try {
           const referralDocRef = doc(db, "referrals", referral.trim())
           const referralDoc = await getDoc(referralDocRef)
@@ -187,17 +187,26 @@ const Signup = () => {
           if (referralDoc.exists()) {
             const referralData = referralDoc.data()
 
-            // Add the new user to the referred users list
+            // Add the new user to the referred users list and update earnings
             await updateDoc(referralDocRef, {
               referredUsers: arrayUnion({
                 username: username,
+                email: email,
+                fullName: fullName,
                 joinedAt: serverTimestamp(),
+                userId: user.uid,
               }),
               refGain: (referralData.refGain || 0) + 200, // Add 200 to the referrer's earnings
+              totalReferrals: (referralData.totalReferrals || 0) + 1, // Increment total referrals count
+              lastReferralAt: serverTimestamp(), // Track when the last referral was made
             })
+
+            console.log(`Successfully added ${username} to referral ${referral.trim()}`)
+          } else {
+            console.warn(`Referral code ${referral.trim()} not found during signup processing`)
           }
         } catch (referralError) {
-          console.error("Error processing referral:", referralError)
+          console.error("Error processing referral during signup:", referralError)
           // Continue with signup even if referral processing fails
         }
       }
