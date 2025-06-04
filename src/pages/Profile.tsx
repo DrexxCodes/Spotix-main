@@ -26,6 +26,9 @@ interface UserProfile {
   referralCode: string
   isBooker: boolean
   referredBy?: string
+  telegramConnected?: boolean
+  telegramUsername?: string
+  telegramChatId?: string
 }
 
 interface ConfirmDialogProps {
@@ -72,6 +75,12 @@ const Profile = () => {
   const [referralListed, setReferralListed] = useState(false)
   const [referrerUsername, setReferrerUsername] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  // Telegram connection states
+  const [telegramConnected, setTelegramConnected] = useState(false)
+  const [telegramUsername, setTelegramUsername] = useState<string | null>(null)
+  const [telegramConnecting, setTelegramConnecting] = useState(false)
+  const [telegramConnectionToken, setTelegramConnectionToken] = useState<string | null>(null)
 
   // Auth change states
   const [newEmail, setNewEmail] = useState("")
@@ -128,7 +137,14 @@ const Profile = () => {
                 referralCode: userData.referralCode || "",
                 isBooker: userData.isBooker || false,
                 referredBy: userData.referredBy || "",
+                telegramConnected: userData.telegramConnected || false,
+                telegramUsername: userData.telegramUsername || "",
+                telegramChatId: userData.telegramChatId || "",
               })
+
+              // Set Telegram connection state
+              setTelegramConnected(userData.telegramConnected || false)
+              setTelegramUsername(userData.telegramUsername || null)
 
               if (userData.bankName) {
                 setBankInput(userData.bankName)
@@ -509,6 +525,133 @@ const Profile = () => {
     navigate("/referrals")
   }
 
+  // Telegram connection functions
+  const generateConnectionToken = async () => {
+    if (!user) return null
+
+    const token = `${user.uid}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+
+    try {
+      // Store token in Firestore with expiration
+      await setDoc(doc(db, "telegramTokens", token), {
+        uid: user.uid,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        used: false,
+      })
+
+      return token
+    } catch (error) {
+      console.error("Error generating connection token:", error)
+      return null
+    }
+  }
+
+  const handleTelegramConnect = async () => {
+    if (!user) return
+
+    setTelegramConnecting(true)
+
+    try {
+      const token = await generateConnectionToken()
+      if (!token) {
+        alert("Failed to generate connection token. Please try again.")
+        setTelegramConnecting(false)
+        return
+      }
+
+      setTelegramConnectionToken(token)
+
+      // Create Telegram deep link
+      const telegramUrl = `https://t.me/TristarAI_bot?start=${token}`
+
+      // Open Telegram
+      window.open(telegramUrl, "_blank")
+
+      // Start polling for connection status
+      pollConnectionStatus(token)
+    } catch (error) {
+      console.error("Error connecting to Telegram:", error)
+      alert("Failed to connect to Telegram. Please try again.")
+      setTelegramConnecting(false)
+    }
+  }
+
+  const pollConnectionStatus = async (token: string) => {
+    const maxAttempts = 60 // 3 minutes (60 * 3 seconds)
+    let attempts = 0
+
+    const poll = async () => {
+      if (attempts >= maxAttempts) {
+        setTelegramConnecting(false)
+        setTelegramConnectionToken(null)
+        alert("Connection timeout. Please try again.")
+        return
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user!.uid))
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          if (userData.telegramConnected) {
+            setTelegramConnected(true)
+            setTelegramUsername(userData.telegramUsername)
+            setTelegramConnecting(false)
+            setTelegramConnectionToken(null)
+
+            // Update local user state
+            setUser({
+              ...user!,
+              telegramConnected: true,
+              telegramUsername: userData.telegramUsername,
+              telegramChatId: userData.telegramChatId,
+            })
+
+            return
+          }
+        }
+
+        attempts++
+        setTimeout(poll, 3000) // Poll every 3 seconds
+      } catch (error) {
+        console.error("Error polling connection status:", error)
+        attempts++
+        setTimeout(poll, 3000)
+      }
+    }
+
+    poll()
+  }
+
+  const handleTelegramDisconnect = async () => {
+    if (!user) return
+
+    try {
+      const userDocRef = doc(db, "users", user.uid)
+      await updateDoc(userDocRef, {
+        telegramConnected: false,
+        telegramUsername: "",
+        telegramChatId: "",
+        telegramFirstName: "",
+        telegramLastName: "",
+      })
+
+      setTelegramConnected(false)
+      setTelegramUsername(null)
+      setUser({
+        ...user,
+        telegramConnected: false,
+        telegramUsername: "",
+        telegramChatId: "",
+      })
+
+      alert("Telegram account disconnected successfully!")
+    } catch (error) {
+      console.error("Error disconnecting Telegram:", error)
+      alert("Failed to disconnect Telegram. Please try again.")
+    }
+  }
+
   if (loading || !user) {
     return <Preloader loading={loading} />
   }
@@ -829,6 +972,62 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Telegram Bot Connection Section */}
+        <div className="form-section">
+          <div className="section-header-with-tag">
+            <h2 className="section-title">
+              <img src="/telegram-logo.png" alt="Telegram" className="telegram-logo" />
+              Telegram Bot
+              <span className="new-tag">New</span>
+            </h2>
+          </div>
+
+          <div className="telegram-connection-container">
+            {!telegramConnected ? (
+              <div className="telegram-not-connected">
+                <p className="telegram-description">
+                  Connect your Telegram account to receive event notifications, ticket updates, and manage your Spotix
+                  account through our bot.
+                </p>
+
+                {telegramConnecting ? (
+                  <div className="telegram-connecting">
+                    <div className="connecting-spinner"></div>
+                    <p>Awaiting Confirmation...</p>
+                    <p className="connecting-hint">Please complete the connection in Telegram</p>
+                  </div>
+                ) : (
+                  <button type="button" className="telegram-connect-btn" onClick={handleTelegramConnect}>
+                    <img src="/telegram-logo.png" alt="Telegram" className="btn-telegram-logo" />
+                    Connect Telegram Bot
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="telegram-connected">
+                <div className="connection-success">
+                  <CheckCircle size={20} className="success-icon" />
+                  <p>Connection Successful!</p>
+                </div>
+
+                <div className="telegram-account-info">
+                  <div className="telegram-user">
+                    <img src="/telegram-logo.png" alt="Telegram" className="telegram-avatar" />
+                    <div className="telegram-details">
+                      <p className="telegram-username">@{telegramUsername}</p>
+                      <p className="connection-status">Connected to Spotix Bot</p>
+                    </div>
+                  </div>
+
+                  <button type="button" className="telegram-disconnect-btn" onClick={handleTelegramDisconnect}>
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Booker Status Section - Only show "Become Booker" button if not already a booker */}
         {!user.isBooker && (
           <div className="form-section">
@@ -848,6 +1047,181 @@ const Profile = () => {
       </form>
 
       <Footer />
+      <style>{`
+        .section-header-with-tag {
+          position: relative;
+          margin-bottom: 1rem;
+        }
+
+        .telegram-logo {
+          width: 24px;
+          height: 24px;
+          margin-right: 8px;
+          vertical-align: middle;
+        }
+
+        .new-tag {
+          background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+          color: white;
+          font-size: 0.7rem;
+          font-weight: 600;
+          padding: 2px 8px;
+          border-radius: 12px;
+          margin-left: 8px;
+          animation: pulse 2s infinite;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
+          }
+        }
+
+        .telegram-connection-container {
+          background: linear-gradient(135deg, #0088cc, #229ed9);
+          border-radius: 12px;
+          padding: 1.5rem;
+          color: white;
+        }
+
+        .telegram-description {
+          margin-bottom: 1rem;
+          opacity: 0.9;
+          line-height: 1.5;
+        }
+
+        .telegram-connect-btn {
+          background: rgba(255, 255, 255, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .telegram-connect-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.5);
+          transform: translateY(-2px);
+        }
+
+        .btn-telegram-logo {
+          width: 20px;
+          height: 20px;
+        }
+
+        .telegram-connecting {
+          text-align: center;
+          padding: 1rem;
+        }
+
+        .connecting-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(255, 255, 255, 0.3);
+          border-top: 3px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .connecting-hint {
+          font-size: 0.9rem;
+          opacity: 0.8;
+          margin-top: 0.5rem;
+        }
+
+        .telegram-connected {
+          text-align: center;
+        }
+
+        .connection-success {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        .success-icon {
+          color: #4ade80;
+        }
+
+        .telegram-account-info {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-top: 1rem;
+        }
+
+        .telegram-user {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 1rem;
+        }
+
+        .telegram-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          padding: 8px;
+        }
+
+        .telegram-details {
+          text-align: left;
+          flex: 1;
+        }
+
+        .telegram-username {
+          font-weight: 600;
+          margin: 0;
+          font-size: 1.1rem;
+        }
+
+        .connection-status {
+          margin: 0;
+          opacity: 0.8;
+          font-size: 0.9rem;
+        }
+
+        .telegram-disconnect-btn {
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 0.9rem;
+        }
+
+        .telegram-disconnect-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+      `}</style>
     </div>
   )
 }

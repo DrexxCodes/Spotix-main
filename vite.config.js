@@ -10,7 +10,7 @@ export default defineConfig({
 
   server: {
     host: true,
-    allowedHosts: ['6e3e-102-90-101-252.ngrok-free.app'],
+    allowedHosts: ['944aaaac1057e16b46ec15356a89feca.serveo.net'],
     hmr: {
       clientPort: 443 // Prevent dev server warning from ngrok HTTPS
     },
