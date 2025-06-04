@@ -727,6 +727,7 @@ const Events = () => {
           flex-direction: column;
           gap: 0.5rem;
           margin-bottom: 0.75rem;
+          color:black;
         }
 
         .event-detail {

@@ -819,14 +819,14 @@ const Payment = () => {
             {paystackPreloading && (
               <div className="paystack-preloading-indicator">
                 <Loader2 size={16} className="animate-spin" />
-                <span>Preparing instant payment...</span>
+                <span>Preparing paystack payment...</span>
               </div>
             )}
 
             {paystackPreloaded && (
               <div className="paystack-preloaded-indicator">
                 <CheckCircle size={16} className="success-icon" />
-                <span>Payment ready for instant checkout!</span>
+                <span>Paystack ready for checkout!</span>
               </div>
             )}
 

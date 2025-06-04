@@ -54,6 +54,7 @@ const Team = lazy(() => import("./pages/team"))
 const TicketHistoryInfo = lazy(() => import("./pages/ticketHistoryInfo"))
 const TailwindTest = lazy(() => import("./pages/TailwindTest"))
 const Collabs = lazy(() => import("./pages/collabs"))
+const ZoomCallback = lazy(() => import("./pages/zoom-callback"))
 const CollabVerify = lazy(() => import("./pages/collab-verify"))
 const CollabPayout = lazy(() => import("./pages/collab-payout"))
 
@@ -139,6 +140,8 @@ function App() {
             <Route path="/agent-v-auth" element={user ? <AgentVAuth /> : <Navigate to="/login" />} />
             <Route path="/user-v-auth" element={user ? <UserAuth /> : <Navigate to="/login" />} />
             <Route path="/agent-pay" element={user ? <AgentPay /> : <Navigate to="/login" />} />
+            <Route path="/zoom-callback" element={<ZoomCallback />} />
+
 
 
             {/* Booker-only routes */}

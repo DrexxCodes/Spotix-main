@@ -33,6 +33,29 @@ interface ReferralData {
   referredUsers: ReferredUser[]
 }
 
+// Helper function to format join date - handles both Firestore Timestamp and ISO string
+const formatJoinDate = (joinedAt: any): string => {
+  try {
+    if (!joinedAt) return "Recently"
+
+    // Check if it's a Firestore Timestamp (has toDate method)
+    if (joinedAt && typeof joinedAt.toDate === "function") {
+      return new Date(joinedAt.toDate()).toLocaleDateString()
+    }
+
+    // Check if it's an ISO string
+    if (typeof joinedAt === "string") {
+      return new Date(joinedAt).toLocaleDateString()
+    }
+
+    // Fallback for other date formats
+    return new Date(joinedAt).toLocaleDateString()
+  } catch (error) {
+    console.error("Error formatting join date:", error)
+    return "Recently"
+  }
+}
+
 const Referrals = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -352,7 +375,7 @@ const Referrals = () => {
                       <div className="user-details">
                         <span className="user-name">{user.username}</span>
                         <span className="join-date">
-                          Joined: {user.joinedAt ? new Date(user.joinedAt.toDate()).toLocaleDateString() : "Recently"}
+                          Joined: {user.joinedAt ? formatJoinDate(user.joinedAt) : "Recently"}
                         </span>
                       </div>
                       <div className="referral-amount">+NGN 200</div>
