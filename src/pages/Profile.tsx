@@ -11,7 +11,7 @@ import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
-import { Eye, EyeOff, AlertCircle, CheckCircle, Users } from "lucide-react"
+import { Eye, EyeOff, AlertCircle, CheckCircle, Users, Copy } from "lucide-react"
 import "./profile.css"
 
 interface UserProfile {
@@ -81,6 +81,7 @@ const Profile = () => {
   const [telegramUsername, setTelegramUsername] = useState<string | null>(null)
   const [telegramConnecting, setTelegramConnecting] = useState(false)
   const [telegramConnectionToken, setTelegramConnectionToken] = useState<string | null>(null)
+  const [tokenCopySuccess, setTokenCopySuccess] = useState(false)
 
   // Auth change states
   const [newEmail, setNewEmail] = useState("")
@@ -213,13 +214,14 @@ const Profile = () => {
 
   // Reset copy success message after 3 seconds
   useEffect(() => {
-    if (copySuccess) {
+    if (copySuccess || tokenCopySuccess) {
       const timer = setTimeout(() => {
         setCopySuccess(false)
+        setTokenCopySuccess(false)
       }, 3000)
       return () => clearTimeout(timer)
     }
-  }, [copySuccess])
+  }, [copySuccess, tokenCopySuccess])
 
   // Reset auth change success/error messages after 5 seconds
   useEffect(() => {
@@ -231,6 +233,53 @@ const Profile = () => {
       return () => clearTimeout(timer)
     }
   }, [authChangeSuccess, authChangeError])
+
+  // Poll for connection status when token is generated
+  useEffect(() => {
+    if (telegramConnectionToken && !telegramConnected) {
+      const pollInterval = setInterval(async () => {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user!.uid))
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            if (userData.telegramConnected) {
+              setTelegramConnected(true)
+              setTelegramUsername(userData.telegramUsername)
+              setTelegramConnecting(false)
+              setTelegramConnectionToken(null)
+
+              // Update local user state
+              setUser({
+                ...user!,
+                telegramConnected: true,
+                telegramUsername: userData.telegramUsername,
+                telegramChatId: userData.telegramChatId,
+              })
+
+              clearInterval(pollInterval)
+            }
+          }
+        } catch (error) {
+          console.error("Error polling connection status:", error)
+        }
+      }, 3000)
+
+      // Clear polling after 10 minutes
+      const timeout = setTimeout(
+        () => {
+          clearInterval(pollInterval)
+          setTelegramConnecting(false)
+          setTelegramConnectionToken(null)
+        },
+        10 * 60 * 1000,
+      )
+
+      return () => {
+        clearInterval(pollInterval)
+        clearTimeout(timeout)
+      }
+    }
+  }, [telegramConnectionToken, telegramConnected, user])
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -535,6 +584,7 @@ const Profile = () => {
       // Store token in Firestore with expiration
       await setDoc(doc(db, "telegramTokens", token), {
         uid: user.uid,
+        userEmail: user.email,
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
         used: false,
@@ -561,66 +611,27 @@ const Profile = () => {
       }
 
       setTelegramConnectionToken(token)
-
-      // Create Telegram deep link
-      const telegramUrl = `https://t.me/TristarAI_bot?start=${token}`
-
-      // Open Telegram
-      window.open(telegramUrl, "_blank")
-
-      // Start polling for connection status
-      pollConnectionStatus(token)
     } catch (error) {
       console.error("Error connecting to Telegram:", error)
-      alert("Failed to connect to Telegram. Please try again.")
+      alert("Failed to generate connection token. Please try again.")
       setTelegramConnecting(false)
     }
   }
 
-  const pollConnectionStatus = async (token: string) => {
-    const maxAttempts = 60 // 3 minutes (60 * 3 seconds)
-    let attempts = 0
+  const copyConnectionToken = async () => {
+    if (!telegramConnectionToken) return
 
-    const poll = async () => {
-      if (attempts >= maxAttempts) {
-        setTelegramConnecting(false)
-        setTelegramConnectionToken(null)
-        alert("Connection timeout. Please try again.")
-        return
-      }
-
-      try {
-        const userDoc = await getDoc(doc(db, "users", user!.uid))
-        if (userDoc.exists()) {
-          const userData = userDoc.data()
-          if (userData.telegramConnected) {
-            setTelegramConnected(true)
-            setTelegramUsername(userData.telegramUsername)
-            setTelegramConnecting(false)
-            setTelegramConnectionToken(null)
-
-            // Update local user state
-            setUser({
-              ...user!,
-              telegramConnected: true,
-              telegramUsername: userData.telegramUsername,
-              telegramChatId: userData.telegramChatId,
-            })
-
-            return
-          }
-        }
-
-        attempts++
-        setTimeout(poll, 3000) // Poll every 3 seconds
-      } catch (error) {
-        console.error("Error polling connection status:", error)
-        attempts++
-        setTimeout(poll, 3000)
-      }
+    try {
+      await navigator.clipboard.writeText(telegramConnectionToken)
+      setTokenCopySuccess(true)
+    } catch (err) {
+      console.error("Failed to copy token: ", err)
+      alert("Failed to copy connection token. Please try again.")
     }
+  }
 
-    poll()
+  const handleProceedToBot = () => {
+    window.open("https://t.me/TristarAI_bot", "_blank")
   }
 
   const handleTelegramDisconnect = async () => {
@@ -990,17 +1001,77 @@ const Profile = () => {
                   account through our bot.
                 </p>
 
-                {telegramConnecting ? (
-                  <div className="telegram-connecting">
-                    <div className="connecting-spinner"></div>
-                    <p>Awaiting Confirmation...</p>
-                    <p className="connecting-hint">Please complete the connection in Telegram</p>
-                  </div>
-                ) : (
-                  <button type="button" className="telegram-connect-btn" onClick={handleTelegramConnect}>
+                {!telegramConnectionToken ? (
+                  <button
+                    type="button"
+                    className="telegram-connect-btn"
+                    onClick={handleTelegramConnect}
+                    disabled={telegramConnecting}
+                  >
                     <img src="/telegram-logo.png" alt="Telegram" className="btn-telegram-logo" />
-                    Connect Telegram Bot
+                    {telegramConnecting ? "Generating Token..." : "Generate Connection Token"}
                   </button>
+                ) : (
+                  <div className="telegram-token-section">
+                    <div className="token-instructions">
+                      <h4>🔑 Connection Token Generated</h4>
+                      <p>
+                        Copy the token below and use the <code>/connect</code> command in our Telegram bot:
+                      </p>
+                    </div>
+
+                    <div className="token-block">
+                      <div className="token-display">
+                        <code className="connection-token">{telegramConnectionToken}</code>
+                        <button
+                          type="button"
+                          className={`token-copy-btn ${tokenCopySuccess ? "copy-success" : ""}`}
+                          onClick={copyConnectionToken}
+                        >
+                          <Copy size={16} />
+                          {tokenCopySuccess ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="token-actions">
+                      <button type="button" className="proceed-to-bot-btn" onClick={handleProceedToBot}>
+                        <img src="/telegram-logo.png" alt="Telegram" className="btn-telegram-logo" />
+                        Proceed to Bot
+                      </button>
+                      <button
+                        type="button"
+                        className="cancel-connection-btn"
+                        onClick={() => {
+                          setTelegramConnectionToken(null)
+                          setTelegramConnecting(false)
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    <div className="connection-instructions">
+                      <p>
+                        <strong>Instructions:</strong>
+                      </p>
+                      <ol>
+                        <li>Copy the token above</li>
+                        <li>Click "Proceed to Bot" to open Telegram</li>
+                        <li>
+                          Type <code>/connect</code> and paste your token
+                        </li>
+                        <li>Your account will be connected automatically</li>
+                      </ol>
+                    </div>
+
+                    {telegramConnecting && (
+                      <div className="waiting-connection">
+                        <div className="connecting-spinner"></div>
+                        <p>Waiting for connection...</p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
@@ -1116,24 +1187,176 @@ const Profile = () => {
           transform: translateY(-2px);
         }
 
+        .telegram-connect-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
         .btn-telegram-logo {
           width: 20px;
           height: 20px;
         }
 
-        .telegram-connecting {
+        .telegram-token-section {
+          margin-top: 1rem;
+        }
+
+        .token-instructions {
+          margin-bottom: 1rem;
+        }
+
+        .token-instructions h4 {
+          margin: 0 0 0.5rem 0;
+          color: white;
+          font-size: 1.1rem;
+        }
+
+        .token-instructions p {
+          margin: 0;
+          opacity: 0.9;
+          font-size: 0.9rem;
+        }
+
+        .token-instructions code {
+          background: rgba(255, 255, 255, 0.2);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: monospace;
+        }
+
+        .token-block {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 8px;
+          padding: 1rem;
+          margin: 1rem 0;
+        }
+
+        .token-display {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .connection-token {
+          flex: 1;
+          background: rgba(255, 255, 255, 0.1);
+          padding: 12px;
+          border-radius: 6px;
+          font-family: monospace;
+          font-size: 0.9rem;
+          word-break: break-all;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .token-copy-btn {
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 12px 16px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.9rem;
+          white-space: nowrap;
+        }
+
+        .token-copy-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .token-copy-btn.copy-success {
+          background: rgba(76, 175, 80, 0.3);
+          border-color: rgba(76, 175, 80, 0.5);
+        }
+
+        .token-actions {
+          display: flex;
+          gap: 12px;
+          margin: 1rem 0;
+        }
+
+        .proceed-to-bot-btn {
+          background: rgba(255, 255, 255, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex: 1;
+        }
+
+        .proceed-to-bot-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .cancel-connection-btn {
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .cancel-connection-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .connection-instructions {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-top: 1rem;
+        }
+
+        .connection-instructions p {
+          margin: 0 0 0.5rem 0;
+          font-weight: 600;
+        }
+
+        .connection-instructions ol {
+          margin: 0;
+          padding-left: 1.5rem;
+        }
+
+        .connection-instructions li {
+          margin-bottom: 0.3rem;
+          font-size: 0.9rem;
+          opacity: 0.9;
+        }
+
+        .connection-instructions code {
+          background: rgba(255, 255, 255, 0.2);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: monospace;
+        }
+
+        .waiting-connection {
           text-align: center;
           padding: 1rem;
+          margin-top: 1rem;
         }
 
         .connecting-spinner {
-          width: 40px;
-          height: 40px;
+          width: 30px;
+          height: 30px;
           border: 3px solid rgba(255, 255, 255, 0.3);
           border-top: 3px solid white;
           border-radius: 50%;
           animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
+          margin: 0 auto 0.5rem;
         }
 
         @keyframes spin {
@@ -1143,12 +1366,6 @@ const Profile = () => {
           100% {
             transform: rotate(360deg);
           }
-        }
-
-        .connecting-hint {
-          font-size: 0.9rem;
-          opacity: 0.8;
-          margin-top: 0.5rem;
         }
 
         .telegram-connected {
