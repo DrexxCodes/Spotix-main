@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key, History, ClipboardCheck } from "lucide-react"
+import { Menu, X, CalendarPlus, User, Bot, CreditCard, AppWindow, Key, History, ClipboardCheck, Combine } from "lucide-react"
 import {
   HeaderContainer,
   LogoSection,
