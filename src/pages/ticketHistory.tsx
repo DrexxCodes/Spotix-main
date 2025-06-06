@@ -8,7 +8,7 @@ import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
-import { Search, Ticket, Calendar, Clock, CheckCircle, XCircle } from "lucide-react"
+import { Search, Ticket, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { getWithExpiry, setWithExpiry } from "../utils/cacheUtils"
 
 interface TicketHistoryItem {
@@ -135,6 +135,11 @@ const TicketHistory = () => {
     }
   }, [searchQuery, tickets])
 
+  // Format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
+
   const handleTicketClick = (ticketId: string) => {
     navigate(`/ticket-Info/${ticketId}`)
   }
@@ -206,7 +211,7 @@ const TicketHistory = () => {
               <div className="flex-1 min-w-0 ticket-details">
                 <h3 className="ticket-event-name text-lg font-semibold text-gray-900 truncate">{ticket.eventName}</h3>
                 <p className="ticket-type  text-sm text-gray-600">{ticket.ticketType}</p>
-                <p className="ticket-price text-base font-medium text-[#6b2fa5]">₦{ticket.ticketPrice.toFixed(2)}</p>
+                <p className="ticket-price text-base font-medium text-[#6b2fa5]">₦{formatNumber(ticket.ticketPrice)}</p>
               </div>
             </div>
           </div>

@@ -1,0 +1,490 @@
+.refund-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 2rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.refund-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 2rem;
+}
+
+.back-button:hover {
+  background-color: #f5f5f5;
+}
+
+.refund-image {
+  margin-bottom: 2rem;
+}
+
+.refund-svg {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  display: block;
+}
+
+.refund-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.refund-header p {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ticket-selection {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.ticket-selection h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.no-tickets {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.no-tickets p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.ticket-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ticket-card:hover {
+  border-color: #6b2fa5;
+  box-shadow: 0 4px 12px rgba(107, 47, 165, 0.1);
+  transform: translateY(-2px);
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.ticket-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.ticket-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #6b2fa5;
+  white-space: nowrap;
+}
+
+.ticket-details {
+  margin-bottom: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.detail-item svg {
+  color: #999;
+}
+
+.ticket-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.ticket-ref {
+  font-size: 0.8rem;
+  color: #999;
+  font-family: monospace;
+}
+
+.verified,
+.not-verified {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.verified {
+  color: #28a745;
+}
+
+.not-verified {
+  color: #dc3545;
+}
+
+.refund-form {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.refund-form h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.form-section h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #6b2fa5;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #6b2fa5;
+  box-shadow: 0 0 0 3px rgba(107, 47, 165, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: #f8f9fa;
+  color: #666;
+}
+
+.reason-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reason-option:hover {
+  border-color: #6b2fa5;
+  background-color: #f8f9fa;
+}
+
+.reason-option input[type="radio"] {
+  margin: 0;
+  width: auto;
+}
+
+.reason-option input[type="radio"]:checked + span {
+  color: #6b2fa5;
+  font-weight: 500;
+}
+
+.policy-agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.policy-agreement input[type="checkbox"] {
+  margin: 0;
+  width: auto;
+  margin-top: 0.25rem;
+}
+
+.policy-agreement a {
+  color: #6b2fa5;
+  text-decoration: underline;
+}
+
+.policy-agreement a:hover {
+  text-decoration: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.primary-button {
+  background: #6b2fa5;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #5a2589;
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: white;
+  color: #6b2fa5;
+  border: 1px solid #6b2fa5;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondary-button:hover {
+  background: #6b2fa5;
+  color: white;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-header {
+  margin-bottom: 1rem;
+}
+
+.dialog-header h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0.5rem 0 0 0;
+}
+
+.dialog p {
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.refund-success {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.success-icon {
+  margin-bottom: 2rem;
+}
+
+.refund-success h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.refund-success > p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.refund-details {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.refund-details p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.refund-note {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.success-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .refund-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .refund-header h1 {
+    font-size: 2rem;
+  }
+
+  .refund-svg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .reason-options {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .success-actions {
+    flex-direction: column;
+  }
+
+  .tickets-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .ticket-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ticket-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .dialog {
+    padding: 1.5rem;
+  }
+}

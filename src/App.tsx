@@ -20,6 +20,7 @@ const AdminPermissions = lazy(() => import("./pages/AdminPermissions"))
 const AdminSuite = lazy(() => import("./pages/AdminSuite"))
 const AgentOnboard = lazy(() => import("./pages/agent-onboard"))
 const AgentFunding = lazy(() => import("./pages/agent-funding"))
+const AdminRefund = lazy(() => import("./pages/Admin-refund"))
 const AgentPayout = lazy(() => import("./pages/agent-payout"))
 const EventAdmin = lazy(() => import("./pages/Event-admin"))
 const WalletDebit = lazy(() => import("./pages/wallet-debit"))
@@ -50,6 +51,8 @@ const BookerTicketInfo = lazy(() => import("./pages/BookerTicketInfo"))
 const VerifyTicket = lazy(() => import("./pages/VerifyTicket"))
 const Verification = lazy(() => import("./pages/Verification"))
 const TicketHistory = lazy(() => import("./pages/ticketHistory"))
+const Refund = lazy(() => import("./pages/refund"))
+const RefundTrack = lazy(() => import("./pages/refund-track"))
 const Team = lazy(() => import("./pages/team"))
 const TicketHistoryInfo = lazy(() => import("./pages/ticketHistoryInfo"))
 const TailwindTest = lazy(() => import("./pages/TailwindTest"))
@@ -140,6 +143,8 @@ function App() {
             <Route path="/agent-v-auth" element={user ? <AgentVAuth /> : <Navigate to="/login" />} />
             <Route path="/user-v-auth" element={user ? <UserAuth /> : <Navigate to="/login" />} />
             <Route path="/agent-pay" element={user ? <AgentPay /> : <Navigate to="/login" />} />
+            <Route path="/refund" element={user ? <Refund /> : <Navigate to="/login" />} />
+            <Route path="/refund-track" element={user ? <RefundTrack /> : <Navigate to="/login" />} />
             <Route path="/zoom-callback" element={<ZoomCallback />} />
 
 
@@ -336,6 +341,19 @@ function App() {
                 user ? (
                   <AdminRoute>
                     <AgentFunding />
+                  </AdminRoute>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+
+              <Route
+              path="/admin-refund"
+              element={
+                user ? (
+                  <AdminRoute>
+                    <AdminRefund />
                   </AdminRoute>
                 ) : (
                   <Navigate to="/login" />
