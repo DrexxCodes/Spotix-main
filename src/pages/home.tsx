@@ -24,6 +24,14 @@ interface PublicEventType {
   timestamp: any
   creatorID: string
   eventId: string
+  eventGroup?: boolean
+}
+
+interface EventGroupData {
+  eventName: string
+  creatorID: string
+  imageURL: string
+  eventType?: string
 }
 
 interface SearchSuggestion {
@@ -92,7 +100,7 @@ const optimizeImageUrl = (originalUrl: string, width = 400): string => {
   return originalUrl
 }
 
-// Lazy loading hook - FIXED TYPE ISSUES
+// Lazy loading hook
 const useLazyLoading = (ref: React.RefObject<HTMLElement | null>, threshold = 0.1) => {
   const [isVisible, setIsVisible] = useState(false)
 
@@ -181,6 +189,39 @@ const EventCardSkeleton = () => (
   </div>
 )
 
+// Event Group Card Component
+const EventGroupCard: React.FC<{
+  eventGroup: EventGroupData
+  onClick: () => void
+}> = ({ eventGroup, onClick }) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const isVisible = useLazyLoading(cardRef, 0.1)
+
+  if (!isVisible) {
+    return (
+      <div ref={cardRef} className="event-card-placeholder">
+        <EventCardSkeleton />
+      </div>
+    )
+  }
+
+  return (
+    <div ref={cardRef} onClick={onClick} className="event-card event-group-card">
+      <div className="event-card-image">
+        <LazyImage src={eventGroup.imageURL || "/placeholder.svg"} alt={eventGroup.eventName || "Event"} width={400} />
+        <div className="event-group-overlay">
+          <span className="event-group-badge">Event Collection</span>
+        </div>
+      </div>
+
+      <div className="event-card-content">
+        <h2 className="event-title">{eventGroup.eventName || "Untitled Event"}</h2>
+        <p className="event-type">{eventGroup.eventType || "Event Collection"}</p>
+      </div>
+    </div>
+  )
+}
+
 // Lazy Event Card Component
 const LazyEventCard: React.FC<{
   event: PublicEventType
@@ -227,6 +268,7 @@ const LazyEventCard: React.FC<{
 const Home = () => {
   const [username, setUsername] = useState("")
   const [events, setEvents] = useState<PublicEventType[]>([])
+  const [eventGroups, setEventGroups] = useState<EventGroupData[]>([])
   const [upcomingEvents, setUpcomingEvents] = useState<PublicEventType[]>([])
   const [eventsToday, setEventsToday] = useState<PublicEventType[]>([])
   const [pastEvents, setPassedEvents] = useState<PublicEventType[]>([])
@@ -299,27 +341,47 @@ const Home = () => {
       )
       const eventsSnapshot = await getDocs(publicEventsQuery)
 
-      const eventList: PublicEventType[] = eventsSnapshot.docs.map((doc) => {
+      const eventList: PublicEventType[] = []
+      const eventGroupsList: EventGroupData[] = []
+
+      eventsSnapshot.docs.forEach((doc) => {
         const event = doc.data() as PublicEventType
-        return {
-          ...event,
+
+        // Check if this is an event group
+        if (event.eventGroup === true) {
+          eventGroupsList.push({
+            eventName: event.eventName,
+            creatorID: event.creatorID,
+            imageURL: event.imageURL,
+            eventType: event.eventType,
+          })
+        } else {
+          eventList.push({
+            ...event,
+            eventId: event.eventId || doc.id, // Ensure eventId exists
+          })
         }
       })
 
+      setEventGroups(eventGroupsList)
       setEvents(eventList)
 
       const now = new Date()
-      const today = getTodayDate()
 
-      // Separate events by timing
+      // Separate events by timing (use eventList instead of all events)
       const upcoming = eventList.filter((e) => {
+        if (!e || !e.eventStartDate) return false
         const eventDate = new Date(e.eventStartDate)
         return eventDate >= now && !isEventToday(e.eventStartDate)
       })
 
-      const todayEvents = eventList.filter((e) => isEventToday(e.eventStartDate))
+      const todayEvents = eventList.filter((e) => {
+        if (!e || !e.eventStartDate) return false
+        return isEventToday(e.eventStartDate)
+      })
 
       const past = eventList.filter((e) => {
+        if (!e || !e.eventStartDate) return false
         const eventDate = new Date(e.eventStartDate)
         return eventDate < now && !isEventToday(e.eventStartDate)
       })
@@ -343,6 +405,7 @@ const Home = () => {
       // Cache the data with timestamp
       const cacheData = {
         events: eventList,
+        eventGroups: eventGroupsList,
         upcoming: sortedUpcoming,
         today: sortedToday,
         past: sortedPast,
@@ -352,7 +415,6 @@ const Home = () => {
 
       return true
     } catch (error) {
-      console.error("Error fetching events:", error)
       return false
     } finally {
       setLoading(false)
@@ -378,18 +440,18 @@ const Home = () => {
 
           // Check if cache is still valid
           if (cachedData.timestamp && now - cachedData.timestamp < cacheDuration) {
-            setEvents(cachedData.events)
-            setUpcomingEvents(cachedData.upcoming)
+            setEvents(cachedData.events || [])
+            setEventGroups(cachedData.eventGroups || [])
+            setUpcomingEvents(cachedData.upcoming || [])
             setEventsToday(cachedData.today || [])
-            setPassedEvents(cachedData.past)
+            setPassedEvents(cachedData.past || [])
             setLoading(false)
-
             // Refresh in background after using cache
             fetchFreshEvents()
             return
           }
         } catch (error) {
-          console.error("Error parsing cached data:", error)
+          // Continue to fresh fetch
         }
       }
 
@@ -413,7 +475,7 @@ const Home = () => {
       try {
         const searchLower = searchQuery.toLowerCase()
         const suggestions = events
-          .filter((event) => event.eventName.toLowerCase().includes(searchLower))
+          .filter((event) => event && event.eventName && event.eventName.toLowerCase().includes(searchLower))
           .slice(0, 5) // Limit to 5 suggestions
           .map((event) => ({
             eventName: event.eventName,
@@ -424,7 +486,7 @@ const Home = () => {
         setSearchSuggestions(suggestions)
         setShowSuggestions(suggestions.length > 0)
       } catch (error) {
-        console.error("Error fetching search suggestions:", error)
+        // Handle error silently
       }
     }
 
@@ -442,11 +504,17 @@ const Home = () => {
     navigate(`/event/${creatorId}/${eventId}`)
   }
 
+  const navigateToEventGroup = (eventGroup: EventGroupData) => {
+    navigate(`/event-group/${eventGroup.creatorID}/${encodeURIComponent(eventGroup.eventName)}`)
+  }
+
   const filterEvents = (list: PublicEventType[]) => {
     return list.filter((event) => {
+      if (!event) return false
+
       const matchesSearch = searchQuery
-        ? event.eventName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.eventId?.toLowerCase().includes(searchQuery.toLowerCase())
+        ? (event.eventName && event.eventName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (event.eventId && event.eventId.toLowerCase().includes(searchQuery.toLowerCase()))
         : true
 
       const matchesType = filterType ? event.eventType === filterType : true
@@ -559,9 +627,9 @@ const Home = () => {
               {loading ? (
                 renderSkeletons(4)
               ) : filteredTodayEvents.length > 0 ? (
-                filteredTodayEvents.map((event) => (
+                filteredTodayEvents.map((event, index) => (
                   <LazyEventCard
-                    key={event.eventId}
+                    key={event.eventId || `today-${index}`}
                     event={event}
                     isToday={true}
                     onClick={() => navigateToEvent(event.creatorID, event.eventId)}
@@ -579,9 +647,9 @@ const Home = () => {
           {loading ? (
             renderSkeletons(8)
           ) : filteredUpcomingEvents.length > 0 ? (
-            filteredUpcomingEvents.map((event) => (
+            filteredUpcomingEvents.map((event, index) => (
               <LazyEventCard
-                key={event.eventId}
+                key={event.eventId || `upcoming-${index}`}
                 event={event}
                 onClick={() => navigateToEvent(event.creatorID, event.eventId)}
               />
@@ -591,14 +659,36 @@ const Home = () => {
           )}
         </div>
 
+        {/* Event Groups Section */}
+        {eventGroups.length > 0 && (
+          <>
+            <h2 className="section-title event-groups-title">Event Collections</h2>
+            <div className="events-grid">
+              {loading ? (
+                renderSkeletons(4)
+              ) : eventGroups.length > 0 ? (
+                eventGroups.map((eventGroup, index) => (
+                  <EventGroupCard
+                    key={`group-${eventGroup.creatorID}-${eventGroup.eventName}-${index}`}
+                    eventGroup={eventGroup}
+                    onClick={() => navigateToEventGroup(eventGroup)}
+                  />
+                ))
+              ) : (
+                <p className="no-events-message">No event collections found.</p>
+              )}
+            </div>
+          </>
+        )}
+
         <h2 className="section-title past-events-title">Past Events</h2>
         <div className="events-grid">
           {loading ? (
             renderSkeletons(4)
           ) : filteredPastEvents.length > 0 ? (
-            filteredPastEvents.map((event) => (
+            filteredPastEvents.map((event, index) => (
               <LazyEventCard
-                key={event.eventId}
+                key={event.eventId || `past-${index}`}
                 event={event}
                 isPast={true}
                 onClick={() => navigateToEvent(event.creatorID, event.eventId)}
@@ -700,6 +790,48 @@ const Home = () => {
             animation: none;
             transition: none;
           }
+        }
+
+        .event-group-card {
+          position: relative;
+        }
+
+        .event-group-overlay {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          z-index: 2;
+        }
+
+        .event-group-badge {
+          background: linear-gradient(135deg, #6b2fa5, #8b5cf6);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 2px 8px rgba(107, 47, 165, 0.3);
+        }
+
+        .event-groups-title {
+          background: linear-gradient(135deg, #6b2fa5, #8b5cf6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          position: relative;
+        }
+
+        .event-groups-title::after {
+          content: '';
+          position: absolute;
+          bottom: -5px;
+          left: 0;
+          width: 60px;
+          height: 3px;
+          background: linear-gradient(135deg, #6b2fa5, #8b5cf6);
+          border-radius: 2px;
         }
       `}</style>
     </div>

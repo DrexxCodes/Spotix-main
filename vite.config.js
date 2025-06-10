@@ -11,11 +11,9 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: ['944aaaac1057e16b46ec15356a89feca.serveo.net'],
-    hmr: {
-      clientPort: 443 // Prevent dev server warning from ngrok HTTPS
-    },
+    hmr: true,
     proxy: {
-      // Proxy API requests to the Express server
+      // Proxy API requests to the Fastify server
       '/api': {
         target: 'http://localhost:5000', 
         changeOrigin: true,

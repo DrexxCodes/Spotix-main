@@ -348,7 +348,7 @@ const TicketHistory = () => {
       <Footer />
 
       {/* Custom Styles */}
-      <style jsx>{`
+      <style>{`
         .refund-buttons-container {
           display: flex;
           justify-content: center;

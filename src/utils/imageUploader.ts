@@ -183,7 +183,7 @@ export function uploadImage(
       try {
         fileUrl = await uploadToCloudinary(file, cloudinaryFolder, handleProgress)
         if (fileUrl) {
-          provider = "cloudinary"
+          provider = "Spotix-Cloud"
         }
       } catch (error) {
         console.error("Cloudinary upload failed:", error)

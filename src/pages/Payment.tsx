@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
-import { doc, getDoc, collection, query, where, getDocs, updateDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { CheckCircle, Loader2, AlertCircle, Tag } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
@@ -42,13 +42,6 @@ interface EventDetails {
   bookerEmail?: string
 }
 
-// Extend Window interface to include PaystackPop
-declare global {
-  interface Window {
-    PaystackPop: any
-  }
-}
-
 const Payment = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -77,20 +70,10 @@ const Payment = () => {
   const [stepStatus, setStepStatus] = useState<"loading" | "success" | "error" | null>(null)
   const [walletBalance, setWalletBalance] = useState<number>(0)
 
-  // Paystack popup status states
-  const [paystackPopupStatus, setPaystackPopupStatus] = useState<string | null>(null)
-  const [showPaystackStatus, setShowPaystackStatus] = useState(false)
+  // Check if event is free
+  const isFreeEvent = finalPrice === 0
 
-  // Paystack preloading states
-  const [paystackPreloading, setPaystackPreloading] = useState(false)
-  const [paystackPreloaded, setPaystackPreloaded] = useState(false)
-  const [paystackHandler, setPaystackHandler] = useState<any>(null)
-  const [userData, setUserData] = useState<any>(null)
-
-  // Refs for cleanup
-  const paystackHandlerRef = useRef<any>(null)
-
-  // Add PaystackPop script to the document and preload payment data
+  // Add PaystackPop script to the document
   useEffect(() => {
     const script = document.createElement("script")
     script.src = "https://js.paystack.co/v1/inline.js"
@@ -98,14 +81,6 @@ const Payment = () => {
 
     script.onload = () => {
       setPaystackInitialized(true)
-      // Start preloading payment data once Paystack is loaded
-      if (paymentData && eventDetails) {
-        preloadPaystackPayment()
-      }
-    }
-
-    script.onerror = () => {
-      setPaystackError("Failed to load Paystack. Please refresh the page and try again.")
     }
 
     document.body.appendChild(script)
@@ -117,15 +92,8 @@ const Payment = () => {
     }
   }, [])
 
-  // Preload payment data when dependencies are ready
   useEffect(() => {
-    if (paystackInitialized && paymentData && eventDetails && userData && !paystackPreloaded) {
-      preloadPaystackPayment()
-    }
-  }, [paystackInitialized, paymentData, eventDetails, userData, paystackPreloaded])
-
-  useEffect(() => {
-    let isMounted = true
+    let isMounted = true // Add a flag to track component mount status
 
     // Get payment data from location state
     if (location.state) {
@@ -144,8 +112,8 @@ const Payment = () => {
       navigate("/")
     }
 
-    // Fetch user's wallet balance and data
-    const fetchUserData = async () => {
+    // Fetch user's wallet balance
+    const fetchWalletBalance = async () => {
       try {
         const user = auth.currentUser
         if (!user) {
@@ -160,15 +128,14 @@ const Payment = () => {
           const userData = userDoc.data()
           if (isMounted) {
             setWalletBalance(userData.wallet || 0)
-            setUserData(userData)
           }
         }
       } catch (error) {
-        console.error("Error fetching user data:", error)
+        console.error("Error fetching wallet balance:", error)
       }
     }
 
-    fetchUserData()
+    fetchWalletBalance()
 
     // Set up share URL
     if (paymentData) {
@@ -177,177 +144,18 @@ const Payment = () => {
     }
 
     return () => {
-      isMounted = false
+      isMounted = false // Set the flag to false when the component unmounts
     }
   }, [location, navigate])
 
-  // Auto-hide Paystack status messages after 5 seconds
+  // Auto-select wallet for free events and prevent disabled method selection
   useEffect(() => {
-    if (showPaystackStatus) {
-      const timer = setTimeout(() => {
-        setShowPaystackStatus(false)
-        setPaystackPopupStatus(null)
-      }, 5000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [showPaystackStatus])
-
-  // Cleanup Paystack handler on unmount
-  useEffect(() => {
-    return () => {
-      if (paystackHandlerRef.current) {
-        try {
-          // Clean up any existing Paystack handlers
-          paystackHandlerRef.current = null
-        } catch (error) {
-          console.error("Error cleaning up Paystack handler:", error)
-        }
+    if (isFreeEvent) {
+      if (paymentMethod === "paystack" || paymentMethod === "agent") {
+        setPaymentMethod("wallet")
       }
     }
-  }, [])
-
-  // Preload Paystack payment handler
-  const preloadPaystackPayment = async () => {
-    if (!window.PaystackPop || !paymentData || !eventDetails || !userData || paystackPreloaded) {
-      return
-    }
-
-    setPaystackPreloading(true)
-    setPaystackError(null)
-
-    try {
-      const user = auth.currentUser
-      if (!user) {
-        throw new Error("User not authenticated")
-      }
-
-      // Add transaction fee to the final price
-      const totalWithFee = finalPrice + 150
-
-      // Prepare payment metadata with discount information and event details
-      const paymentMetadata = {
-        userId: user.uid,
-        eventId: paymentData.eventId,
-        eventCreatorId: paymentData.eventCreatorId,
-        ticketType: paymentData.ticketType,
-        eventName: paymentData.eventName,
-        originalPrice: paymentData.ticketPrice,
-        ticketPrice: finalPrice,
-        transactionFee: 150,
-        totalAmount: totalWithFee,
-        discountApplied: appliedDiscount ? true : false,
-        discountCode: appliedDiscount ? appliedDiscount.code : null,
-        discountType: appliedDiscount ? appliedDiscount.type : null,
-        discountValue: appliedDiscount ? appliedDiscount.value : null,
-        // Add event details
-        eventVenue: eventDetails.eventVenue,
-        eventType: eventDetails.eventType,
-        eventDate: eventDetails.eventDate,
-        eventEndDate: eventDetails.eventEndDate,
-        eventStart: eventDetails.eventStart,
-        eventEnd: eventDetails.eventEnd,
-        stopDate: eventDetails.stopDate,
-        bookerName: eventDetails.bookerName,
-        bookerEmail: eventDetails.bookerEmail,
-        userFullName: userData.fullName || userData.username || "Valued Customer",
-        userEmail: userData.email,
-      }
-
-      // Save payment data for the callback
-      const paymentDataForStorage = {
-        ...paymentData,
-        ticketPrice: finalPrice,
-        transactionFee: 150,
-        totalAmount: totalWithFee,
-        originalPrice: paymentData.ticketPrice,
-        discountApplied: appliedDiscount ? true : false,
-        discountCode: appliedDiscount ? appliedDiscount.code : null,
-        // Add event details with null checks
-        eventVenue: eventDetails.eventVenue || null,
-        eventType: eventDetails.eventType || null,
-        eventDate: eventDetails.eventDate || null,
-        eventEndDate: eventDetails.eventEndDate || null,
-        eventStart: eventDetails.eventStart || null,
-        eventEnd: eventDetails.eventEnd || null,
-        bookerName: eventDetails.bookerName || null,
-        bookerEmail: eventDetails.bookerEmail || null,
-        userFullName: userData.fullName || userData.username || "Valued Customer",
-        userEmail: userData.email,
-        // Only include stopDate if it exists
-        ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
-      }
-
-      localStorage.setItem("paystack_payment_data", JSON.stringify(paymentDataForStorage))
-
-      // Calculate amount in kobo (smallest currency unit)
-      const amountInKobo = Math.round(totalWithFee * 100)
-
-      // Generate reference
-      const generateReference = () => {
-        const letters = Math.random().toString(36).substring(2, 8).toUpperCase()
-        const numbers = Math.floor(1000 + Math.random() * 9000).toString()
-        return `${letters}${numbers}`
-      }
-
-      // Pre-initialize Paystack handler
-      const handler = window.PaystackPop.setup({
-        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-        email: userData.email,
-        amount: amountInKobo,
-        currency: "NGN",
-        ref: generateReference(),
-        metadata: paymentMetadata,
-        callback: (response: any) => {
-          // Handle success
-          setPaystackPopupStatus(null)
-          setShowPaystackStatus(false)
-
-          if (appliedDiscount) {
-            // Update discount usage in a separate call
-            updateDiscountUsage()
-              .then(() => {
-                console.log("Discount usage updated")
-              })
-              .catch((err) => {
-                console.error("Error updating discount:", err)
-              })
-          }
-
-          // Redirect to success page
-          window.location.href = `/paystack-success?reference=${response.reference}`
-        },
-        onClose: () => {
-          // Handle when user closes payment modal
-          console.log("Payment window closed")
-          setPaystackPopupStatus("Payment Closed: User closed the transaction on Paystack")
-          setShowPaystackStatus(true)
-        },
-      })
-
-      // Store the handler for instant use
-      setPaystackHandler(handler)
-      paystackHandlerRef.current = handler
-      setPaystackPreloaded(true)
-
-      console.log("Paystack payment preloaded successfully")
-    } catch (error) {
-      console.error("Error preloading Paystack payment:", error)
-      setPaystackError("Failed to prepare payment. Please try again.")
-    } finally {
-      setPaystackPreloading(false)
-    }
-  }
-
-  // Update preloading when discount changes
-  useEffect(() => {
-    if (paystackPreloaded && appliedDiscount !== null) {
-      // Reset preloaded state when discount changes
-      setPaystackPreloaded(false)
-      setPaystackHandler(null)
-      paystackHandlerRef.current = null
-    }
-  }, [appliedDiscount, finalPrice])
+  }, [isFreeEvent, paymentMethod])
 
   // Format number with commas
   const formatNumber = (num: number): string => {
@@ -524,10 +332,11 @@ const Payment = () => {
     }
   }
 
-  // Optimized Paystack initialization - uses preloaded handler
+  // Initialize Paystack client-side
   const initializePaystack = () => {
     try {
       if (!paystackInitialized) {
+        console.error("Paystack script not loaded yet")
         setPaystackError("Paystack is still loading. Please try again in a moment.")
         return
       }
@@ -535,24 +344,8 @@ const Payment = () => {
       // Clear any previous errors
       setPaystackError(null)
 
-      // Use preloaded handler if available
-      if (paystackHandler && paystackPreloaded) {
-        console.log("Using preloaded Paystack handler")
-
-        // Show popup active status
-        setPaystackPopupStatus("Paystack popup is active")
-        setShowPaystackStatus(true)
-
-        // Open the preloaded iframe
-        paystackHandler.openIframe()
-        return
-      }
-
-      // Fallback to regular initialization if preloading failed
-      console.log("Falling back to regular Paystack initialization")
-
       const user = auth.currentUser
-      if (!user || !paymentData || !eventDetails || !userData) {
+      if (!user || !paymentData || !eventDetails) {
         throw new Error("User not authenticated or payment data missing")
       }
 
@@ -628,23 +421,16 @@ const Payment = () => {
           // Calculate amount in kobo (smallest currency unit)
           const amountInKobo = Math.round(totalWithFee * 100)
 
-          // Show popup active status
-          setPaystackPopupStatus("Paystack popup is active")
-          setShowPaystackStatus(true)
-
           // @ts-ignore - PaystackPop is loaded from the script
           const handler = window.PaystackPop.setup({
             key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
             email: userData.email,
             amount: amountInKobo, // Convert to kobo
-            currency: "NGN", // Nigerian Naira (fixed - removed trailing space)
+            currency: "NGN", // Nigerian Naira
             ref: generateReference(),
             metadata: paymentMetadata,
             callback: (response) => {
               // Handle success - this must be a regular function, not an arrow function
-              setPaystackPopupStatus(null)
-              setShowPaystackStatus(false)
-
               if (appliedDiscount) {
                 // Update discount usage in a separate call
                 updateDiscountUsage()
@@ -662,8 +448,6 @@ const Payment = () => {
             onClose: () => {
               // Handle when user closes payment modal
               console.log("Payment window closed")
-              setPaystackPopupStatus("Payment Closed: User closed the transaction on Paystack")
-              setShowPaystackStatus(true)
             },
           })
 
@@ -694,7 +478,7 @@ const Payment = () => {
     if (!paymentData) return
 
     if (paymentMethod === "paystack") {
-      // Use optimized Paystack initialization
+      // Use client-side Paystack initialization
       initializePaystack()
       return
     } else if (paymentMethod === "bitcoin") {
@@ -790,45 +574,9 @@ const Payment = () => {
       </Helmet>
       <UserHeader />
       <div className="payment-page-container">
-        {/* Paystack Status Message */}
-        {showPaystackStatus && paystackPopupStatus && (
-          <div className={`paystack-status-message ${paystackPopupStatus.includes("active") ? "active" : "closed"}`}>
-            <div className="status-content">
-              <div className="status-icon">
-                {paystackPopupStatus.includes("active") ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-              </div>
-              <span className="status-text">{paystackPopupStatus}</span>
-              <button
-                className="status-close"
-                onClick={() => {
-                  setShowPaystackStatus(false)
-                  setPaystackPopupStatus(null)
-                }}
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-
         {!paymentStarted ? (
           <div className="payment-method-selection">
             <h2>Choose your payment method</h2>
-
-            {/* Paystack Preloading Indicator */}
-            {paystackPreloading && (
-              <div className="paystack-preloading-indicator">
-                <Loader2 size={16} className="animate-spin" />
-                <span>Preparing paystack payment...</span>
-              </div>
-            )}
-
-            {paystackPreloaded && (
-              <div className="paystack-preloaded-indicator">
-                <CheckCircle size={16} className="success-icon" />
-                <span>Paystack ready for checkout!</span>
-              </div>
-            )}
 
             {/* Discount Code Section */}
             <div className="discount-code-section">
@@ -889,24 +637,31 @@ const Payment = () => {
                 <div className="payment-method-balance">NGN {formatNumber(walletBalance)}</div>
               </div>
               <div
-                className={`payment-method ${paymentMethod === "paystack" ? "selected" : ""} ${paystackPreloaded ? "preloaded" : ""}`}
-                onClick={() => setPaymentMethod("paystack")}
+                className={`payment-method ${paymentMethod === "paystack" ? "selected" : ""} ${isFreeEvent ? "disabled" : ""}`}
+                onClick={() => !isFreeEvent && setPaymentMethod("paystack")}
               >
                 <div className="payment-method-icon">💳</div>
                 <div className="payment-method-name">
                   Paystack
-                  {paystackPreloaded && <span className="instant-badge">⚡ Instant</span>}
+                  {isFreeEvent && <span className="disabled-badge">Not Available</span>}
                 </div>
-                <div className="payment-method-description">Card Payment</div>
+                <div className="payment-method-description">
+                  {isFreeEvent ? "Not available for free events" : "Card Payment"}
+                </div>
               </div>
               <div
-                className={`payment-method ${paymentMethod === "agent" ? "selected" : ""}`}
-                onClick={() => setPaymentMethod("agent")}
+                className={`payment-method ${paymentMethod === "agent" ? "selected" : ""} ${isFreeEvent ? "disabled" : ""}`}
+                onClick={() => !isFreeEvent && setPaymentMethod("agent")}
               >
                 <div className="payment-method-icon">🙍🏻‍♂️</div>
-                <div className="payment-method-name">Agent Pay</div>
-                <div className="payment-method-description">Pay via Agent</div>
-                <div className="new-tag">NEW</div>
+                <div className="payment-method-name">
+                  Agent Pay
+                  {isFreeEvent && <span className="disabled-badge">Not Available</span>}
+                </div>
+                <div className="payment-method-description">
+                  {isFreeEvent ? "Not available for free events" : "Pay via Agent"}
+                </div>
+                {!isFreeEvent && <div className="new-tag">NEW</div>}
               </div>
               <div
                 className={`payment-method ${paymentMethod === "bitcoin" ? "selected" : ""}`}
@@ -958,14 +713,15 @@ const Payment = () => {
                 <span>NGN {formatNumber(finalPrice)}</span>
               </div>
 
-              <div className="payment-summary-row">
+              <div className={`payment-summary-row ${isFreeEvent ? "strikethrough" : ""}`}>
                 <span>Transaction Fee:</span>
                 <span>NGN 150</span>
+                {isFreeEvent && <span className="free-event-note">(Waived for free events)</span>}
               </div>
 
               <div className="payment-summary-row total">
                 <span>Total Price:</span>
-                <span>NGN {formatNumber(finalPrice + 150)}</span>
+                <span>NGN {formatNumber(isFreeEvent ? 0 : finalPrice + 150)}</span>
               </div>
             </div>
             <div className="payment-actions">
@@ -973,7 +729,7 @@ const Payment = () => {
                 Cancel
               </button>
               <button className="proceed-payment-btn" onClick={handleStartPayment}>
-                {paymentMethod === "paystack" && paystackPreloaded ? "Pay Instantly" : "Proceed to Payment"}
+                Proceed to Payment
               </button>
             </div>
           </div>
@@ -1005,186 +761,6 @@ const Payment = () => {
         )}
       </div>
       <Footer />
-
-      {/* Additional styles for preloading indicators and instant payment */}
-      <style>{`
-        .paystack-status-message {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 9999;
-          max-width: 400px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          animation: slideInRight 0.3s ease-out;
-        }
-
-        .paystack-status-message.active {
-          background: linear-gradient(135deg, #d4edda, #c3e6cb);
-          border: 1px solid #c3e6cb;
-          color: #155724;
-        }
-
-        .paystack-status-message.closed {
-          background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-          border: 1px solid #f5c6cb;
-          color: #721c24;
-        }
-
-        .status-content {
-          display: flex;
-          align-items: center;
-          padding: 12px 16px;
-          gap: 10px;
-        }
-
-        .status-icon {
-          flex-shrink: 0;
-        }
-
-        .status-text {
-          flex-grow: 1;
-          font-weight: 500;
-          font-size: 14px;
-        }
-
-        .status-close {
-          background: none;
-          border: none;
-          font-size: 18px;
-          cursor: pointer;
-          color: inherit;
-          padding: 0;
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          transition: background-color 0.2s;
-        }
-
-        .status-close:hover {
-          background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Preloading indicators */
-        .paystack-preloading-indicator,
-        .paystack-preloaded-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 16px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .paystack-preloading-indicator {
-          background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-          color: #856404;
-          border: 1px solid #ffeaa7;
-        }
-
-        .paystack-preloaded-indicator {
-          background: linear-gradient(135deg, #d4edda, #c3e6cb);
-          color: #155724;
-          border: 1px solid #c3e6cb;
-        }
-
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        /* Enhanced payment method styling for preloaded state */
-        .payment-method.preloaded {
-          border: 2px solid #28a745;
-          background: linear-gradient(135deg, #f8fff9, #e8f5e8);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .payment-method.preloaded::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(40, 167, 69, 0.1), transparent);
-          animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-          0% { left: -100%; }
-          100% { left: 100%; }
-        }
-
-        .instant-badge {
-          background: linear-gradient(45deg, #28a745, #20c997);
-          color: white;
-          padding: 2px 6px;
-          border-radius: 10px;
-          font-size: 10px;
-          font-weight: 600;
-          margin-left: 8px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-        }
-
-        /* Enhanced proceed button for instant payment */
-        .proceed-payment-btn {
-          position: relative;
-          overflow: hidden;
-        }
-
-        .proceed-payment-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(107, 47, 165, 0.3);
-        }
-
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-
-        /* Mobile responsive adjustments */
-        @media (max-width: 768px) {
-          .paystack-status-message {
-            top: 10px;
-            right: 10px;
-            left: 10px;
-            max-width: none;
-          }
-
-          .status-content {
-            padding: 10px 12px;
-          }
-
-          .status-text {
-            font-size: 13px;
-          }
-
-          .paystack-preloading-indicator,
-          .paystack-preloaded-indicator {
-            padding: 10px 12px;
-            font-size: 13px;
-          }
-        }
-      `}</style>
     </>
   )
 }

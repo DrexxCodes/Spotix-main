@@ -36,6 +36,7 @@ const Referrals = lazy(() => import("./pages/Referrals"))
 const CreateEvent = lazy(() => import("./pages/createEvent"))
 const Success = lazy(() => import("./pages/success"))
 const Event = lazy(() => import("./pages/event"))
+const EventGroup = lazy(() => import("./pages/event-group"))
 const Payment = lazy(() => import("./pages/Payment"))
 const Wallet = lazy(() => import("./pages/wallet"))
 const WalletHistory = lazy(() => import("./pages/wallet-history"))
@@ -127,6 +128,7 @@ function App() {
             {/* Modified to be public routes */}
             <Route path="/home" element={<Home />} />
             <Route path="/event/:uid/:id" element={<Event />} />
+            <Route path="/event-group/:uid/:id" element={<EventGroup />} />
 
             {/* Protected routes - require authentication */}
             <Route path="/bookerRole" element={user ? <BookerRole /> : <Navigate to="/login" />} />

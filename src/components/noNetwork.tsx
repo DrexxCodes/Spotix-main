@@ -7,7 +7,7 @@ const NoNetwork = ({ retry }: { retry: () => void }) => {
   const [show, setShow] = useState(false)
 
   // This component should be controlled externally by parent logic when Firestore fails due to timeout.
-  // So the parent sets 'show' via props. Here we simulate a quick display logic (optional).
+  // So the parent sets 'show' via props. Here I'll probably simulate a quick display logic (optional).
   useEffect(() => {
     // Optional delay in showing in case of retry or short disconnect
     const timeout = setTimeout(() => {
