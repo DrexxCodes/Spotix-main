@@ -10,6 +10,8 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { Search, Ticket, Calendar, Clock, CheckCircle, XCircle, RefreshCw, AlertTriangle } from "lucide-react"
 import { getWithExpiry, setWithExpiry } from "../utils/cacheUtils"
+import { ReviewCTA } from '../components/ReviewCTA';
+
 
 interface TicketHistoryItem {
   id: string
@@ -313,6 +315,7 @@ const TicketHistory = () => {
                 </div>
               </div>
             ))}
+                  <ReviewCTA onReviewClick={undefined} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">

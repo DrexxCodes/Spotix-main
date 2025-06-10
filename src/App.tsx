@@ -37,6 +37,7 @@ const CreateEvent = lazy(() => import("./pages/createEvent"))
 const Success = lazy(() => import("./pages/success"))
 const Event = lazy(() => import("./pages/event"))
 const EventGroup = lazy(() => import("./pages/event-group"))
+const EventReview = lazy(() => import("./pages/event-review"))
 const Payment = lazy(() => import("./pages/Payment"))
 const Wallet = lazy(() => import("./pages/wallet"))
 const WalletHistory = lazy(() => import("./pages/wallet-history"))
@@ -133,6 +134,7 @@ function App() {
             {/* Protected routes - require authentication */}
             <Route path="/bookerRole" element={user ? <BookerRole /> : <Navigate to="/login" />} />
             <Route path="/Profile" element={user ? <UserProfile /> : <Navigate to="/login" />} />
+            <Route path="/event-review" element={user ? <EventReview /> : <Navigate to="/login" />} />
             <Route path="/booker-confirm" element={user ? <BookerConfirm /> : <Navigate to="/login" />} />
             <Route path="/payment" element={user ? <Payment /> : <Navigate to="/login" />} />
             <Route path="/paystack-success" element={user ? <PaystackSuccess /> : <Navigate to="/login" />} />

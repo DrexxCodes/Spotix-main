@@ -12,9 +12,11 @@ import { Helmet } from "react-helmet"
 import { ArrowLeft, User, Ticket, Info, X, Wallet } from "lucide-react"
 import ShareBtn from "../components/shareBtn"
 import LoginButton from "../components/loginBtn"
+import EventReviews from "../components/event-reviews-section"
 import "boxicons/css/boxicons.min.css"
 import "../responsive.css"
 import "./event.css"
+import Review from "../components/review"
 
 interface EventType {
   id: string
@@ -219,6 +221,22 @@ const Event = () => {
     },
     [formatNumber],
   )
+
+  // Check if event has ended
+  const hasEventEnded = useCallback(() => {
+    if (!eventData?.eventEndDate) return false
+
+    const now = new Date()
+    const endDate = new Date(eventData.eventEndDate)
+
+    // If there's an end time, add it to the end date
+    if (eventData.eventEnd) {
+      const [hours, minutes] = eventData.eventEnd.split(":").map(Number)
+      endDate.setHours(hours || 0, minutes || 0)
+    }
+
+    return now > endDate
+  }, [eventData])
 
   useEffect(() => {
     // Check authentication status
@@ -849,6 +867,21 @@ const Event = () => {
               )}
             </div>
           </div>
+
+          {/* Event Reviews Section */}
+          {eventData && (
+            <EventReviews
+              eventId={id || ""}
+              eventName={eventData.eventName}
+              eventEndDate={eventData.eventEndDate}
+              eventEnd={eventData.eventEnd}
+              hasEventEnded={hasEventEnded()}
+              isAuthenticated={isAuthenticated}
+            />
+          )}
+
+          {/* Review Call-to-Action */}
+          {eventData && hasEventEnded() && <Review eventId={id || ""} eventName={eventData.eventName} />}
 
           {/* Passed Event Dialog */}
           {showPassedDialog && (
