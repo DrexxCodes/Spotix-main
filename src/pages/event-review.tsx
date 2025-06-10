@@ -477,20 +477,43 @@ const EventReviewCard = ({ ticket, userRating, isSubmitting, onRatingSubmit }: E
     setTimeout(() => setIsAnimating(false), 300)
   }
 
-  const handleSubmit = () => {
-    if (selectedRating > 0 && ticket.eventId && eventEnded) {
-      onRatingSubmit(ticket.eventId, ticket.eventName, selectedRating, comment)
-    }
-  }
-
   const renderStars = () => {
+    const getStarColor = (starIndex: number, rating: number) => {
+      if (starIndex > rating) return "#ddd"
+
+      switch (rating) {
+        case 1:
+          return "#dc2626" // Deep red
+        case 2:
+          return "#f87171" // Lighter red
+        case 3:
+          return "#fbbf24" // Yellow
+        case 4:
+          return "#16a34a" // Darker green
+        case 5:
+          return "#22c55e" // Full green
+        default:
+          return "#ddd"
+      }
+    }
+
     return (
       <div className={`rating-stars ${isAnimating ? "animating" : ""}`}>
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
             size={24}
-            className={`star ${star <= (hoveredRating || selectedRating) ? "filled" : eventEnded ? "" : "disabled"}`}
+            className={`stars ${star <= (hoveredRating || selectedRating) ? "filled" : eventEnded ? "" : "disabled"}`}
+            style={{
+              color:
+                star <= (hoveredRating || selectedRating)
+                  ? getStarColor(star, hoveredRating || selectedRating)
+                  : "#ddd",
+              fill:
+                star <= (hoveredRating || selectedRating)
+                  ? getStarColor(star, hoveredRating || selectedRating)
+                  : "transparent",
+            }}
             onClick={() => handleStarClick(star)}
             onMouseEnter={() => (eventEnded ? setHoveredRating(star) : null)}
             onMouseLeave={() => (eventEnded ? setHoveredRating(0) : null)}
@@ -498,6 +521,12 @@ const EventReviewCard = ({ ticket, userRating, isSubmitting, onRatingSubmit }: E
         ))}
       </div>
     )
+  }
+
+  const handleSubmit = () => {
+    if (selectedRating > 0 && ticket.eventId && eventEnded) {
+      onRatingSubmit(ticket.eventId, ticket.eventName, selectedRating, comment)
+    }
   }
 
   return (

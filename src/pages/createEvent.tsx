@@ -751,33 +751,37 @@ const CreateEvent = () => {
 
       console.log("✅ Event successfully created in standard location:", docRef.id)
 
-      // STEP 2: Create duplicate in publicEvents collection at root level
-      try {
-        const publicEventData = {
-          imageURL: imageUrl,
-          eventType: eventType,
-          venue: eventVenue,
-          eventStartDate: eventDate,
-          eventName: eventName,
-          freeOrPaid:
-            enablePricing && ticketPrices.length > 0 && ticketPrices.some((ticket) => ticket.policy && ticket.price),
-          timestamp: new Date(),
-          creatorID: user.uid,
-          eventId: eventId,
-          eventGroup: false, // This is a regular event, not a group
+      // STEP 2: Create duplicate in publicEvents collection ONLY if NOT part of a collection
+      if (!selectedEventCollection) {
+        try {
+          const publicEventData = {
+            imageURL: imageUrl,
+            eventType: eventType,
+            venue: eventVenue,
+            eventStartDate: eventDate,
+            eventName: eventName,
+            freeOrPaid:
+              enablePricing && ticketPrices.length > 0 && ticketPrices.some((ticket) => ticket.policy && ticket.price),
+            timestamp: new Date(),
+            creatorID: user.uid,
+            eventId: eventId,
+            eventGroup: false, // This is a regular event, not a group
+          }
+
+          // Create document in publicEvents collection with eventName as document ID
+          const publicEventDocRef = doc(db, "publicEvents", eventName)
+          await setDoc(publicEventDocRef, publicEventData)
+
+          console.log("✅ Event successfully duplicated to publicEvents collection:", eventName)
+        } catch (publicEventError) {
+          console.error("❌ Error creating publicEvents document:", publicEventError)
+          console.warn("Main event was created successfully, but publicEvents creation failed")
         }
-
-        // Create document in publicEvents collection with eventName as document ID
-        const publicEventDocRef = doc(db, "publicEvents", eventName)
-        await setDoc(publicEventDocRef, publicEventData)
-
-        console.log("✅ Event successfully duplicated to publicEvents collection:", eventName)
-      } catch (publicEventError) {
-        console.error("❌ Error creating publicEvents document:", publicEventError)
-        console.warn("Main event was created successfully, but publicEvents creation failed")
+      } else {
+        console.log("🔄 Skipping publicEvents creation - event is part of a collection")
       }
 
-      // STEP 3: If event collection is selected, also add reference to the collection
+      // STEP 3: If event collection is selected, add reference to the collection
       if (selectedEventCollection) {
         try {
           // Add a reference document in the event collection
@@ -899,6 +903,9 @@ const CreateEvent = () => {
                   />
                   <div className="collection-details">
                     <h4>Event Collection: {selectedEventCollection.name}</h4>
+                    <p className="collection-notice">
+                      ℹ️ This event will be added to the collection and will not appear in public events listing.
+                    </p>
                   </div>
                   <button
                     type="button"

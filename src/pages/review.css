@@ -379,19 +379,17 @@
   transform: scale(1.1);
 }
 
-.star {
+.stars {
   cursor: pointer;
-  color: #ddd;
   transition: all 0.2s ease;
 }
 
-.star:hover {
+.stars:hover {
   transform: scale(1.1);
 }
 
-.star.filled {
-  color: #ffb800;
-  fill: #ffb800;
+.stars.filled {
+  /* Color is now handled by inline styles */
   animation: starFill 0.3s ease;
 }
 
@@ -407,9 +405,30 @@
   }
 }
 
-.star.disabled {
+.stars.disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* Color-coded star glow effects */
+.stars.filled[style*="#dc2626"] {
+  filter: drop-shadow(0 0 4px rgba(220, 38, 38, 0.3));
+}
+
+.stars.filled[style*="#f87171"] {
+  filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.3));
+}
+
+.stars.filled[style*="#fbbf24"] {
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.3));
+}
+
+.stars.filled[style*="#16a34a"] {
+  filter: drop-shadow(0 0 4px rgba(22, 163, 74, 0.3));
+}
+
+.stars.filled[style*="#22c55e"] {
+  filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.3));
 }
 
 .rating-date {

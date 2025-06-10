@@ -238,6 +238,11 @@
   gap: 2px;
 }
 
+.stars {
+  transition: color 0.2s ease;
+}
+
+
 .star {
   color: #d1d5db;
   transition: color 0.2s ease;

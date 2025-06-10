@@ -147,10 +147,33 @@ const EventReviewsSection = ({
   }
 
   const renderStars = (rating: number) => {
+    const getStarColor = (starIndex: number, rating: number) => {
+      if (starIndex > rating) return "text-gray-300"
+
+      switch (rating) {
+        case 1:
+          return "text-red-700" // Deep red
+        case 2:
+          return "text-red-400" // Lighter red
+        case 3:
+          return "text-yellow-400" // Yellow
+        case 4:
+          return "text-green-600" // Darker green
+        case 5:
+          return "text-green-500" // Full green
+        default:
+          return "text-gray-300"
+      }
+    }
+
     return (
       <div className="review-stars">
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star key={star} size={16} className={`star ${star <= rating ? "filled" : ""}`} />
+          <Star
+            key={star}
+            size={16}
+            className={`stars ${star <= rating ? "filled" : ""} ${getStarColor(star, rating)}`}
+          />
         ))}
       </div>
     )
@@ -179,9 +202,8 @@ const EventReviewsSection = ({
   }
 
   const reviewsArray = Object.entries(reviews).map(([userId, review]) => ({
-      ...review,
-      userId,
-    }))
+    ...review,
+  }))
 
   return (
     <div className="event-reviews-section">
