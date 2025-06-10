@@ -32,6 +32,7 @@ interface WalletTransaction {
   newBalance?: number
   userEmail?: string
   userFullName?: string
+  transactionFee?: number
 }
 
 const WalletHistory = () => {
@@ -109,6 +110,7 @@ const WalletHistory = () => {
           newBalance: data.newBalance || null,
           userEmail: data.userEmail || null,
           userFullName: data.userFullName || null,
+          transactionFee: Number(data.transactionFee) || 0,
         })
       })
 
@@ -118,7 +120,6 @@ const WalletHistory = () => {
         const dateB = new Date(`${b.transactionDate} ${b.transactionTime}`)
         return dateB.getTime() - dateA.getTime()
       })
-
 
       if (loadMore) {
         setTransactions((prev) => [...prev, ...newTransactions])
@@ -218,12 +219,31 @@ const WalletHistory = () => {
     if (transaction.tag === "credit") {
       return "Wallet Funding"
     }
+
+    // Check if it's a free event (transaction fee is 0 and it's an event ticket)
+    const isFreeEvent = transaction.transactionFee === 0 && transaction.eventName
+
+    if (isFreeEvent) {
+      return `${transaction.eventName || transaction.transactionType} (Free Event)`
+    }
+
     return transaction.eventName || transaction.transactionType || "Event Ticket"
+  }
+
+  const isFreeEvent = (transaction: WalletTransaction): boolean => {
+    return transaction.transactionFee === 0 && !!transaction.eventName && transaction.tag === "debit"
+  }
+
+  const getTransactionFeeDisplay = (transaction: WalletTransaction): string => {
+    if (isFreeEvent(transaction)) {
+      return "Waived"
+    }
+    return `NGN ${formatNumber(transaction.transactionFee || 0)}`
   }
 
   const exportTransactions = () => {
     const csvContent = [
-      ["Date", "Time", "Transaction ID", "Type", "Amount", "Tag", "Status"].join(","),
+      ["Date", "Time", "Transaction ID", "Type", "Amount", "Transaction Fee", "Tag", "Status", "Free Event"].join(","),
       ...filteredTransactions.map((transaction) =>
         [
           transaction.transactionDate,
@@ -231,8 +251,10 @@ const WalletHistory = () => {
           transaction.transactionId,
           getTransactionTypeDisplay(transaction),
           transaction.amount,
+          isFreeEvent(transaction) ? "Waived" : transaction.transactionFee || 0,
           transaction.tag,
           transaction.status,
+          isFreeEvent(transaction) ? "Yes" : "No",
         ].join(","),
       ),
     ].join("\n")
@@ -390,13 +412,17 @@ const WalletHistory = () => {
                       <th>Transaction ID</th>
                       <th>Type</th>
                       <th>Amount</th>
+                      <th>Transaction Fee</th>
                       <th>Tag</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentTransactions.map((transaction) => (
-                      <tr key={transaction.id} className="transaction-row">
+                      <tr
+                        key={transaction.id}
+                        className={`transaction-row ${isFreeEvent(transaction) ? "free-event" : ""}`}
+                      >
                         <td className="date-time-cell">
                           <div className="date-time-container">
                             <span className="date">{formatDate(transaction.transactionDate)}</span>
@@ -414,11 +440,22 @@ const WalletHistory = () => {
                           <div className="type-container">
                             <span className="type-main">{getTransactionTypeDisplay(transaction)}</span>
                             {transaction.ticketType && <span className="type-sub">{transaction.ticketType}</span>}
+                            {isFreeEvent(transaction) && (
+                              <span className="free-event-badge">
+                                <i className="bx bx-gift"></i>
+                                Free Event
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="amount-cell">
                           <span className={`amount ${transaction.tag}`}>
                             {transaction.tag === "debit" ? "-" : "+"}NGN {formatNumber(transaction.amount)}
+                          </span>
+                        </td>
+                        <td className="fee-cell">
+                          <span className={`fee-amount ${isFreeEvent(transaction) ? "waived" : ""}`}>
+                            {getTransactionFeeDisplay(transaction)}
                           </span>
                         </td>
                         <td className="tag-cell">
@@ -444,7 +481,10 @@ const WalletHistory = () => {
               {/* Card layout for mobile devices */}
               <div className="transaction-cards">
                 {currentTransactions.map((transaction) => (
-                  <div key={transaction.id} className={`transaction-card ${transaction.tag}`}>
+                  <div
+                    key={transaction.id}
+                    className={`transaction-card ${transaction.tag} ${isFreeEvent(transaction) ? "free-event" : ""}`}
+                  >
                     <div className="card-header">
                       <div className="card-date-time">
                         <span className="card-date">{formatDate(transaction.transactionDate)}</span>
@@ -476,6 +516,12 @@ const WalletHistory = () => {
                             <i className="bx bx-plus-circle"></i>
                           )}
                           {transaction.tag.charAt(0).toUpperCase() + transaction.tag.slice(1)}
+                        </span>
+                      </div>
+                      <div className="card-detail-row">
+                        <span className="card-detail-label">Transaction Fee:</span>
+                        <span className={`card-detail-value ${isFreeEvent(transaction) ? "fee-waived" : ""}`}>
+                          {getTransactionFeeDisplay(transaction)}
                         </span>
                       </div>
                       <div className="card-detail-row">
@@ -1332,6 +1378,53 @@ const WalletHistory = () => {
   .controls-section {
     gap: 1rem;
   }
+}
+
+.fee-amount.waived {
+  color: #28a745;
+  font-weight: 600;
+  position: relative;
+}
+
+.fee-amount.waived::after {
+  content: " (Free Event)";
+  font-size: 0.75rem;
+  color: #28a745;
+  font-weight: normal;
+}
+
+.card-detail-value.fee-waived {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.card-detail-value.fee-waived::after {
+  content: " (Free)";
+  font-size: 0.75rem;
+  color: #28a745;
+  font-weight: normal;
+}
+
+.transaction-row.free-event {
+  background-color: rgba(40, 167, 69, 0.05);
+}
+
+.transaction-card.free-event {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(40, 167, 69, 0.1));
+}
+
+.type-container .free-event-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #d4edda;
+  color: #155724;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
 }
 `}</style>
     </>

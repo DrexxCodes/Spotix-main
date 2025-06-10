@@ -136,6 +136,12 @@ const Wallet = () => {
   const [emailSending, setEmailSending] = useState(false)
   const [userData, setUserData] = useState<UserData | null>(null)
 
+  // Check if this is a free event
+  const [isFreeEvent, setIsFreeEvent] = useState(false)
+  // Adjusted transaction fee and total amount for free events
+  const [adjustedTransactionFee, setAdjustedTransactionFee] = useState(0)
+  const [adjustedTotalAmount, setAdjustedTotalAmount] = useState(0)
+
   // Payment process states
   const [currentStep, setCurrentStep] = useState<string | null>(null)
   const [stepStatus, setStepStatus] = useState<"loading" | "success" | "error" | null>(null)
@@ -177,13 +183,31 @@ const Wallet = () => {
         const paymentInfo = location.state as PaymentPageProps
         Logger.info("Payment data received", paymentInfo)
 
+        // Check if this is a free event (price is 0)
+        const eventIsFree = paymentInfo.finalPrice === 0
+        setIsFreeEvent(eventIsFree)
+
+        // Adjust transaction fee and total amount for free events
+        const fee = eventIsFree ? 0 : paymentInfo.transactionFee
+        const total = eventIsFree ? 0 : paymentInfo.totalAmount
+
+        setAdjustedTransactionFee(fee)
+        setAdjustedTotalAmount(total)
+
+        Logger.info(`Event is ${eventIsFree ? "free" : "paid"}, fee: ${fee}, total: ${total}`)
+
         // Check if we already have event details from the previous page
         if (paymentInfo.eventDetails) {
           Logger.info("IWSS object reading event details")
           setEventDetails(paymentInfo.eventDetails)
         }
 
-        setPaymentData(paymentInfo)
+        setPaymentData({
+          ...paymentInfo,
+          // Override transaction fee and total amount for free events
+          transactionFee: fee,
+          totalAmount: total,
+        })
 
         // Generate unique transaction ID
         const uniqueTransactionId = `wallet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -207,7 +231,11 @@ const Wallet = () => {
         // Start payment process after a short delay to ensure UI is ready
         setTimeout(() => {
           if (isMounted.current && !transactionProcessed) {
-            processPayment(paymentInfo)
+            processPayment({
+              ...paymentInfo,
+              transactionFee: fee,
+              totalAmount: total,
+            })
           }
         }, 500)
       } catch (error) {
@@ -316,45 +344,6 @@ const Wallet = () => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
   }
 
-  // Fetch event details
-  // const fetchEventDetails = async (creatorId: string, eventId: string) => {
-  //   try {
-  //     const eventDocRef = doc(db, "events", creatorId, "userEvents", eventId)
-  //     const eventDoc = await getDoc(eventDocRef)
-
-  //     if (eventDoc.exists()) {
-  //       const data = eventDoc.data()
-
-  //       // Get booker details
-  //       const bookerDocRef = doc(db, "users", creatorId)
-  //       const bookerDoc = await getDoc(bookerDocRef)
-  //       let bookerName = "Event Host"
-  //       let bookerEmail = "support@spotix.com.ng"
-
-  //       if (bookerDoc.exists()) {
-  //         const bookerData = bookerDoc.data()
-  //         bookerName = bookerData.bookerName || bookerData.fullName || "Event Host"
-  //         bookerEmail = bookerData.email || "support@spotix.com.ng"
-  //       }
-
-  //       setEventDetails({
-  //         eventVenue: data.eventVenue || "",
-  //         eventType: data.eventType || "",
-  //         eventDate: data.eventDate || "",
-  //         eventEndDate: data.eventEndDate || "",
-  //         eventStart: data.eventStart || "",
-  //         eventEnd: data.eventEnd || "",
-  //         stopDate: data.enableStopDate ? data.stopDate : undefined,
-  //         enableStopDate: data.enableStopDate || false,
-  //         bookerName,
-  //         bookerEmail,
-  //       })
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching event details:", error)
-  //   }
-  // }
-
   // Generate unique ticket ID
   const generateTicketId = () => {
     const randomNumbers = Math.floor(10000000 + Math.random() * 90000000).toString()
@@ -416,7 +405,7 @@ const Wallet = () => {
     try {
       setEmailSending(true)
 
-      const response = await fetch("api/mail/payment-confirmation", {
+      const response = await fetch("https://spotix-backend.onrender.com/api/mail/payment-confirmation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -430,8 +419,8 @@ const Wallet = () => {
           payment_ref: ticketReference,
           ticket_type: paymentData.ticketType,
           booker_email: eventDetails.bookerEmail || "support@spotix.com.ng",
-          ticket_price: paymentData.totalAmount.toFixed(2),
-          payment_method: "IWSS", // In-Wallet Spotix System
+          ticket_price: isFreeEvent ? "0.00" : paymentData.totalAmount.toFixed(2),
+          payment_method: isFreeEvent ? "Free Event" : "IWSS", // In-Wallet Spotix System
           event_venue: eventDetails.eventVenue || "Not specified",
           event_date: eventDetails.eventDate || "Not specified",
           event_start: eventDetails.eventStart || "Not specified",
@@ -496,20 +485,24 @@ const Wallet = () => {
       setStepStatus("loading")
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      if (walletBalance < paymentData.totalAmount) {
+      // For free events, skip the wallet balance check
+      if (!isFreeEvent && walletBalance < adjustedTotalAmount) {
         setStepStatus("error")
         setPaymentResult({
           success: false,
-          message: `Insufficient funds in wallet. Balance: NGN ${formatNumber(walletBalance)}, Required: NGN ${formatNumber(paymentData.totalAmount)}`,
+          message: `Insufficient funds in wallet. Balance: NGN ${formatNumber(walletBalance)}, Required: NGN ${formatNumber(adjustedTotalAmount)}`,
         })
         return
       }
 
-      // Update wallet balance
-      const newBalance = walletBalance - paymentData.totalAmount
-      await updateDoc(userDocRef, {
-        wallet: newBalance,
-      })
+      // Only update wallet balance for paid events
+      let newBalance = walletBalance
+      if (!isFreeEvent) {
+        newBalance = walletBalance - adjustedTotalAmount
+        await updateDoc(userDocRef, {
+          wallet: newBalance,
+        })
+      }
 
       // Update discount usage if a discount was applied
       if (paymentData.appliedDiscount) {
@@ -542,10 +535,10 @@ const Wallet = () => {
         transactionDate: purchaseDate,
         transactionTime: purchaseTime,
         transactionType: paymentData.eventName,
-        amount: paymentData.totalAmount,
+        amount: adjustedTotalAmount,
         ticketPrice: paymentData.finalPrice,
-        transactionFee: paymentData.transactionFee,
-        tag: "debit",
+        transactionFee: adjustedTransactionFee,
+        tag: isFreeEvent ? "free" : "debit",
         ticketId,
         ticketReference,
         eventId: paymentData.eventId,
@@ -568,6 +561,7 @@ const Wallet = () => {
         status: "completed",
         previousBalance: walletBalance,
         newBalance: newBalance,
+        isFreeEvent: isFreeEvent,
       })
 
       // Prepare ticket data with discount information and event details
@@ -581,11 +575,11 @@ const Wallet = () => {
         purchaseDate,
         purchaseTime,
         verified: false,
-        paymentMethod: "Wallet",
+        paymentMethod: isFreeEvent ? "Free Event" : "Wallet",
         originalPrice: paymentData.ticketPrice,
         ticketPrice: paymentData.finalPrice,
-        transactionFee: paymentData.transactionFee,
-        totalAmount: paymentData.totalAmount,
+        transactionFee: adjustedTransactionFee,
+        totalAmount: adjustedTotalAmount,
         transactionId: transactionId,
         discountApplied: paymentData.appliedDiscount ? true : false,
         discountCode: paymentData.appliedDiscount ? paymentData.appliedDiscount.code : null,
@@ -599,6 +593,7 @@ const Wallet = () => {
         eventEnd: eventDetails.eventEnd || "",
         bookerName: eventDetails.bookerName || "Event Host",
         bookerEmail: eventDetails.bookerEmail || "support@spotix.com.ng",
+        isFreeEvent: isFreeEvent,
         ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
       }
 
@@ -630,7 +625,7 @@ const Wallet = () => {
         const eventData = eventDoc.data()
         await updateDoc(eventDocRef, {
           ticketsSold: (eventData.ticketsSold || 0) + 1,
-          totalRevenue: (eventData.totalRevenue || 0) + paymentData.totalAmount,
+          totalRevenue: (eventData.totalRevenue || 0) + adjustedTotalAmount,
         })
       }
 
@@ -647,7 +642,7 @@ const Wallet = () => {
 
       setPaymentResult({
         success: true,
-        message: "Payment successful",
+        message: isFreeEvent ? "Free ticket acquired successfully" : "Payment successful",
         ticketId,
         ticketReference,
         userData: {
@@ -773,12 +768,21 @@ const Wallet = () => {
 
               <div className="payment-summary-row">
                 <span>Transaction Fee:</span>
-                <span>NGN {formatNumber(paymentData.transactionFee)}</span>
+                {isFreeEvent ? (
+                  <span>
+                    <span style={{ textDecoration: "line-through", color: "#999" }}>NGN {formatNumber(150)}</span>
+                    <span style={{ color: "#28a745", marginLeft: "8px", fontSize: "0.85rem" }}>
+                      Waived for free events
+                    </span>
+                  </span>
+                ) : (
+                  <span>NGN {formatNumber(adjustedTransactionFee)}</span>
+                )}
               </div>
 
               <div className="payment-summary-row total">
                 <span>Total Price:</span>
-                <span>NGN {formatNumber(paymentData.totalAmount)}</span>
+                <span>NGN {formatNumber(adjustedTotalAmount)}</span>
               </div>
 
               <div className="payment-summary-row">
@@ -792,20 +796,24 @@ const Wallet = () => {
                 Cancel
               </button>
               <button
-                className="proceed-payment-btn"
+                className={`proceed-payment-btn ${isFreeEvent ? "free-event" : ""}`}
                 onClick={handleStartPayment}
-                disabled={walletBalance < paymentData.totalAmount}
+                disabled={!isFreeEvent && walletBalance < adjustedTotalAmount}
               >
-                {walletBalance < paymentData.totalAmount ? "Insufficient Funds" : "Pay with Wallet"}
+                {!isFreeEvent && walletBalance < adjustedTotalAmount
+                  ? "Insufficient Funds"
+                  : isFreeEvent
+                    ? "Get Free Ticket"
+                    : "Pay with Wallet"}
               </button>
             </div>
 
-            {walletBalance < paymentData.totalAmount && (
+            {!isFreeEvent && walletBalance < adjustedTotalAmount && (
               <div className="insufficient-funds-message">
                 <AlertTriangle size={16} className="warning-icon" />
                 <p>
-                  Insufficient wallet balance. You need NGN {formatNumber(paymentData.totalAmount - walletBalance)} more
-                  to complete this transaction.
+                  Insufficient wallet balance. You need NGN {formatNumber(adjustedTotalAmount - walletBalance)} more to
+                  complete this transaction.
                 </p>
               </div>
             )}
@@ -817,7 +825,7 @@ const Wallet = () => {
                 <div className="success-icon">
                   <CheckCircle size={60} className="text-green-500" />
                 </div>
-                <h2>Payment Successful!</h2>
+                <h2>{isFreeEvent ? "Free Ticket Acquired!" : "Payment Successful!"}</h2>
 
                 <div className="security-badge-container">
                   <div className="security-badge">
@@ -902,11 +910,18 @@ const Wallet = () => {
                     </div>
                     <div className="ticket-detail-row">
                       <span>Transaction Fee:</span>
-                      <span>NGN {formatNumber(paymentData.transactionFee)}</span>
+                      {isFreeEvent ? (
+                        <span>
+                          <span style={{ textDecoration: "line-through", color: "#999" }}>NGN {formatNumber(150)}</span>
+                          <span style={{ color: "#28a745", marginLeft: "8px", fontSize: "0.85rem" }}>Waived</span>
+                        </span>
+                      ) : (
+                        <span>NGN {formatNumber(adjustedTransactionFee)}</span>
+                      )}
                     </div>
                     <div className="ticket-detail-row">
                       <span>Amount Paid:</span>
-                      <span>NGN {formatNumber(paymentData.totalAmount)}</span>
+                      <span>NGN {formatNumber(adjustedTotalAmount)}</span>
                     </div>
                   </div>
                 </div>
@@ -991,7 +1006,7 @@ const Wallet = () => {
           </div>
         ) : (
           <div className="payment-processing">
-            <h2>Processing Wallet Payment</h2>
+            <h2>{isFreeEvent ? "Processing Free Ticket" : "Processing Wallet Payment"}</h2>
 
             <div className="payment-steps">
               <div
@@ -1010,7 +1025,7 @@ const Wallet = () => {
                   )}
                   {currentStep === "initializing" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
-                <div className="step-label">Initializing Payment</div>
+                <div className="step-label">Initializing {isFreeEvent ? "Ticket" : "Payment"}</div>
               </div>
 
               <div
@@ -1027,7 +1042,7 @@ const Wallet = () => {
                   {currentStep === "reading" && stepStatus === "success" && <CheckCircle className="text-green-500" />}
                   {currentStep === "reading" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
-                <div className="step-label">Reading Wallet</div>
+                <div className="step-label">Reading User Data</div>
               </div>
 
               <div
@@ -1045,7 +1060,9 @@ const Wallet = () => {
                   {currentStep === "charging" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
                 <div className="step-label">
-                  Charging NGN {paymentData ? formatNumber(paymentData.totalAmount) : "0"} from Wallet
+                  {isFreeEvent
+                    ? "Processing Free Ticket"
+                    : `Charging NGN ${formatNumber(adjustedTotalAmount)} from Wallet`}
                 </div>
               </div>
 
@@ -1086,11 +1103,13 @@ const Wallet = () => {
                   )}
                   {currentStep === "finalizing" && stepStatus === "error" && <XCircle className="text-red-500" />}
                 </div>
-                <div className="step-label">Finalizing Payment</div>
+                <div className="step-label">Finalizing {isFreeEvent ? "Ticket" : "Payment"}</div>
               </div>
             </div>
 
-            <p className="processing-message">Please wait while we process your payment...</p>
+            <p className="processing-message">
+              Please wait while we {isFreeEvent ? "process your free ticket" : "process your payment"}...
+            </p>
 
             <div className="security-badge-container">
               <div className="security-badge">
@@ -1251,6 +1270,17 @@ const Wallet = () => {
         .proceed-payment-btn:disabled {
           background-color: #ccc;
           cursor: not-allowed;
+        }
+        
+        /* Free event styling */
+        .proceed-payment-btn.free-event {
+          background-color: #28a745;
+          background-image: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .proceed-payment-btn.free-event:hover {
+          background-color: #218838;
+          background-image: linear-gradient(135deg, #218838, #1e9e7f);
         }
       `}</style>
     </>

@@ -70,25 +70,61 @@ const Payment = () => {
   const [stepStatus, setStepStatus] = useState<"loading" | "success" | "error" | null>(null)
   const [walletBalance, setWalletBalance] = useState<number>(0)
 
+  // Paystack inline tracking states
+  const [paystackInlineOpen, setPaystackInlineOpen] = useState(false)
+  const [paystackInlineClosed, setPaystackInlineClosed] = useState(false)
+  const [paystackMounting, setPaystackMounting] = useState(false)
+  const [paystackOptimized, setPaystackOptimized] = useState(false)
+
   // Check if event is free
   const isFreeEvent = finalPrice === 0
 
-  // Add PaystackPop script to the document
+  // Optimized PaystackPop script loading with preloading
   useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "https://js.paystack.co/v1/inline.js"
-    script.async = true
-
-    script.onload = () => {
-      setPaystackInitialized(true)
+    // Preload the script for faster response
+    const preloadScript = () => {
+      const link = document.createElement("link")
+      link.rel = "preload"
+      link.href = "https://js.paystack.co/v1/inline.js"
+      link.as = "script"
+      document.head.appendChild(link)
     }
 
-    document.body.appendChild(script)
+    // Load the actual script
+    const loadScript = () => {
+      const script = document.createElement("script")
+      script.src = "https://js.paystack.co/v1/inline.js"
+      script.async = true
+      script.defer = true
+
+      script.onload = () => {
+        setPaystackInitialized(true)
+        setPaystackOptimized(true)
+        console.log("✅ Paystack script loaded and optimized")
+      }
+
+      script.onerror = () => {
+        setPaystackError("Failed to load Paystack. Please refresh the page and try again.")
+        console.error("❌ Failed to load Paystack script")
+      }
+
+      document.body.appendChild(script)
+
+      return () => {
+        if (document.body.contains(script)) {
+          document.body.removeChild(script)
+        }
+      }
+    }
+
+    // Start preloading immediately
+    preloadScript()
+
+    // Load script after a short delay to allow preloading
+    const timeoutId = setTimeout(loadScript, 100)
 
     return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script)
-      }
+      clearTimeout(timeoutId)
     }
   }, [])
 
@@ -332,17 +368,19 @@ const Payment = () => {
     }
   }
 
-  // Initialize Paystack client-side
+  // Optimized Paystack client-side initialization
   const initializePaystack = () => {
     try {
-      if (!paystackInitialized) {
-        console.error("Paystack script not loaded yet")
+      if (!paystackInitialized || !paystackOptimized) {
+        console.error("Paystack script not ready yet")
         setPaystackError("Paystack is still loading. Please try again in a moment.")
         return
       }
 
-      // Clear any previous errors
+      // Clear any previous errors and states
       setPaystackError(null)
+      setPaystackInlineClosed(false)
+      setPaystackMounting(true)
 
       const user = auth.currentUser
       if (!user || !paymentData || !eventDetails) {
@@ -354,6 +392,7 @@ const Payment = () => {
         .then((userDoc) => {
           if (!userDoc.exists()) {
             setPaystackError("User data not found")
+            setPaystackMounting(false)
             return
           }
 
@@ -431,6 +470,8 @@ const Payment = () => {
             metadata: paymentMetadata,
             callback: (response) => {
               // Handle success - this must be a regular function, not an arrow function
+              console.log("✅ Paystack payment successful:", response.reference)
+
               if (appliedDiscount) {
                 // Update discount usage in a separate call
                 updateDiscountUsage()
@@ -442,24 +483,43 @@ const Payment = () => {
                   })
               }
 
+              // Set inline closed state
+              setPaystackInlineOpen(false)
+              setPaystackMounting(false)
+
               // Redirect to success page
               window.location.href = `/paystack-success?reference=${response.reference}`
             },
             onClose: () => {
               // Handle when user closes payment modal
-              console.log("Payment window closed")
+              console.log("⚠️ Paystack payment window closed by user")
+              setPaystackInlineOpen(false)
+              setPaystackInlineClosed(true)
+              setPaystackMounting(false)
+
+              // Show feedback message
+              setTimeout(() => {
+                setPaystackInlineClosed(false)
+              }, 5000) // Hide message after 5 seconds
             },
           })
+
+          // Set mounting complete and inline opened
+          setPaystackMounting(false)
+          setPaystackInlineOpen(true)
+          console.log("🚀 Opening Paystack inline payment")
 
           handler.openIframe()
         })
         .catch((error) => {
           console.error("Error getting user data:", error)
           setPaystackError("Failed to initialize payment. Please try again.")
+          setPaystackMounting(false)
         })
     } catch (error) {
       console.error("Error initializing Paystack payment:", error)
       setPaystackError("There was an error initializing Paystack. Please try again or use another payment method.")
+      setPaystackMounting(false)
     }
   }
 
@@ -724,12 +784,45 @@ const Payment = () => {
                 <span>NGN {formatNumber(isFreeEvent ? 0 : finalPrice + 150)}</span>
               </div>
             </div>
+
+            {/* Paystack Inline Feedback */}
+            {paystackMounting && (
+              <div className="paystack-feedback mounting">
+                <div className="feedback-content">
+                  <Loader2 className="animate-spin feedback-icon" size={20} />
+                  <span>Preparing secure payment...</span>
+                </div>
+              </div>
+            )}
+
+            {paystackInlineOpen && (
+              <div className="paystack-feedback open">
+                <div className="feedback-content">
+                  <CheckCircle className="feedback-icon" size={20} />
+                  <span>Payment window opened. Complete your payment in the popup.</span>
+                </div>
+              </div>
+            )}
+
+            {paystackInlineClosed && (
+              <div className="paystack-feedback closed">
+                <div className="feedback-content">
+                  <AlertCircle className="feedback-icon" size={20} />
+                  <span>Payment window was closed. Click "Proceed to Payment" to try again.</span>
+                </div>
+              </div>
+            )}
+
             <div className="payment-actions">
               <button className="cancel-payment-btn" onClick={handleGoHome}>
                 Cancel
               </button>
-              <button className="proceed-payment-btn" onClick={handleStartPayment}>
-                Proceed to Payment
+              <button
+                className={`proceed-payment-btn ${paystackMounting ? "loading" : ""}`}
+                onClick={handleStartPayment}
+                disabled={paystackMounting}
+              >
+                {paystackMounting ? "Preparing..." : "Proceed to Payment"}
               </button>
             </div>
           </div>
@@ -761,6 +854,92 @@ const Payment = () => {
         )}
       </div>
       <Footer />
+      <style>{`
+        .paystack-feedback {
+          margin: 1rem 0;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          border: 1px solid;
+          animation: slideIn 0.3s ease-out;
+        }
+
+        .paystack-feedback.mounting {
+          background-color: rgba(59, 130, 246, 0.1);
+          border-color: rgba(59, 130, 246, 0.3);
+          color: #1e40af;
+        }
+
+        .paystack-feedback.open {
+          background-color: rgba(34, 197, 94, 0.1);
+          border-color: rgba(34, 197, 94, 0.3);
+          color: #166534;
+        }
+
+        .paystack-feedback.closed {
+          background-color: rgba(251, 146, 60, 0.1);
+          border-color: rgba(251, 146, 60, 0.3);
+          color: #ea580c;
+        }
+
+        .feedback-content {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+
+        .feedback-icon {
+          flex-shrink: 0;
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Optimize button states */
+        .proceed-payment-btn {
+          position: relative;
+          transition: all 0.2s ease;
+        }
+
+        .proceed-payment-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .proceed-payment-btn.loading {
+          color: transparent;
+        }
+
+        .proceed-payment-btn.loading::after {
+          content: "";
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          top: 50%;
+          left: 50%;
+          margin-left: -8px;
+          margin-top: -8px;
+          border: 2px solid #ffffff;
+          border-radius: 50%;
+          border-top-color: transparent;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </>
   )
 }

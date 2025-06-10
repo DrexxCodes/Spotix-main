@@ -398,9 +398,9 @@
   }
   
   .close-dialog-btn {
-    position: absolute;
+    /* position: absolute;
     top: 15px;
-    right: 15px;
+    right: 15px; */
     background: none;
     border: none;
     cursor: pointer;
