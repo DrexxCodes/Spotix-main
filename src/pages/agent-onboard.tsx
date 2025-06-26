@@ -26,6 +26,8 @@ const AgentOnboard = () => {
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null)
   const [processingAction, setProcessingAction] = useState(false)
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
@@ -131,7 +133,7 @@ const AgentOnboard = () => {
       const userDoc = await getDoc(userDocRef)
       const userData = userDoc.data()
 
-      const response = await fetch("https://spotix-backend.onrender.com/api/notify/agent-onboard", {
+      const response = await fetch(`${BACKEND_URL}/api/notify/agent-onboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,30 +1,22 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, Suspense } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, collection, getDocs, updateDoc, addDoc, query, orderBy } from "firebase/firestore"
 import BookersHeader from "../components/BookersHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
-// import "../styles/Booker-ticket-info.css"
-import { Copy, Check, AlertCircle, Shield, Eye, EyeOff, Wallet, ArrowUpRight } from "lucide-react"
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts"
 import "../booker-ticket-info-override.css"
+import "../components/skeleton.css"
 
+// Import tab components
+import OverviewTab, { OverviewTabSkeleton } from "../components/overview-tab"
+import AttendeesTab, { AttendeesTabSkeleton } from "../components/attendees-tab"
+import DiscountsTab, { DiscountsTabSkeleton } from "../components/discounts-tab"
+import PayoutsTab, { PayoutsTabSkeleton } from "../components/payouts-tab"
+import EditEventTab, { EditEventTabSkeleton } from "../components/edit-event-tab"
 
 // Add this utility function at the top of the file, after the imports
 const formatFirestoreTimestamp = (timestamp: any): string => {
@@ -85,7 +77,6 @@ interface AttendeeData {
   ticketReference: string
 }
 
-// Add agentName to the PayoutData interface
 interface PayoutData {
   id?: string
   date: string
@@ -127,6 +118,7 @@ const BookerTicketInfo = () => {
   const [attendees, setAttendees] = useState<AttendeeData[]>([])
   const [payouts, setPayouts] = useState<PayoutData[]>([])
   const [activeTab, setActiveTab] = useState<"overview" | "attendees" | "payouts" | "edit" | "discounts">("overview")
+  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(["overview"])) // Track loaded tabs
   const [ticketSalesByDay, setTicketSalesByDay] = useState<TicketSalesByDay[]>([])
   const [ticketSalesByType, setTicketSalesByType] = useState<TicketSalesByType[]>([])
   const [editFormData, setEditFormData] = useState<any>(null)
@@ -145,8 +137,6 @@ const BookerTicketInfo = () => {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [bookerBVT, setBookerBVT] = useState<string>("")
   const [visibleActionCodes, setVisibleActionCodes] = useState<Record<string, boolean>>({})
-
-  // Add new state variables after the existing state declarations
   const [availableBalance, setAvailableBalance] = useState<number>(0)
   const [totalPaidOut, setTotalPaidOut] = useState<number>(0)
 
@@ -164,6 +154,12 @@ const BookerTicketInfo = () => {
       count: typeCount[type],
     }))
   }, [eventData, attendees])
+
+  // Handle tab switching with lazy loading
+  const handleTabSwitch = (tab: "overview" | "attendees" | "payouts" | "edit" | "discounts") => {
+    setActiveTab(tab)
+    setLoadedTabs((prev) => new Set([...Array.from(prev), tab]))
+  }
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -212,13 +208,11 @@ const BookerTicketInfo = () => {
             enableStopDate: data.enableStopDate || false,
             stopDate: data.stopDate || "",
             payId: data.payId || "",
-            // Add these fields to capture financial data from Firestore
             availableRevenue: data.availableRevenue,
             totalPaidOut: data.totalPaidOut,
           }
 
           setEventData(eventDataObj)
-          // Initialize edit form data with the correct pricing state
           setEditFormData({
             ...eventDataObj,
             enablePricing: !data.isFree,
@@ -259,7 +253,6 @@ const BookerTicketInfo = () => {
                 count: salesByDay[date],
               }))
 
-              // Sort by date
               salesByDayArray.sort((a, b) => {
                 const dateA = new Date(a.date).getTime()
                 const dateB = new Date(b.date).getTime()
@@ -308,7 +301,7 @@ const BookerTicketInfo = () => {
                   value: discountData.value || 0,
                   maxUses: discountData.maxUses || 1,
                   usedCount: discountData.usedCount || 0,
-                  active: discountData.active !== false, // Default to true if not specified
+                  active: discountData.active !== false,
                 })
               })
               setDiscounts(discountsList)
@@ -320,7 +313,7 @@ const BookerTicketInfo = () => {
             setDiscounts([])
           }
 
-          // Fetch payouts from the payouts collection
+          // Fetch payouts
           try {
             const payoutsCollectionRef = collection(db, "events", user.uid, "userEvents", id, "payouts")
             const payoutsQuery = query(payoutsCollectionRef, orderBy("createdAt", "desc"))
@@ -334,7 +327,6 @@ const BookerTicketInfo = () => {
                 const payoutData = doc.data()
                 const payoutAmount = payoutData.payoutAmount || 0
 
-                // Only count confirmed payouts towards total paid out
                 if (payoutData.status === "Confirmed") {
                   calculatedTotalPaidOut += payoutAmount
                 }
@@ -356,14 +348,12 @@ const BookerTicketInfo = () => {
 
               setPayouts(payoutsList)
 
-              // Use the stored values from Firestore if available, otherwise calculate
               if (eventDataObj.totalPaidOut !== undefined) {
                 setTotalPaidOut(eventDataObj.totalPaidOut)
               } else {
                 setTotalPaidOut(calculatedTotalPaidOut)
               }
 
-              // Set available balance based on Firestore field or calculate it
               if (eventDataObj.availableRevenue !== undefined) {
                 setAvailableBalance(eventDataObj.availableRevenue)
               } else {
@@ -375,7 +365,6 @@ const BookerTicketInfo = () => {
               setPayouts([])
               setTotalPaidOut(0)
 
-              // If no payouts, still use Firestore value if available
               if (eventDataObj.availableRevenue !== undefined) {
                 setAvailableBalance(eventDataObj.availableRevenue)
               } else {
@@ -408,7 +397,7 @@ const BookerTicketInfo = () => {
   }
 
   const handleEditEvent = () => {
-    setActiveTab("edit")
+    handleTabSwitch("edit")
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -466,7 +455,6 @@ const BookerTicketInfo = () => {
       const user = auth.currentUser
       if (!user || !id) throw new Error("User not authenticated or event ID missing")
 
-      // Check if discount code already exists
       const codeExists = discounts.some((discount) => discount.code.toLowerCase() === newDiscount.code.toLowerCase())
 
       if (codeExists) {
@@ -475,14 +463,11 @@ const BookerTicketInfo = () => {
         return
       }
 
-      // Add discount to Firestore
       const discountsCollectionRef = collection(db, "events", user.uid, "userEvents", id, "discounts")
       await addDoc(discountsCollectionRef, newDiscount)
 
-      // Update local state
       setDiscounts([...discounts, newDiscount])
 
-      // Reset form
       setNewDiscount({
         code: "",
         type: "percentage",
@@ -507,15 +492,8 @@ const BookerTicketInfo = () => {
       const user = auth.currentUser
       if (!user || !id) throw new Error("User not authenticated or event ID missing")
 
-      // Get the discount to update
       const discountToUpdate = discounts[index]
-
-      // Update in Firestore
-      // Note: In a real app, you would need to store the document ID to update it directly
-      // For this example, we'll recreate the discount with the updated status
       const discountsCollectionRef = collection(db, "events", user.uid, "userEvents", id, "discounts")
-
-      // Get all discounts to find the one to update
       const discountsSnapshot = await getDocs(discountsCollectionRef)
       let docIdToUpdate: string | null = null
 
@@ -532,7 +510,6 @@ const BookerTicketInfo = () => {
           active: !discountToUpdate.active,
         })
 
-        // Update local state
         const updatedDiscounts = [...discounts]
         updatedDiscounts[index] = {
           ...discountToUpdate,
@@ -556,7 +533,6 @@ const BookerTicketInfo = () => {
       const user = auth.currentUser
       if (!user || !id) throw new Error("User not authenticated or event ID missing")
 
-      // Prepare the update data with correct isFree value
       const updateData = {
         eventName: editFormData.eventName,
         eventDescription: editFormData.eventDescription,
@@ -566,7 +542,7 @@ const BookerTicketInfo = () => {
         eventStart: editFormData.eventStart,
         eventEnd: editFormData.eventEnd,
         eventType: editFormData.eventType,
-        isFree: !editFormData.enablePricing, // This is the key fix
+        isFree: !editFormData.enablePricing,
         ticketPrices: editFormData.enablePricing ? editFormData.ticketPrices : [],
         enableStopDate: editFormData.enableStopDate,
         stopDate: editFormData.enableStopDate ? editFormData.stopDate : null,
@@ -576,11 +552,9 @@ const BookerTicketInfo = () => {
         maxSize: editFormData.enableMaxSize ? editFormData.maxSize : null,
       }
 
-      // Update the event document
       const eventDocRef = doc(db, "events", user.uid, "userEvents", id)
       await updateDoc(eventDocRef, updateData)
 
-      // Refresh event data
       const updatedEventDoc = await getDoc(eventDocRef)
       if (updatedEventDoc.exists()) {
         const data = updatedEventDoc.data()
@@ -605,15 +579,13 @@ const BookerTicketInfo = () => {
         }
 
         setEventData(updatedEventData)
-        // Update edit form data with the correct pricing state
         setEditFormData({
           ...updatedEventData,
           enablePricing: !data.isFree,
         })
       }
 
-      // Switch back to overview tab
-      setActiveTab("overview")
+      handleTabSwitch("overview")
       alert("Event updated successfully!")
     } catch (error) {
       console.error("Error updating event:", error)
@@ -629,13 +601,11 @@ const BookerTicketInfo = () => {
       const user = auth.currentUser
       if (!user || !id) throw new Error("User not authenticated or event ID missing")
 
-      // Find the payout
       const payout = payouts.find((p) => p.id === payoutId)
       if (!payout) {
         throw new Error("Payout not found")
       }
 
-      // Verify action code
       if (!actionCode) {
         alert("Please enter the action code")
         setLoading(false)
@@ -648,7 +618,6 @@ const BookerTicketInfo = () => {
         return
       }
 
-      // Update payout status in Firestore
       const payoutDocRef = doc(db, "events", user.uid, "userEvents", id, "payouts", payoutId)
       await updateDoc(payoutDocRef, {
         status: "Confirmed",
@@ -656,7 +625,6 @@ const BookerTicketInfo = () => {
         confirmedBy: user.uid,
       })
 
-      // Update local state
       const updatedPayouts = payouts.map((p) => {
         if (p.id === payoutId) {
           return { ...p, status: "Confirmed" }
@@ -665,7 +633,6 @@ const BookerTicketInfo = () => {
       })
       setPayouts(updatedPayouts)
 
-      // Reset action code and selected payout
       setActionCode("")
       setSelectedPayoutId(null)
 
@@ -697,14 +664,11 @@ const BookerTicketInfo = () => {
     }))
   }
 
-  // Add this function after the toggleActionCodeVisibility function
   const formatTransactionTime = (timestamp: any): string => {
     if (!timestamp) return "Unknown"
 
-    // Check if it's a Firestore timestamp
     if (timestamp && typeof timestamp === "object" && "seconds" in timestamp) {
       try {
-        // Convert Firestore timestamp to JavaScript Date with time
         const date = new Date(timestamp.seconds * 1000)
         return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       } catch (error) {
@@ -714,6 +678,97 @@ const BookerTicketInfo = () => {
     }
 
     return String(timestamp)
+  }
+
+  // Render tab content with lazy loading
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return loadedTabs.has("overview") ? (
+          <Suspense fallback={<OverviewTabSkeleton />}>
+            <OverviewTab
+              eventData={eventData!}
+              availableBalance={availableBalance}
+              totalPaidOut={totalPaidOut}
+              copiedField={copiedField}
+              bookerBVT={bookerBVT}
+              ticketSalesByDay={ticketSalesByDay}
+              ticketSalesByType={ticketSalesByType}
+              ticketTypeData={ticketTypeData}
+              copyToClipboard={copyToClipboard}
+            />
+          </Suspense>
+        ) : (
+          <OverviewTabSkeleton />
+        )
+
+      case "attendees":
+        return loadedTabs.has("attendees") ? (
+          <Suspense fallback={<AttendeesTabSkeleton />}>
+            <AttendeesTab attendees={attendees} formatFirestoreTimestamp={formatFirestoreTimestamp} />
+          </Suspense>
+        ) : (
+          <AttendeesTabSkeleton />
+        )
+
+      case "discounts":
+        return loadedTabs.has("discounts") ? (
+          <Suspense fallback={<DiscountsTabSkeleton />}>
+            <DiscountsTab
+              discounts={discounts}
+              newDiscount={newDiscount}
+              handleDiscountInputChange={handleDiscountInputChange}
+              handleAddDiscount={handleAddDiscount}
+              handleToggleDiscountStatus={handleToggleDiscountStatus}
+            />
+          </Suspense>
+        ) : (
+          <DiscountsTabSkeleton />
+        )
+
+      case "payouts":
+        return loadedTabs.has("payouts") ? (
+          <Suspense fallback={<PayoutsTabSkeleton />}>
+            <PayoutsTab
+              payouts={payouts}
+              availableBalance={availableBalance}
+              totalPaidOut={totalPaidOut}
+              selectedPayoutId={selectedPayoutId}
+              actionCode={actionCode}
+              copiedField={copiedField}
+              visibleActionCodes={visibleActionCodes}
+              setSelectedPayoutId={setSelectedPayoutId}
+              setActionCode={setActionCode}
+              handleConfirmPayout={handleConfirmPayout}
+              copyToClipboard={copyToClipboard}
+              toggleActionCodeVisibility={toggleActionCodeVisibility}
+              formatTransactionTime={formatTransactionTime}
+            />
+          </Suspense>
+        ) : (
+          <PayoutsTabSkeleton />
+        )
+
+      case "edit":
+        return loadedTabs.has("edit") && editFormData ? (
+          <Suspense fallback={<EditEventTabSkeleton />}>
+            <EditEventTab
+              editFormData={editFormData}
+              handleInputChange={handleInputChange}
+              handleTicketPriceChange={handleTicketPriceChange}
+              addTicketPrice={addTicketPrice}
+              handleSubmitEdit={handleSubmitEdit}
+              setActiveTab={handleTabSwitch}
+              setEditFormData={setEditFormData}
+            />
+          </Suspense>
+        ) : (
+          <EditEventTabSkeleton />
+        )
+
+      default:
+        return <OverviewTabSkeleton />
+    }
   }
 
   if (loading) {
@@ -730,343 +785,6 @@ const BookerTicketInfo = () => {
         </div>
         <Footer />
       </>
-    )
-  }
-
-  // Safely render the attendees tab with error handling
-  const renderAttendeesTab = () => {
-    try {
-      return (
-        <div className="attendees-tab">
-          <h3>Attendees List</h3>
-          <div className="attendees-table-container">
-            <table className="attendees-table">
-              <thead>
-                <tr>
-                  <th>Reference</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Ticket Type</th>
-                  <th>Purchase Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendees.length > 0 ? (
-                  attendees.map((attendee) => (
-                    <tr key={attendee.id}>
-                      <td className="reference-cell">{attendee.ticketReference}</td>
-                      <td>{attendee.fullName}</td>
-                      <td className="email-cell">{attendee.email}</td>
-                      <td>{attendee.ticketType}</td>
-                      <td>{formatFirestoreTimestamp(attendee.purchaseDate)}</td>
-                      <td>
-                        <span className={`status-badge ${attendee.verified ? "status-verified" : "status-pending"}`}>
-                          {attendee.verified ? "Verified" : "Not Verified"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="no-attendees-message">
-                      No attendees yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )
-    } catch (error) {
-      console.error("Error rendering attendees tab:", error)
-      return (
-        <div className="error-message">
-          <h3>Error Loading Attendees</h3>
-          <p>There was a problem loading the attendees data. Please try again later.</p>
-        </div>
-      )
-    }
-  }
-
-  // Render the discounts tab
-  const renderDiscountsTab = () => {
-    return (
-      <div className="discounts-tab">
-        <h3>Discount Codes</h3>
-
-        <div className="discount-form">
-          <div className="form-section">
-            <h4>Create New Discount</h4>
-            <div className="form-group">
-              <label>Discount Code</label>
-              <input
-                type="text"
-                name="code"
-                value={newDiscount.code}
-                onChange={handleDiscountInputChange}
-                placeholder="e.g. SUMMER20"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Discount Type</label>
-              <select name="type" value={newDiscount.type} onChange={handleDiscountInputChange}>
-                <option value="percentage">Percentage (%)</option>
-                <option value="flat">Flat Amount (₦)</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Discount Value</label>
-              <div className="discount-value-input">
-                <input
-                  type="number"
-                  name="value"
-                  value={newDiscount.value}
-                  onChange={handleDiscountInputChange}
-                  min="0"
-                  max={newDiscount.type === "percentage" ? 100 : undefined}
-                  required
-                />
-                <span className="discount-value-symbol">{newDiscount.type === "percentage" ? "%" : "₦"}</span>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Maximum Uses</label>
-              <input
-                type="number"
-                name="maxUses"
-                value={newDiscount.maxUses}
-                onChange={handleDiscountInputChange}
-                min="1"
-                required
-              />
-            </div>
-
-            <button type="button" className="add-discount-button" onClick={handleAddDiscount}>
-              Add Discount Code
-            </button>
-          </div>
-
-          <div className="form-section">
-            <h4>Active Discount Codes</h4>
-            {discounts.length > 0 ? (
-              <div className="discounts-table-container">
-                <table className="discounts-table">
-                  <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Type</th>
-                      <th>Value</th>
-                      <th>Uses</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {discounts.map((discount, index) => (
-                      <tr key={index}>
-                        <td>{discount.code}</td>
-                        <td>{discount.type === "percentage" ? "Percentage" : "Flat Amount"}</td>
-                        <td>
-                          {discount.value}
-                          {discount.type === "percentage" ? "%" : "₦"}
-                        </td>
-                        <td>
-                          {discount.usedCount} / {discount.maxUses}
-                        </td>
-                        <td>
-                          <span className={`status-badge ${discount.active ? "status-verified" : "status-pending"}`}>
-                            {discount.active ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className={`toggle-status-btn ${discount.active ? "deactivate" : "activate"}`}
-                            onClick={() => handleToggleDiscountStatus(index)}
-                          >
-                            {discount.active ? "Deactivate" : "Activate"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="no-discounts-message">No discount codes created yet.</p>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Render the payouts tab with real payout data and action codes
-  const renderPayoutsTab = () => {
-    return (
-      <div className="payouts-tab">
-        <h3>Payout History</h3>
-        <div className="payouts-info-alert">
-          <AlertCircle size={18} />
-          <p>
-            When an admin initiates a payout, you'll see an action code below. Share this code with the admin to
-            complete the payout process.
-          </p>
-        </div>
-
-        <div className="balance-summary">
-          <div className="balance-card">
-            <div className="balance-icon">
-              <Wallet size={24} />
-            </div>
-            <div className="balance-details">
-              <h4>Available Balance</h4>
-              <p className="balance-amount">₦{availableBalance.toFixed(2)}</p>
-              <span className="balance-label">Ready to withdraw</span>
-            </div>
-          </div>
-          <div className="balance-card">
-            <div className="balance-icon">
-              <ArrowUpRight size={24} />
-            </div>
-            <div className="balance-details">
-              <h4>Total Paid Out</h4>
-              <p className="balance-amount">₦{totalPaidOut.toFixed(2)}</p>
-              <span className="balance-label">Successfully processed</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="payouts-table-container">
-          <table className="payouts-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Reference</th>
-                <th>Amount</th>
-                <th>Agent</th>
-                <th>Action Code</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payouts.length > 0 ? (
-                payouts.map((payout) => (
-                  <tr key={payout.id}>
-                    <td>{payout.date}</td>
-                    <td>{payout.transactionTime || formatTransactionTime(payout.createdAt) || "N/A"}</td>
-                    <td>{payout.reference || "N/A"}</td>
-                    <td>₦{payout.payoutAmount ? payout.payoutAmount.toFixed(2) : payout.amount.toFixed(2)}</td>
-                    <td>{payout.agentName || "Unknown"}</td>
-                    <td className="action-code-cell">
-                      {payout.actionCode ? (
-                        <div className="action-code-container">
-                          <span className={visibleActionCodes[payout.id || ""] ? "visible-code" : "hidden-code"}>
-                            {visibleActionCodes[payout.id || ""] ? payout.actionCode : "••••••"}
-                          </span>
-                          <button
-                            className="toggle-visibility-btn"
-                            onClick={() => toggleActionCodeVisibility(payout.id || "")}
-                            title={visibleActionCodes[payout.id || ""] ? "Hide code" : "Show code"}
-                          >
-                            {visibleActionCodes[payout.id || ""] ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                          <button
-                            className="copy-button"
-                            onClick={() => copyToClipboard(payout.actionCode || "", `actionCode-${payout.id}`)}
-                            title="Copy code"
-                          >
-                            {copiedField === `actionCode-${payout.id}` ? <Check size={16} /> : <Copy size={16} />}
-                          </button>
-                        </div>
-                      ) : (
-                        "N/A"
-                      )}
-                    </td>
-                    <td>
-                      <span className={`status-badge status-${payout.status.toLowerCase()}`}>{payout.status}</span>
-                    </td>
-                    <td>
-                      {payout.status === "Pending" && payout.actionCode && (
-                        <button className="confirm-payout-btn" onClick={() => setSelectedPayoutId(payout.id ?? null)}>
-                          Confirm
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8} className="no-payouts-message">
-                    No payouts yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Action Code Confirmation Modal */}
-        {selectedPayoutId && (
-          <div className="action-code-modal">
-            <div className="action-code-content">
-              <h4>Confirm Payout</h4>
-              <p>Enter the action code provided by the admin to confirm this payout.</p>
-              <div className="form-group">
-                <label>Action Code</label>
-                <input
-                  type="text"
-                  value={actionCode}
-                  onChange={(e) => setActionCode(e.target.value)}
-                  placeholder="Enter action code"
-                />
-              </div>
-              <div className="action-buttons">
-                <button className="confirm-button" onClick={() => handleConfirmPayout(selectedPayoutId)}>
-                  Confirm
-                </button>
-                <button
-                  className="cancel-button"
-                  onClick={() => {
-                    setSelectedPayoutId(null)
-                    setActionCode("")
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Security Information */}
-        <div className="payout-security-info">
-          <div className="security-header">
-            <Shield size={18} />
-            <h4>Payout Security Information</h4>
-          </div>
-          <div className="security-content">
-            <p>For your security, we use action codes to verify payout requests. When an admin initiates a payout:</p>
-            <ol>
-              <li>You'll see an action code in the table above</li>
-              <li>Share this code with the admin who initiated the payout</li>
-              <li>The admin will enter this code to verify and process your payout</li>
-              <li>Once verified, your payout will be processed</li>
-            </ol>
-            <p className="security-warning">
-              <strong>Important:</strong> Never share your action codes with anyone except the admin who initiated your
-              payout.
-            </p>
-          </div>
-        </div>
-      </div>
     )
   }
 
@@ -1103,28 +821,31 @@ const BookerTicketInfo = () => {
         <div className="ticket-info-tabs">
           <button
             className={`tab-button ${activeTab === "overview" ? "active" : ""}`}
-            onClick={() => setActiveTab("overview")}
+            onClick={() => handleTabSwitch("overview")}
           >
             Overview
           </button>
           <button
             className={`tab-button ${activeTab === "attendees" ? "active" : ""}`}
-            onClick={() => setActiveTab("attendees")}
+            onClick={() => handleTabSwitch("attendees")}
           >
             Attendees
           </button>
           <button
             className={`tab-button ${activeTab === "payouts" ? "active" : ""}`}
-            onClick={() => setActiveTab("payouts")}
+            onClick={() => handleTabSwitch("payouts")}
           >
             Payouts
           </button>
-          <button className={`tab-button ${activeTab === "edit" ? "active" : ""}`} onClick={() => setActiveTab("edit")}>
+          <button
+            className={`tab-button ${activeTab === "edit" ? "active" : ""}`}
+            onClick={() => handleTabSwitch("edit")}
+          >
             Edit Event
           </button>
           <button
             className={`tab-button ${activeTab === "discounts" ? "active" : ""}`}
-            onClick={() => setActiveTab("discounts")}
+            onClick={() => handleTabSwitch("discounts")}
           >
             Discounts
           </button>
@@ -1132,416 +853,7 @@ const BookerTicketInfo = () => {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="ticket-info-content">
-          {activeTab === "overview" && (
-            <div className="overview-tab">
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <h3>Tickets Sold</h3>
-                  <p className="stat-value">
-                    {eventData.ticketsSold}
-                    {eventData.enableMaxSize && eventData.maxSize && (
-                      <span className="capacity-indicator"> / {eventData.maxSize}</span>
-                    )}
-                  </p>
-                  {eventData.enableMaxSize && eventData.maxSize && (
-                    <div className="progress-bar">
-                      <div
-                        className="progress"
-                        style={{ width: `${(eventData.ticketsSold / Number.parseInt(eventData.maxSize)) * 100}%` }}
-                      ></div>
-                    </div>
-                  )}
-                </div>
-                <div className="stat-card">
-                  <h3>Total Revenue</h3>
-                  <p className="stat-value">₦{eventData.totalRevenue.toFixed(2)}</p>
-                </div>
-                <div className="stat-card highlight">
-                  <h3>Available Balance</h3>
-                  <p className="stat-value">₦{availableBalance.toFixed(2)}</p>
-                </div>
-                <div className="stat-card">
-                  <h3>Total Paid Out</h3>
-                  <p className="stat-value">₦{totalPaidOut.toFixed(2)}</p>
-                </div>
-              </div>
-
-              {/* Payment Requisites Section */}
-              <div className="payment-requisites">
-                <h3>Payment Requisites</h3>
-                <div className="requisites-grid">
-                  <div className="requisite-item">
-                    <label>Event ID</label>
-                    <div className="copy-field">
-                      <input type="text" value={eventData.id} readOnly />
-                      <button className="copy-button" onClick={() => copyToClipboard(eventData.id, "eventId")}>
-                        {copiedField === "eventId" ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="requisite-item">
-                    <label>Pay ID</label>
-                    <div className="copy-field">
-                      <input type="text" value={eventData.payId || "Not set"} readOnly />
-                      <button
-                        className="copy-button"
-                        onClick={() => copyToClipboard(eventData.payId || "", "payId")}
-                        disabled={!eventData.payId}
-                      >
-                        {copiedField === "payId" ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="requisite-item">
-                    <label>Booker Verification Tag (BVT)</label>
-                    <div className="copy-field">
-                      <input type="text" value={bookerBVT || "Not verified"} readOnly />
-                      <button
-                        className="copy-button"
-                        onClick={() => copyToClipboard(bookerBVT || "", "bvt")}
-                        disabled={!bookerBVT}
-                      >
-                        {copiedField === "bvt" ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="event-description">
-                <h3>Event Description</h3>
-                <p>{eventData.eventDescription || "No description provided."}</p>
-              </div>
-
-              <div className="sales-chart-container">
-                <h3>Ticket Sales Over Time</h3>
-                {ticketSalesByDay.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={ticketSalesByDay} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Area type="monotone" dataKey="count" name="Tickets Sold" stroke="#6b2fa5" fill="#d0b9e8" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="no-data-message">No sales data available yet.</p>
-                )}
-              </div>
-
-              <div className="ticket-types">
-                <h3>Ticket Types</h3>
-                <div className="ticket-types-chart-container">
-                  {ticketTypeData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={ticketTypeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="type" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="count" name="Tickets Sold" fill="#6b2fa5" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="no-data-message">No ticket type data available yet.</p>
-                  )}
-                </div>
-                <table className="ticket-types-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Price</th>
-                      <th>Sold</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {eventData.isFree ? (
-                      <tr>
-                        <td>Free Admission</td>
-                        <td>₦0.00</td>
-                        <td>{eventData.ticketsSold}</td>
-                      </tr>
-                    ) : (
-                      eventData.ticketPrices.map((ticket, index) => {
-                        // Find count of this ticket type
-                        const typeData = ticketSalesByType.find((t) => t.type === ticket.policy)
-                        const soldCount = typeData ? typeData.count : 0
-
-                        return (
-                          <tr key={index}>
-                            <td>{ticket.policy}</td>
-                            <td>₦{Number.parseFloat(ticket.price.toString()).toFixed(2)}</td>
-                            <td>{soldCount}</td>
-                          </tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "attendees" && renderAttendeesTab()}
-          {activeTab === "payouts" && renderPayoutsTab()}
-          {activeTab === "discounts" && renderDiscountsTab()}
-
-          {activeTab === "edit" && editFormData && (
-            <div className="edit-tab">
-              <h3>Edit Event</h3>
-              <form onSubmit={handleSubmitEdit}>
-                <div className="event-section">
-                  <h3>Event Bio-Data</h3>
-                  <label>Event Name</label>
-                  <input
-                    type="text"
-                    name="eventName"
-                    value={editFormData.eventName}
-                    onChange={handleInputChange}
-                    required
-                  />
-
-                  <label>Event Description</label>
-                  <textarea
-                    name="eventDescription"
-                    value={editFormData.eventDescription}
-                    onChange={handleInputChange}
-                    required
-                  ></textarea>
-
-                  <label>Event Date</label>
-                  <input
-                    type="datetime-local"
-                    name="eventDate"
-                    value={editFormData.eventDate}
-                    onChange={handleInputChange}
-                    required
-                  />
-
-                  <label>Event Venue</label>
-                  <input
-                    type="text"
-                    name="eventVenue"
-                    value={editFormData.eventVenue}
-                    onChange={handleInputChange}
-                    required
-                  />
-
-                  <label>Event Start Time</label>
-                  <input
-                    type="time"
-                    name="eventStart"
-                    value={editFormData.eventStart}
-                    onChange={handleInputChange}
-                    required
-                  />
-
-                  <label>Event End Date</label>
-                  <input
-                    type="date"
-                    name="eventEndDate"
-                    value={editFormData.eventEndDate}
-                    onChange={handleInputChange}
-                    required
-                  />
-
-                  <label>Event End Time</label>
-                  <input
-                    type="time"
-                    name="eventEnd"
-                    value={editFormData.eventEnd}
-                    onChange={handleInputChange}
-                    required
-                  />
-
-                  <label>Event Type</label>
-                  <select name="eventType" value={editFormData.eventType} onChange={handleInputChange} required>
-                    <option value="Night party">Night party</option>
-                    <option value="Concert">Concert</option>
-                    <option value="Conference">Conference</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="event-section">
-                  <h3>Pricing</h3>
-                  <div className="option-with-help switch-container">
-                    <label>
-                      Enable Pricing
-                      <div className="switch">
-                        <input
-                          type="checkbox"
-                          name="enablePricing"
-                          checked={editFormData.enablePricing}
-                          onChange={(e) =>
-                            setEditFormData({
-                              ...editFormData,
-                              enablePricing: e.target.checked,
-                            })
-                          }
-                        />
-                        <span className="slider round"></span>
-                      </div>
-                    </label>
-                  </div>
-
-                  {editFormData.enablePricing && (
-                    <>
-                      {editFormData.ticketPrices && editFormData.ticketPrices.length > 0 ? (
-                        editFormData.ticketPrices.map((ticket, index) => (
-                          <div key={index} className="ticket-pricing-row">
-                            <input
-                              type="text"
-                              placeholder="Ticket Type"
-                              value={ticket.policy}
-                              onChange={(e) => handleTicketPriceChange(index, "policy", e.target.value)}
-                              required
-                            />
-                            <input
-                              type="number"
-                              placeholder="Price"
-                              value={ticket.price}
-                              onChange={(e) => handleTicketPriceChange(index, "price", e.target.value)}
-                              required
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        // If no ticket prices exist, add a default one
-                        <div className="ticket-pricing-row">
-                          <input
-                            type="text"
-                            placeholder="Ticket Type"
-                            value=""
-                            onChange={(e) => handleTicketPriceChange(0, "policy", e.target.value)}
-                            required
-                          />
-                          <input
-                            type="number"
-                            placeholder="Price"
-                            value="0"
-                            onChange={(e) => handleTicketPriceChange(0, "price", e.target.value)}
-                            required
-                          />
-                        </div>
-                      )}
-                      <button type="button" className="add-price-button" onClick={addTicketPrice}>
-                        + Add Ticket Type
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                <div className="event-section">
-                  <h3>Additional Settings</h3>
-
-                  <div className="option-row switch-container">
-                    <label>
-                      Enable Stop Date for Ticket Sales
-                      <div className="switch">
-                        <input
-                          type="checkbox"
-                          name="enableStopDate"
-                          checked={editFormData.enableStopDate}
-                          onChange={(e) =>
-                            setEditFormData({
-                              ...editFormData,
-                              enableStopDate: e.target.checked,
-                            })
-                          }
-                        />
-                        <span className="slider round"></span>
-                      </div>
-                    </label>
-                    {editFormData.enableStopDate && (
-                      <input
-                        type="datetime-local"
-                        name="stopDate"
-                        value={editFormData.stopDate}
-                        onChange={handleInputChange}
-                        required={editFormData.enableStopDate}
-                      />
-                    )}
-                  </div>
-
-                  <div className="option-row switch-container">
-                    <label>
-                      Enable Color Theme for Event
-                      <div className="switch">
-                        <input
-                          type="checkbox"
-                          name="enableColorCode"
-                          checked={editFormData.enableColorCode}
-                          onChange={(e) =>
-                            setEditFormData({
-                              ...editFormData,
-                              enableColorCode: e.target.checked,
-                            })
-                          }
-                        />
-                        <span className="slider round"></span>
-                      </div>
-                    </label>
-                    {editFormData.enableColorCode && (
-                      <input
-                        type="color"
-                        name="colorCode"
-                        value={editFormData.colorCode}
-                        onChange={handleInputChange}
-                      />
-                    )}
-                  </div>
-
-                  <div className="option-row switch-container">
-                    <label>
-                      Set Maximum Attendees
-                      <div className="switch">
-                        <input
-                          type="checkbox"
-                          name="enableMaxSize"
-                          checked={editFormData.enableMaxSize}
-                          onChange={(e) =>
-                            setEditFormData({
-                              ...editFormData,
-                              enableMaxSize: e.target.checked,
-                            })
-                          }
-                        />
-                        <span className="slider round"></span>
-                      </div>
-                    </label>
-                    {editFormData.enableMaxSize && (
-                      <input
-                        type="number"
-                        name="maxSize"
-                        value={editFormData.maxSize}
-                        onChange={handleInputChange}
-                        min="1"
-                        required={editFormData.enableMaxSize}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="edit-actions">
-                  <button type="submit" className="save-button">
-                    Save Changes
-                  </button>
-                  <button type="button" className="cancel-button" onClick={() => setActiveTab("overview")}>
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-        </div>
+        <div className="ticket-info-content">{renderTabContent()}</div>
       </div>
       <Footer />
     </>

@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
-import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore"
+import { doc, updateDoc, collection, getDocs, getDoc } from "firebase/firestore"
 import BookersHeader from "../components/BookersHeader"
 import { Helmet } from "react-helmet"
 import Footer from "../components/footer"
@@ -114,26 +114,6 @@ const VerifyTicket = () => {
     setErrorMessage("")
   }
 
-  const updateTicketHistoryVerification = async (attendeeUid: string, ticketReference: string) => {
-    try {
-      // Find the ticket in the user's ticket history
-      const ticketHistoryRef = collection(db, "TicketHistory", attendeeUid, "tickets")
-      const ticketQuery = query(ticketHistoryRef, where("ticketReference", "==", ticketReference))
-      const ticketSnapshot = await getDocs(ticketQuery)
-
-      if (!ticketSnapshot.empty) {
-        const ticketDoc = ticketSnapshot.docs[0]
-        // Update the verified status
-        await updateDoc(doc(ticketHistoryRef, ticketDoc.id), {
-          verified: true,
-        })
-        console.log("Updated ticket history verification status")
-      }
-    } catch (error) {
-      console.error("Error updating ticket history verification:", error)
-    }
-  }
-
   const verifyTicket = async (scannedTicketId: string) => {
     if (!scannedTicketId || !selectedEventId) return
 
@@ -145,74 +125,89 @@ const VerifyTicket = () => {
       const user = auth.currentUser
       if (!user) throw new Error("User not authenticated")
 
-      // Check if the ticket exists in the attendees collection for this event
-      const attendeesCollectionRef = collection(db, "events", user.uid, "userEvents", selectedEventId, "attendees")
+      // Step 1: Direct lookup using ticket ID as document ID in attendees collection
+      const attendeeDocRef = doc(db, "events", user.uid, "userEvents", selectedEventId, "attendees", scannedTicketId)
+      const attendeeDoc = await getDoc(attendeeDocRef)
 
-      // First try to find by ticketId
-      let ticketQuery = query(attendeesCollectionRef, where("ticketId", "==", scannedTicketId))
-      let ticketSnapshot = await getDocs(ticketQuery)
-
-      // If not found by ticketId, try by ticketReference
-      if (ticketSnapshot.empty) {
-        ticketQuery = query(attendeesCollectionRef, where("ticketReference", "==", scannedTicketId))
-        ticketSnapshot = await getDocs(ticketQuery)
-      }
-
-      if (ticketSnapshot.empty) {
+      if (!attendeeDoc.exists()) {
         // Ticket not found for this event
         setVerificationStatus("not-found")
-        setErrorMessage("This ticket ID or reference is not associated with this event.")
+        setErrorMessage("This ticket ID is not associated with this event.")
         setLoading(false)
         return
       }
 
-      // Ticket found in database
-      const ticketDoc = ticketSnapshot.docs[0]
-      const ticketDocData = ticketDoc.data()
+      // Step 2: Get attendee data including uid
+      const attendeeData = attendeeDoc.data()
+      const attendeeUid = attendeeData.uid
 
-      if (ticketDocData.verified) {
+      if (!attendeeUid) {
+        setVerificationStatus("error")
+        setErrorMessage("Invalid ticket data: User ID not found.")
+        setLoading(false)
+        return
+      }
+
+      // Step 3: Check verification status
+      if (attendeeData.verified) {
         // Ticket is already verified
         setTicketData({
           id: scannedTicketId,
           eventId: selectedEventId,
           eventName: bookerEvents.find((event) => event.id === selectedEventId)?.name || "Unknown Event",
-          attendeeName: ticketDocData.fullName || "Unknown",
-          attendeeEmail: ticketDocData.email || "unknown@example.com",
-          ticketType: ticketDocData.ticketType || "Standard",
-          purchaseDate: ticketDocData.purchaseDate || "Unknown",
-          purchaseTime: ticketDocData.purchaseTime || "Unknown",
+          attendeeName: attendeeData.fullName || "Unknown",
+          attendeeEmail: attendeeData.email || "unknown@example.com",
+          ticketType: attendeeData.ticketType || "Standard",
+          purchaseDate: attendeeData.purchaseDate || "Unknown",
+          purchaseTime: attendeeData.purchaseTime || "Unknown",
           isVerified: true,
-          ticketReference: ticketDocData.ticketReference || "",
+          ticketReference: attendeeData.ticketReference || "",
         })
         setVerificationStatus("already-verified")
-      } else {
-        // Ticket is valid but not yet verified
-        // Update the ticket status to verified
-        await updateDoc(doc(attendeesCollectionRef, ticketDoc.id), {
-          verified: true,
-          verificationDate: new Date().toLocaleDateString(),
-          verificationTime: new Date().toLocaleTimeString(),
-        })
-
-        // Also update the verification status in the user's ticket history
-        if (ticketDocData.uid) {
-          await updateTicketHistoryVerification(ticketDocData.uid, ticketDocData.ticketReference || "")
-        }
-
-        setTicketData({
-          id: scannedTicketId,
-          eventId: selectedEventId,
-          eventName: bookerEvents.find((event) => event.id === selectedEventId)?.name || "Unknown Event",
-          attendeeName: ticketDocData.fullName || "Unknown",
-          attendeeEmail: ticketDocData.email || "unknown@example.com",
-          ticketType: ticketDocData.ticketType || "Standard",
-          purchaseDate: ticketDocData.purchaseDate || "Unknown",
-          purchaseTime: ticketDocData.purchaseTime || "Unknown",
-          isVerified: false, // It was false before we updated it
-          ticketReference: ticketDocData.ticketReference || "",
-        })
-        setVerificationStatus("success")
+        setLoading(false)
+        return
       }
+
+      // Step 4: Verify ticket in user's ticket history using the same ticket ID
+      const ticketHistoryDocRef = doc(db, "TicketHistory", attendeeUid, "tickets", scannedTicketId)
+      const ticketHistoryDoc = await getDoc(ticketHistoryDocRef)
+
+      if (!ticketHistoryDoc.exists()) {
+        setVerificationStatus("error")
+        setErrorMessage("Ticket not found in user's history. Data inconsistency detected.")
+        setLoading(false)
+        return
+      }
+
+      // Step 5: Update verification status in both collections simultaneously
+      const currentTime = new Date()
+      const verificationData = {
+        verified: true,
+        verificationDate: currentTime.toLocaleDateString(),
+        verificationTime: currentTime.toLocaleTimeString(),
+        verifiedBy: user.uid,
+      }
+
+      // Update attendee collection
+      await updateDoc(attendeeDocRef, verificationData)
+
+      // Update ticket history collection
+      await updateDoc(ticketHistoryDocRef, verificationData)
+
+      // Step 6: Set success state
+      setTicketData({
+        id: scannedTicketId,
+        eventId: selectedEventId,
+        eventName: bookerEvents.find((event) => event.id === selectedEventId)?.name || "Unknown Event",
+        attendeeName: attendeeData.fullName || "Unknown",
+        attendeeEmail: attendeeData.email || "unknown@example.com",
+        ticketType: attendeeData.ticketType || "Standard",
+        purchaseDate: attendeeData.purchaseDate || "Unknown",
+        purchaseTime: attendeeData.purchaseTime || "Unknown",
+        isVerified: false, // It was false before we updated it
+        ticketReference: attendeeData.ticketReference || "",
+      })
+      setVerificationStatus("success")
     } catch (error) {
       console.error("Error verifying ticket:", error)
       setVerificationStatus("error")
@@ -325,24 +320,31 @@ const VerifyTicket = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Verify Ticket</title>
+        <meta
+          name="description"
+          content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix."
+        />
+        {/* Open Graph for social media */}
+        <meta property="og:title" content="Spotix | Verify Ticket" />
+        <meta
+          property="og:description"
+          content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix."
+        />
+        <meta property="og:image" content="/meta.png" />
+        <meta property="og:url" content="https://spotix.com.ng" />
+        <meta property="og:type" content="website" />
 
-
-          <Helmet>
-  <title>Verify Ticket</title>
-  <meta name="description" content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix." />
-  {/* Open Graph for social media */}
-  <meta property="og:title" content="Spotix | Verify Ticket" />
-  <meta property="og:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
-  <meta property="og:image" content="/meta.png" />
-  <meta property="og:url" content="https://spotix.com.ng" />
-  <meta property="og:type" content="website" />
-
-  {/* Twitter Card */}
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
-  <meta name="twitter:description" content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix." />
-  <meta name="twitter:image" content="/meta.png" />
-</Helmet>
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
+        <meta
+          name="twitter:description"
+          content="Explore top events in your school – concerts, workshops, parties & more. Powered by Spotix."
+        />
+        <meta name="twitter:image" content="/meta.png" />
+      </Helmet>
       <BookersHeader />
       <div className="verify-ticket-container">
         <h1>Verify Ticket</h1>
@@ -368,14 +370,14 @@ const VerifyTicket = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="ticket-id">Enter Ticket ID or Reference</label>
+              <label htmlFor="ticket-id">Enter Ticket ID</label>
               <div className="ticket-input-container">
                 <input
                   type="text"
                   id="ticket-id"
                   value={ticketId}
                   onChange={handleTicketIdChange}
-                  placeholder="e.g., TICKET123 or REF456"
+                  placeholder="e.g., SPTX-TX-12A34B567"
                   className="ticket-id-input"
                   required
                 />

@@ -58,6 +58,8 @@ interface SearchedUser {
   isBooker?: boolean
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+
 const Team = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -352,7 +354,7 @@ const Team = () => {
     recipientName: string,
   ) => {
     try {
-      const response = await fetch("https://spotix-backend.onrender.com/api/notify/team-member-added", {
+      const response = await fetch(`${BACKEND_URL}/api/notify/team-member-added`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

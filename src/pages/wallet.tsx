@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc } from "firebase/firestore"
 import { CheckCircle, XCircle, Loader2, Mail, Share2, AlertTriangle } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
@@ -90,6 +90,8 @@ interface TicketData {
   eventName?: string
   eventCreatorId?: string
 }
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
 
 // Create a logger utility for consistent logging
 const Logger = {
@@ -405,7 +407,7 @@ const Wallet = () => {
     try {
       setEmailSending(true)
 
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/payment-confirmation", {
+      const response = await fetch(`${BACKEND_URL}/api/mail/payment-confirmation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -597,27 +599,27 @@ const Wallet = () => {
         ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
       }
 
-      // Add to attendees collection for the event
-      const attendeesCollectionRef = collection(
-        db,
-        "events",
-        paymentData.eventCreatorId,
-        "userEvents",
-        paymentData.eventId,
-        "attendees",
-      )
-
-      await addDoc(attendeesCollectionRef, ticketData)
-
-      // Add to user's ticket history
-      const ticketHistoryRef = collection(db, "TicketHistory", user.uid, "tickets")
-      await addDoc(ticketHistoryRef, {
-        ...ticketData,
-        eventId: paymentData.eventId,
-        eventName: paymentData.eventName,
-        eventCreatorId: paymentData.eventCreatorId,
-      })
-
+       // Add to attendees collection for the event first and get the document ID
+                const attendeesCollectionRef = collection(
+                  db,
+                  "events",
+                  paymentData.eventCreatorId,
+                  "userEvents",
+                  paymentData.eventId,
+                  "attendees",
+                )
+      
+                const attendeeDocRef = await addDoc(attendeesCollectionRef, ticketData)
+                const consistentDocId = attendeeDocRef.id
+      
+                // Add to user's ticket history using the same document ID
+                const ticketHistoryRef = doc(db, "TicketHistory", user.uid, "tickets", consistentDocId)
+                await setDoc(ticketHistoryRef, {
+                  ...ticketData,
+                  eventId: paymentData.eventId,
+                  eventName: paymentData.eventName,
+                  eventCreatorId: paymentData.eventCreatorId,
+                })
       // Update event stats (increment tickets sold and revenue)
       const eventDocRef = doc(db, "events", paymentData.eventCreatorId, "userEvents", paymentData.eventId)
       const eventDoc = await getDoc(eventDocRef)

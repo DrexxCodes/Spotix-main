@@ -1,0 +1,739 @@
+/* Ticket Info Page Styles */
+.ticket-info-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.ticket-info-header {
+  max-width: 800px;
+  margin: 0 auto 20px auto;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b2fa5;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.ticket-info-card {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.ticket-info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6b2fa5, #8b5fbf, #a855f7);
+}
+
+.ticket-info-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 30px 30px 20px 30px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ticket-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.ticket-info-title h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.ticket-info-status {
+  padding: 20px 30px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.verified-status,
+.unverified-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.verified-status {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.unverified-status {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.ticket-info-content {
+  padding: 30px;
+}
+
+.ticket-info-section {
+  margin-bottom: 30px;
+}
+
+.ticket-info-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #6b2fa5;
+  border-bottom: 2px solid #6b2fa5;
+  padding-bottom: 8px;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #4a5568;
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.info-value {
+  color: #2d3748;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.info-icon {
+  color: #6b2fa5;
+  flex-shrink: 0;
+}
+
+.ticket-id {
+  font-family: "Courier New", monospace;
+  background: rgba(107, 47, 165, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* QR Code Section Styles */
+.ticket-qr-section {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.qr-placeholder {
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  padding: 40px 20px;
+  background: rgba(107, 47, 165, 0.02);
+  margin: 20px 0;
+}
+
+.qr-placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-placeholder-icon {
+  color: #9ca3af;
+}
+
+.qr-placeholder-text {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+.generate-qr-button {
+  background: linear-gradient(135deg, #6b2fa5 0%, #8b5fbf 50%, #a855f7 100%);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(107, 47, 165, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.generate-qr-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.generate-qr-button:hover::before {
+  left: 100%;
+}
+
+.generate-qr-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(107, 47, 165, 0.4);
+}
+
+.generate-qr-button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.qr-button-icon {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(180deg);
+  }
+}
+
+.qr-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.ticket-qr-code {
+  margin: 20px 0;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.qr-code-container {
+  display: inline-block;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.qr-code-label {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 16px 0;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.regenerate-qr-button {
+  background: rgba(107, 47, 165, 0.1);
+  color: #6b2fa5;
+  border: 1px solid rgba(107, 47, 165, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.regenerate-qr-button:hover {
+  background: rgba(107, 47, 165, 0.2);
+  border-color: rgba(107, 47, 165, 0.4);
+}
+
+.ticket-footer {
+  text-align: center;
+  padding-top: 30px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 30px;
+}
+
+.powered-by {
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Ticket Actions */
+.ticket-actions {
+  max-width: 800px;
+  margin: 20px auto 0 auto;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.add-to-calendar-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.add-to-calendar-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+}
+
+.add-to-calendar-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.download-button-container {
+  animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.error-container {
+  max-width: 600px;
+  margin: 100px auto;
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.error-container h2 {
+  color: #ef4444;
+  margin-bottom: 20px;
+}
+
+.error-container .back-button {
+  margin: 0 auto;
+}
+
+/* PDF Specific Styles */
+.pdf-extras {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.pdf-verification-status {
+  margin-bottom: 15px;
+}
+
+.pdf-status {
+  display: inline-block;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.verified-status.pdf-status {
+  background-color: #d4edda;
+  color: #28a745;
+}
+
+.unverified-status.pdf-status {
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+
+.pdf-footer {
+  margin-top: 30px;
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* Security Dialog Styles */
+.security-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.security-dialog {
+  background: white;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: securityDialogAppear 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes securityDialogAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.security-dialog-header {
+  background: linear-gradient(135deg, #6b2fa5 0%, #8b5fbf 100%);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.security-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.security-dialog-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.security-dialog-content {
+  padding: 30px;
+  text-align: center;
+}
+
+.security-dialog-content p {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4a5568;
+}
+
+.security-dialog-content p:last-child {
+  margin-bottom: 0;
+}
+
+.security-note {
+  font-size: 14px !important;
+  color: #6b7280 !important;
+  font-style: italic;
+}
+
+.security-dialog-actions {
+  padding: 0 30px 30px 30px;
+  text-align: center;
+}
+
+.security-dialog-button {
+  background: linear-gradient(135deg, #6b2fa5 0%, #8b5fbf 100%);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(107, 47, 165, 0.3);
+  min-width: 150px;
+}
+
+.security-dialog-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(107, 47, 165, 0.4);
+}
+
+.security-dialog-button:active {
+  transform: translateY(0);
+}
+
+/* Ticket ID Security Styling */
+.ticket-id {
+  font-family: "Courier New", monospace;
+  background: rgba(107, 47, 165, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.info-value .ticket-id {
+  color: #6b7280;
+  font-style: italic;
+  background: rgba(156, 163, 175, 0.1);
+}
+
+/* Event day styling for ticket ID */
+.info-row:has(.ticket-id) .info-value {
+  position: relative;
+}
+
+/* Download button always visible styling */
+.download-button-container {
+  animation: slideInRight 0.5s ease-out;
+  /* Remove any conditional display logic */
+}
+
+/* Update QR placeholder for security message */
+.qr-placeholder.security-mode {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.qr-placeholder.security-mode .qr-placeholder-icon {
+  color: #f59e0b;
+}
+
+.qr-placeholder.security-mode .qr-placeholder-text {
+  color: #92400e;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ticket-info-container {
+    padding: 10px;
+  }
+
+  .ticket-info-title {
+    padding: 20px 20px 15px 20px;
+  }
+
+  .ticket-info-title h1 {
+    font-size: 24px;
+  }
+
+  .ticket-info-content {
+    padding: 20px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .info-label {
+    width: auto;
+    font-size: 13px;
+  }
+
+  .info-value {
+    font-size: 15px;
+  }
+
+  .generate-qr-button {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+
+  .ticket-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .add-to-calendar-button {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-placeholder {
+    padding: 30px 15px;
+  }
+
+  .generate-qr-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .ticket-info-title {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .generate-qr-button::before,
+  .qr-button-icon,
+  .qr-loading-spinner,
+  .ticket-qr-code,
+  .download-button-container {
+    animation: none;
+  }
+
+  .generate-qr-button:hover,
+  .add-to-calendar-button:hover,
+  .back-button:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .ticket-info-card {
+    border: 2px solid #000;
+  }
+
+  .generate-qr-button {
+    border: 2px solid #fff;
+  }
+
+  .qr-placeholder {
+    border-color: #000;
+  }
+}
+
+/* Responsive styles for security dialog */
+@media (max-width: 768px) {
+  .security-dialog {
+    margin: 20px;
+    max-width: none;
+  }
+
+  .security-dialog-header {
+    padding: 24px 20px;
+  }
+
+  .security-dialog-header h3 {
+    font-size: 20px;
+  }
+
+  .security-dialog-content {
+    padding: 24px 20px;
+  }
+
+  .security-dialog-actions {
+    padding: 0 20px 24px 20px;
+  }
+
+  .security-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .security-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .security-dialog-overlay {
+    padding: 10px;
+  }
+
+  .security-dialog-content p {
+    font-size: 15px;
+  }
+
+  .security-note {
+    font-size: 13px !important;
+  }
+
+  .security-dialog-button {
+    padding: 12px 24px;
+    font-size: 15px;
+    min-width: 120px;
+  }
+}

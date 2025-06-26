@@ -4,13 +4,15 @@ import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { auth, db } from "../services/firebase"
-import { doc, getDoc, collection, addDoc, updateDoc, getDocs } from "firebase/firestore"
+import { doc, getDoc, collection, addDoc, updateDoc, getDocs, setDoc } from "firebase/firestore"
 import { CheckCircle, XCircle, Share2, Mail } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import "boxicons/css/boxicons.min.css"
 import "../styles/payment-override.css"
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
 
 const PaystackSuccess = () => {
   const location = useLocation()
@@ -53,9 +55,7 @@ const PaystackSuccess = () => {
         setEventData(paymentData)
 
         // Verify payment on the server
-        const response = await axios.get(
-          `https://spotix-backend.onrender.com/api/payment/verify?reference=${reference}`,
-        )
+        const response = await axios.get(`${BACKEND_URL}/api/payment/verify?reference=${reference}`)
         const data = response.data
 
         if (data.status && data.data && data.data.status === "success") {
@@ -105,7 +105,7 @@ const PaystackSuccess = () => {
             ...(paymentData.stopDate ? { stopDate: paymentData.stopDate } : {}),
           }
 
-          // Add to attendees collection for the event
+          // Add to attendees collection for the event first and get the document ID
           const attendeesCollectionRef = collection(
             db,
             "events",
@@ -115,11 +115,12 @@ const PaystackSuccess = () => {
             "attendees",
           )
 
-          await addDoc(attendeesCollectionRef, ticketData)
+          const attendeeDocRef = await addDoc(attendeesCollectionRef, ticketData)
+          const consistentDocId = attendeeDocRef.id
 
-          // Add to user's ticket history
-          const ticketHistoryRef = collection(db, "TicketHistory", user.uid, "tickets")
-          await addDoc(ticketHistoryRef, {
+          // Add to user's ticket history using the same document ID
+          const ticketHistoryRef = doc(db, "TicketHistory", user.uid, "tickets", consistentDocId)
+          await setDoc(ticketHistoryRef, {
             ...ticketData,
             eventId: paymentData.eventId,
             eventName: paymentData.eventName,
@@ -213,7 +214,7 @@ const PaystackSuccess = () => {
     try {
       setEmailSending(true)
 
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/payment-confirmation", {
+      const response = await fetch(`${BACKEND_URL}/api/mail/payment-confirmation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

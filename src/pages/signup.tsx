@@ -11,6 +11,8 @@ import { Eye, EyeOff, AlertCircle, CheckCircle, Loader2, Shield, User, Mail, Loc
 import { useNavigate } from "react-router-dom"
 import Preloader from "../components/preloader"
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+
 const Signup = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -108,7 +110,7 @@ const Signup = () => {
   // Send welcome email after successful registration
   const sendWelcomeEmail = async (user: any) => {
     try {
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/welcome-email", {
+      const response = await fetch(`${BACKEND_URL}/api/mail/welcome-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

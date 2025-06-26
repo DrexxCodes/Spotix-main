@@ -32,6 +32,8 @@ interface BookerData {
   bookerPassword: string
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+
 const BookerConfirm = () => {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -151,7 +153,7 @@ const BookerConfirm = () => {
   const sendConfirmationEmail = async (name: string, email: string) => {
     setEmailSending(true)
     try {
-      const response = await fetch("https://spotix-backend.onrender.com/api/mail/booker-confirmation", {
+      const response = await fetch(`${BACKEND_URL}/api/mail/booker-confirmation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

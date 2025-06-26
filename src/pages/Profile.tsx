@@ -38,6 +38,8 @@ interface ConfirmDialogProps {
   onCancel: () => void
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+
 const ConfirmDialog = ({ isOpen, message, onConfirm, onCancel }: ConfirmDialogProps) => {
   if (!isOpen) return null
 
@@ -539,7 +541,7 @@ const Profile = () => {
 
     try {
       const response = await fetch(
-        `https://spotix-backend.onrender.com/api/verify?accountNumber=${user.accountNumber}&bankName=${user.bankName}`,
+        `${BACKEND_URL}/api/verify?accountNumber=${user.accountNumber}&bankName=${user.bankName}`,
       )
       if (!response.ok) {
         throw new Error(`Verification failed: ${response.status} ${response.statusText}`)

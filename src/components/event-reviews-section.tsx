@@ -223,7 +223,7 @@ const EventReviewsSection = ({
           <div className="message-content">
             <MessageCircle className="message-icon" />
             <p className="message-text">
-              Oh, <strong>{eventName}</strong> is yet to have occurred so there's no rating yet. Check back at{" "}
+              Oh, <strong>{eventName}</strong> is yet to have occurred so there's no rating yet. Check back on{" "}
               <strong>{formatEventEndDate()}</strong>.
             </p>
           </div>

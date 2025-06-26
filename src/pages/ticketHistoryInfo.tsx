@@ -9,11 +9,11 @@ import { Helmet } from "react-helmet"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import DownloadButton from "../components/DownloadButton"
-import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, MapPin } from "lucide-react"
+import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, MapPin, QrCode, Sparkles } from "lucide-react"
 import html2pdf from "html2pdf.js"
 import QRCode from "react-qr-code"
 import "boxicons/css/boxicons.min.css"
-// import "../styles/ticket-info.css"
+import "./info.css"
 
 interface TicketDetails {
   id: string
@@ -22,7 +22,6 @@ interface TicketDetails {
   eventType: string
   ticketType: string
   ticketPrice: number
-  ticketId: string
   ticketReference: string
   purchaseDate: string
   purchaseTime: string
@@ -67,9 +66,14 @@ const TicketHistoryInfo = () => {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isDownloadComplete, setIsDownloadComplete] = useState(false)
   const [addingToCalendar, setAddingToCalendar] = useState(false)
+  const [qrCodeGenerated, setQrCodeGenerated] = useState(false)
+  const [generatingQr, setGeneratingQr] = useState(false)
   const ticketRef = useRef<HTMLDivElement>(null)
+  const [showSecurityDialog, setShowSecurityDialog] = useState(false)
+  const [isEventDay, setIsEventDay] = useState(false)
 
-  // Cache key for this ticket
+  // Remove the old cacheKey definition and replace with:
+  // Cache key is now based on the ticket ID parameter
   const cacheKey = `ticket_${id}`
 
   // Format date for display
@@ -110,6 +114,25 @@ const TicketHistoryInfo = () => {
     return timeString
   }
 
+  // Check if today is the event day
+  const checkIfEventDay = (eventDate: string) => {
+    if (!eventDate) return false
+
+    try {
+      const today = new Date()
+      const eventDateObj = new Date(eventDate)
+
+      // Set both dates to start of day for accurate comparison
+      today.setHours(0, 0, 0, 0)
+      eventDateObj.setHours(0, 0, 0, 0)
+
+      return today.getTime() >= eventDateObj.getTime()
+    } catch (error) {
+      console.error("Error checking event day:", error)
+      return false
+    }
+  }
+
   useEffect(() => {
     const fetchTicketDetails = async () => {
       try {
@@ -124,6 +147,9 @@ const TicketHistoryInfo = () => {
           navigate("/login")
           return
         }
+
+        // Use ticket ID directly as the cache key and document ID
+        const cacheKey = `ticket_${id}`
 
         // Try to get from cache first
         const cachedData = sessionStorage.getItem(cacheKey)
@@ -142,7 +168,7 @@ const TicketHistoryInfo = () => {
           return
         }
 
-        // No cache, fetch from Firestore
+        // No cache, fetch from Firestore using ticket ID as document ID
         await fetchFromFirestore(user.uid, id)
       } catch (error) {
         console.error("Error fetching ticket details:", error)
@@ -182,6 +208,7 @@ const TicketHistoryInfo = () => {
 
     const fetchFromFirestore = async (uid: string, ticketId: string) => {
       try {
+        // Use ticket ID as document ID for direct access
         const ticketDocRef = doc(db, "TicketHistory", uid, "tickets", ticketId)
         const ticketDoc = await getDoc(ticketDocRef)
 
@@ -206,13 +233,12 @@ const TicketHistoryInfo = () => {
 
           // Initialize ticket data with basic info
           const ticketData: TicketDetails = {
-            id: ticketDoc.id,
+            id: ticketId, // Use the document ID from URL as the ticket ID
             eventId: data.eventId || "",
             eventName: data.eventName || "Unknown Event",
             eventType: data.eventType || "Unknown",
             ticketType: data.ticketType || "Standard",
             ticketPrice: data.ticketPrice || 0,
-            ticketId: data.ticketId || "",
             ticketReference: data.ticketReference || "",
             purchaseDate: purchaseDate,
             purchaseTime: purchaseTime,
@@ -250,8 +276,8 @@ const TicketHistoryInfo = () => {
           // Update state
           setTicketDetails(ticketData)
 
-          // Cache the data
-          sessionStorage.setItem(cacheKey, JSON.stringify(ticketData))
+          // Cache the data using ticket ID as key
+          sessionStorage.setItem(`ticket_${ticketId}`, JSON.stringify(ticketData))
         } else {
           setError("Ticket not found")
         }
@@ -264,14 +290,43 @@ const TicketHistoryInfo = () => {
     }
 
     fetchTicketDetails()
-  }, [id, navigate, cacheKey])
+  }, [id, navigate])
+
+  // Check if today is the event day
+  useEffect(() => {
+    if (ticketDetails?.eventDate) {
+      setIsEventDay(checkIfEventDay(ticketDetails.eventDate))
+    }
+  }, [ticketDetails?.eventDate])
 
   const handleBackClick = () => {
     navigate("/ticket-history")
   }
 
+  const handleGenerateQR = async () => {
+    if (!ticketDetails) return
+
+    // Check if it's the event day
+    if (!isEventDay) {
+      setShowSecurityDialog(true)
+      return
+    }
+
+    setGeneratingQr(true)
+
+    // Simulate QR generation process with a slight delay for better UX
+    setTimeout(() => {
+      setQrCodeGenerated(true)
+      setGeneratingQr(false)
+    }, 1500)
+  }
+
+  const handleCloseSecurityDialog = () => {
+    setShowSecurityDialog(false)
+  }
+
   const handleDownloadTicket = async () => {
-    if (!ticketRef.current || !ticketDetails) return
+    if (!ticketRef.current || !ticketDetails || !qrCodeGenerated) return
 
     setIsDownloading(true)
 
@@ -497,7 +552,6 @@ const TicketHistoryInfo = () => {
   if (error || !ticketDetails) {
     return (
       <>
-      
         <UserHeader />
         <div className="error-container">
           <h2>{error || "An error occurred"}</h2>
@@ -512,7 +566,6 @@ const TicketHistoryInfo = () => {
 
   return (
     <>
-
       <UserHeader />
       <Helmet>
         <title>{ticketDetails.eventName} Ticket Details | Spotix</title>
@@ -526,21 +579,7 @@ const TicketHistoryInfo = () => {
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Spotix" />
         <meta property="og:locale" content="en_US" />
-        <meta property="og:locale:alternate" content="en_GB" />
-        <meta property="og:locale:alternate" content="en_NG" />
-        <meta property="og:locale:alternate" content="en_CA" />
-        <meta property="og:locale:alternate" content="en_AU" />
-        <meta property="og:locale:alternate" content="en_IN" />
-        <meta property="og:locale:alternate" content="en_PH" />
-        <meta property="og:locale:alternate" content="en_SG" />
-        <meta property="og:locale:alternate" content="en_ZA" />
-        <meta property="og:locale:alternate" content="en_IE" />
-        <meta property="og:locale:alternate" content="en_NZ" />
       </Helmet>
-
-
-
-
 
       <div className="ticket-info-container">
         <div className="ticket-info-header">
@@ -660,7 +699,7 @@ const TicketHistoryInfo = () => {
               <h2>Ticket Information</h2>
               <div className="info-row">
                 <div className="info-label">Ticket ID</div>
-                <div className="info-value ticket-id">{ticketDetails.ticketId}</div>
+                <div className="info-value ticket-id">{isEventDay ? id : "Shown on event day"}</div>
               </div>
               <div className="info-row">
                 <div className="info-label">Reference</div>
@@ -691,9 +730,52 @@ const TicketHistoryInfo = () => {
             </div>
 
             {/* QR Code Section */}
-            <div className="ticket-qr-code">
-              <QRCode value={ticketDetails.ticketReference} size={200} level="H" fgColor="#6b2fa5" bgColor="#ffffff" />
-              <p className="qr-code-label">Scan this QR code at the event entrance(It contains your event details)</p>
+            <div className="ticket-qr-section">
+              <h2>Entry QR Code</h2>
+
+              {!qrCodeGenerated ? (
+                <div className="qr-placeholder">
+                  <div className="qr-placeholder-content">
+                    <QrCode size={48} className="qr-placeholder-icon" />
+                    <p className="qr-placeholder-text">Generate your QR code for event entry</p>
+                    <button className="generate-qr-button" onClick={handleGenerateQR} disabled={generatingQr}>
+                      {generatingQr ? (
+                        <>
+                          <div className="qr-loading-spinner"></div>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={20} className="qr-button-icon" />
+                          <span>Generate QR Code</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {qrCodeGenerated && isEventDay && (
+                    <div className="ticket-qr-code">
+                      <div className="qr-code-container">
+                        <QRCode
+                            values={id}
+                            size={200}
+                            level="H"
+                            fgColor="#6b2fa5"
+                            bgColor="#ffffff" value={""}                        />
+                      </div>
+                      <p className="qr-code-label">
+                        No Spotix Staff or Event planner will ever ask you for your ID: {id}. Present this only to the event's check-in staff.
+                      </p>
+                      <button className="regenerate-qr-button" onClick={() => setQrCodeGenerated(false)}>
+                        <QrCode size={16} />
+                        Hide QR Code
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="ticket-footer">
@@ -723,6 +805,36 @@ const TicketHistoryInfo = () => {
           </div>
         </div>
       </div>
+      {/* Security Dialog */}
+      {showSecurityDialog && (
+        <div className="security-dialog-overlay">
+          <div className="security-dialog">
+            <div className="security-dialog-header">
+              <div className="security-icon">
+                <QrCode size={32} />
+              </div>
+              <h3>Ticket Security Notice</h3>
+            </div>
+            <div className="security-dialog-content">
+              <p>
+                For your ticket security, the QR code can only be generated on the event day being{" "}
+                <strong>
+                  {ticketDetails?.eventDate ? formatDisplayDate(ticketDetails.eventDate) : "the event date"}
+                </strong>
+                .
+              </p>
+              <p className="security-note">
+                This helps prevent unauthorized access and ensures your ticket remains secure until the event.
+              </p>
+            </div>
+            <div className="security-dialog-actions">
+              <button className="security-dialog-button" onClick={handleCloseSecurityDialog}>
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </>
   )

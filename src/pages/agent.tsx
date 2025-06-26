@@ -75,7 +75,8 @@ interface AuthKeyData {
   validatedAt?: any
 }
 
-// Format currency with commas
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+
 const formatCurrency = (amount: number): string => {
   return amount.toLocaleString("en-NG", {
     minimumFractionDigits: 2,
@@ -451,7 +452,7 @@ const Agent = () => {
     ticketPrice: string,
   ) => {
     try {
-      await fetch("https://spotix-backend.onrender.com/api/notify/agent-sale", {
+      await fetch(`${BACKEND_URL}/api/notify/agent-sale`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -638,7 +639,7 @@ const Agent = () => {
       const bookerDoc = await getDoc(bookerDocRef)
       const bookerEmail = bookerDoc.exists() ? bookerDoc.data().email : "support@spotix.com.ng"
 
-      const response = await fetch("https://spotix-backend.onrender.com/api/notify/agent-ticket", {
+      const response = await fetch(`${BACKEND_URL}/api/notify/agent-ticket`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -35,6 +35,7 @@ interface EventCollection {
   description: string
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
 const CreateEvent = () => {
   const [currentDateTime, setCurrentDateTime] = useState("")
   const [activeTab, setActiveTab] = useState<"one-time" | "recurring">("one-time")
@@ -446,7 +447,7 @@ const CreateEvent = () => {
         eventType,
       })
 
-      const response = await fetch("https://spotix-backend.onrender.com/api/gemini/enhance", {
+      const response = await fetch(`${BACKEND_URL}/api/gemini/enhance`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
