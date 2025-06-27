@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
 import { collection, query, getDocs, limit, startAfter, type DocumentSnapshot } from "firebase/firestore"
-import { ArrowLeft, CreditCard, Filter, Search, Download, RefreshCw } from "lucide-react"
+import { ArrowLeft, CreditCard, Filter, Download, RefreshCw } from "lucide-react"
 import UserHeader from "../components/UserHeader"
+import Search from "../components/search"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import "boxicons/css/boxicons.min.css"
@@ -286,6 +287,7 @@ const WalletHistory = () => {
 
   return (
     <>
+    <Search></Search>
       <Helmet>
         <title>Wallet History - Spotix</title>
         <meta name="description" content="View your wallet transaction history on Spotix." />
@@ -311,7 +313,6 @@ const WalletHistory = () => {
           <div className="controls-section">
             <div className="search-filter-container">
               <div className="search-box">
-                <Search size={18} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Search transactions..."

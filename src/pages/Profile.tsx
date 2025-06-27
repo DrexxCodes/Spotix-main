@@ -11,6 +11,7 @@ import UserHeader from "../components/UserHeader"
 import LogoutBtn from "../components/logoutbtn"
 import Footer from "../components/footer"
 import { uploadImage } from "../utils/imageUploader"
+import Search from "../components/search"
 import { Eye, EyeOff, AlertCircle, CheckCircle, Users, Copy } from "lucide-react"
 import "./profile.css"
 
@@ -671,6 +672,7 @@ const Profile = () => {
 
   return (
     <div className="profile-container">
+    <Search />
       <UserHeader />
       <Helmet>
         <title>User Profile</title>

@@ -7,6 +7,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
 import { db, auth } from "../services/firebase"
 import UserHeader from "../components/UserHeader"
+import Search from "../components/search"
 import Footer from "../components/footer"
 import { Helmet } from "react-helmet"
 import { ArrowLeft, User, Ticket, Info, X, Wallet } from "lucide-react"
@@ -559,6 +560,7 @@ const Event = () => {
 
   return (
     <>
+      <Search></Search>
       <Helmet>
         <title>{eventData.eventName} - Event Details</title>
         <meta name="description" content={`Details about the event: ${eventData.eventName}`} />

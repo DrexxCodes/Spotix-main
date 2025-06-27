@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import UserHeader from "../components/UserHeader"
+import Search from "../components/search"
 import { Helmet } from "react-helmet"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -552,6 +553,7 @@ const TicketHistoryInfo = () => {
   if (error || !ticketDetails) {
     return (
       <>
+      <Search></Search>
         <UserHeader />
         <div className="error-container">
           <h2>{error || "An error occurred"}</h2>
@@ -566,6 +568,7 @@ const TicketHistoryInfo = () => {
 
   return (
     <>
+    <Search></Search>
       <UserHeader />
       <Helmet>
         <title>{ticketDetails.eventName} Ticket Details | Spotix</title>

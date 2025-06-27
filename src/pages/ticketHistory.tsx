@@ -6,9 +6,10 @@ import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import UserHeader from "../components/UserHeader"
+import Search from "../components/search"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
-import { Search, Ticket, Calendar, Clock, CheckCircle, XCircle, RefreshCw, AlertTriangle } from "lucide-react"
+import {Ticket, Calendar, Clock, CheckCircle, XCircle, RefreshCw, AlertTriangle } from "lucide-react"
 import { getWithExpiry, setWithExpiry } from "../utils/cacheUtils"
 import { ReviewCTA } from '../components/ReviewCTA';
 
@@ -160,6 +161,7 @@ const TicketHistory = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+        <Search></Search>
       <Helmet>
         <title>Spotix Ticket History</title>
         <meta
@@ -219,21 +221,7 @@ const TicketHistory = () => {
               </div>
             </div>
 
-            {/* Search Section */}
-            <div className="search-section">
-              <div className="relative search-container">
-                <div className="absolute search-input-wrapper inset-y-0 left-3 flex items-center pointer-events-none search-icon">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search by reference..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6b2fa5] focus:border-transparent transition-all duration-200"
-                />
-              </div>
-            </div>
+            
 
             {/* Info Banner */}
             <div className="info-banner bg-gradient-to-r from-[#6b2fa5]/5 to-[#6b2fa5]/10 border border-[#6b2fa5]/20 rounded-lg p-4">
