@@ -74,13 +74,16 @@
 }
 
 .hero-content {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 3;
   text-align: center;
   color: white;
   padding: 2rem;
-  width: 100%;
-  max-width: 1200px;
+  width: 90%;
+  max-width: 800px;
 }
 
 .collection-badge {
@@ -103,11 +106,13 @@
 
 .hero-title {
   font-size: 3rem;
-  opacity: 100 !important;
+  opacity: 1 !important;
   font-weight: 800;
   margin: 0;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   line-height: 1.2;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .content-section {
@@ -397,6 +402,11 @@
     height: 300px;
   }
 
+  .hero-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+
   .hero-title {
     font-size: 2rem;
   }
@@ -424,8 +434,18 @@
 }
 
 @media (max-width: 480px) {
+  .hero-content {
+    width: 98%;
+    padding: 1rem;
+  }
+
   .hero-title {
     font-size: 1.75rem;
+  }
+
+  .collection-badge span {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 
   .description-text,
@@ -435,6 +455,16 @@
 
   .variation-content {
     padding: 1rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .hero-content {
+    padding: 0.75rem;
   }
 }
 
