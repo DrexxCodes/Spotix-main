@@ -7,7 +7,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 // ✅ Lazy load components
 const Maintenance = lazy(() => import("./pages/maintenance"))
 const Logs = lazy(() => import("./pages/logs"))
-const AdminLogs = lazy(() => import("./pages/admin-logs"))
+// Test only
+import AdminLogs from "./pages/admin-logs"
+
 
 // ✅ Loading fallback component
 const LoadingSpinner: React.FC = () => (
@@ -31,7 +33,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Navigate to="/maintenance" replace />} />
           <Route path="*" element={<Navigate to="/maintenance" replace />} />
         </Routes>
-      </Suspense>
+      </Suspense> 
     </Router>
   )
 }
