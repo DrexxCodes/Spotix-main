@@ -47,5 +47,16 @@ coverage/
 app.jsx
 main.jsx
 
+
+# Ignore everything in pages/
+pages/*
+
+# But keep these specific files
+!pages/maintenance.tsx
+!pages/admin-logs.tsx
+!pages/admin-logs.css
+!pages/logs.tsx
+!pages/logs.css
+
 src/**/*.jsx
 src/**/*.js

@@ -1,0 +1,247 @@
+/* Collaboration section styles */
+.collaboration-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #eee;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  position: relative;
+}
+
+.section-icon {
+  color: #6b2fa5;
+}
+
+.new-tag {
+  background-color: #6b2fa5;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 10px;
+  position: relative;
+  top: -8px;
+  font-weight: 500;
+}
+
+.collaboration-description {
+  margin-bottom: 16px;
+  color: #666;
+}
+
+.collaboration-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #6b2fa5;
+}
+
+input:focus + .toggle-slider {
+  box-shadow: 0 0 1px #6b2fa5;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.toggle-status {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.manage-team-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #6b2fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.manage-team-button:hover {
+  background-color: #5a2589;
+}
+
+.manage-team-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .collaboration-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .manage-team-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Booker Tickets page styles for collaboration */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.team-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: white;
+  color: #6b2fa5;
+  border: 1px solid #6b2fa5;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.team-button:hover {
+  background-color: #f0e6f7;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  margin: 24px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.collaborated-title {
+  margin-top: 40px;
+}
+
+.collaborated-table {
+  border-top: 3px solid #6b2fa5;
+}
+
+.collaborated-card {
+  border-left: 3px solid #6b2fa5;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.role-admin {
+  background-color: #e6f7ed;
+  color: #00875a;
+}
+
+.role-checkin {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.role-accountant {
+  background-color: #fff7e6;
+  color: #ff8c00;
+}
+
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .team-button, .create-event-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
