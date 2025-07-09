@@ -30,9 +30,6 @@ const App: React.FC = () => {
             <Route path="/logs" element={<Logs />} />
             <Route path="/admin-logs" element={<AdminLogs />} />
 
-            {/* Catch all routes - redirect to maintenance */}
-            <Route path="/" element={<Navigate to="/maintenance" replace />} />
-            <Route path="*" element={<Navigate to="/maintenance" replace />} />
           </Routes>
         </Suspense>
       </div>
