@@ -4,12 +4,12 @@ import type React from "react"
 import { Suspense, lazy } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 
-// Lazy load components
+// ✅ Lazy load components
 const Maintenance = lazy(() => import("./pages/maintenance"))
 const Logs = lazy(() => import("./pages/logs"))
 const AdminLogs = lazy(() => import("./pages/admin-logs"))
 
-// Loading component
+// ✅ Loading fallback component
 const LoadingSpinner: React.FC = () => (
   <div className="loading-container">
     <div className="loading-spinner"></div>
@@ -20,19 +20,18 @@ const LoadingSpinner: React.FC = () => (
 const App: React.FC = () => {
   return (
     <Router>
-      <div className="App">
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            {/* Maintenance page - main landing */}
-            <Route path="/maintenance" element={<Maintenance />} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* ✅ Accessible Routes */}
+          <Route path="/maintenance" element={<Maintenance />} />
+          <Route path="/logs" element={<Logs />} />
+          <Route path="/admin-logs" element={<AdminLogs />} />
 
-            {/* Logs pages */}
-            <Route path="/logs" element={<Logs />} />
-            <Route path="/admin-logs" element={<AdminLogs />} />
-
-          </Routes>
-        </Suspense>
-      </div>
+          {/* ✅ Redirect all other routes to /maintenance */}
+          <Route path="/" element={<Navigate to="/maintenance" replace />} />
+          <Route path="*" element={<Navigate to="/maintenance" replace />} />
+        </Routes>
+      </Suspense>
     </Router>
   )
 }
