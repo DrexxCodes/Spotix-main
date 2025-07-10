@@ -277,6 +277,27 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Hero Background Image with Parallax */
+.hero-bg {
+  background-image: url('./hero.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* Additional parallax support for some browsers especially my iphone freakin 7*/
+  transform: translateZ(0); /* Hardware acceleration */
+}
+
+/* Dark Overlay for Text Visibility */
+.hero-overlay {
+  /* Alternative dark overlay option: */
+  /* background: linear-gradient(135deg, rgba(107, 47, 165, 0.7), rgba(155, 89, 182, 0.7)); */
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Smooth scrolling optimization */
+.hero-section {
+  transform: translateZ(0); /* Creates stacking context for better performance */
+}
 /* Section Styles */
 .section-container {
   max-width: 1200px;

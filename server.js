@@ -1,3 +1,10 @@
+/* 
+
+This server isn't deployed from this frontend. The backend is developed and maintained by Drexx Codes and the Spotix Team 
+
+2025 - till date
+
+*/
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
