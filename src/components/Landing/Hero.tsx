@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
+import heroImage from "/hero.jpg"
 
 const Hero = () => {
   const titleRef = useRef<HTMLHeadingElement>(null)
@@ -31,7 +32,7 @@ const Hero = () => {
       const parallaxElement = parallaxRef.current
       
       if (parallaxElement) {
-        const speed = 0.5 // 0.5 is like the mid value for parallax effect speed
+        const speed = 0.5 // Adjust this value to control parallax speed (0.1 = slow, 0.8 = fast)
         parallaxElement.style.transform = `translateY(${scrolled * speed}px)`
       }
     }
@@ -48,8 +49,15 @@ const Hero = () => {
       {/* Background Image with Parallax */}
       <div 
         ref={parallaxRef}
-        className="hero-bg absolute inset-0 w-full h-full z-0 will-change-transform"
-        style={{ height: '120%', top: '-10%' }}
+        className="absolute inset-0 w-full h-full z-0 will-change-transform"
+        style={{ 
+          height: '120%', 
+          top: '-10%',
+          backgroundImage: `url(${heroImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
       ></div>
       
       {/* Dark Overlay */}
