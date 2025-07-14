@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Plus, X, HelpCircle, AlertCircle, Ticket } from "lucide-react"
-import "./AddPricing.css"
+import "./addPricing.css"
 
 interface TicketType {
   policy: string
