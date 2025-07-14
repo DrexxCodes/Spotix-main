@@ -703,7 +703,7 @@ const Payment = () => {
                 <div className="payment-method-icon">💳</div>
                 <div className="payment-method-name">
                   Paystack
-                  {isFreeEvent && <span className="disabled-badge">Not Available</span>}
+                  {isFreeEvent && <span className="disabled-badge"> (Not Available)</span>}
                 </div>
                 <div className="payment-method-description">
                   {isFreeEvent ? "Not available for free events" : "Card Payment"}
@@ -716,7 +716,7 @@ const Payment = () => {
                 <div className="payment-method-icon">🙍🏻‍♂️</div>
                 <div className="payment-method-name">
                   Agent Pay
-                  {isFreeEvent && <span className="disabled-badge">Not Available</span>}
+                  {isFreeEvent && <span className="disabled-badge"> (Not Available)</span>}
                 </div>
                 <div className="payment-method-description">
                   {isFreeEvent ? "Not available for free events" : "Pay via Agent"}

@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc } from "firebase/firestore"
-import { CheckCircle, XCircle, Loader2, Mail, Share2, AlertTriangle } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
@@ -48,6 +48,7 @@ interface EventDetails {
   enableStopDate?: boolean
   bookerName?: string
   bookerEmail?: string
+  ticketPrices?: { policy: string; price: number; availableTickets?: number | null }[] // Added for updating available tickets
 }
 
 interface UserData {
@@ -91,7 +92,7 @@ interface TicketData {
   eventCreatorId?: string
 }
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 // Create a logger utility for consistent logging
 const Logger = {
@@ -131,9 +132,6 @@ const Wallet = () => {
   const [paymentData, setPaymentData] = useState<PaymentPageProps | null>(null)
   const [eventDetails, setEventDetails] = useState<EventDetails | null>(null)
   const [walletBalance, setWalletBalance] = useState<number>(0)
-  const [shareUrl, setShareUrl] = useState<string>("")
-  const [showShareOptions, setShowShareOptions] = useState(false)
-  const [copySuccess, setCopySuccess] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailSending, setEmailSending] = useState(false)
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -214,10 +212,6 @@ const Wallet = () => {
         // Generate unique transaction ID
         const uniqueTransactionId = `wallet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
         setTransactionId(uniqueTransactionId)
-
-        // Set up share URL
-        const baseUrl = window.location.origin
-        setShareUrl(`${baseUrl}/event/${paymentInfo.eventCreatorId}/${paymentInfo.eventId}`)
 
         // Fetch user data first (we need this for wallet balance)
         const userDataResult = await fetchUserData()
@@ -329,6 +323,7 @@ const Wallet = () => {
         enableStopDate: data.enableStopDate || false,
         bookerName,
         bookerEmail,
+        ticketPrices: data.ticketPrices || [], // Include ticketPrices for updating
       }
 
       Logger.success("Event details fetched successfully")
@@ -599,35 +594,53 @@ const Wallet = () => {
         ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
       }
 
-       // Add to attendees collection for the event first and get the document ID
-                const attendeesCollectionRef = collection(
-                  db,
-                  "events",
-                  paymentData.eventCreatorId,
-                  "userEvents",
-                  paymentData.eventId,
-                  "attendees",
-                )
-      
-                const attendeeDocRef = await addDoc(attendeesCollectionRef, ticketData)
-                const consistentDocId = attendeeDocRef.id
-      
-                // Add to user's ticket history using the same document ID
-                const ticketHistoryRef = doc(db, "TicketHistory", user.uid, "tickets", consistentDocId)
-                await setDoc(ticketHistoryRef, {
-                  ...ticketData,
-                  eventId: paymentData.eventId,
-                  eventName: paymentData.eventName,
-                  eventCreatorId: paymentData.eventCreatorId,
-                })
-      // Update event stats (increment tickets sold and revenue)
+      // Add to attendees collection for the event first and get the document ID
+      const attendeesCollectionRef = collection(
+        db,
+        "events",
+        paymentData.eventCreatorId,
+        "userEvents",
+        paymentData.eventId,
+        "attendees",
+      )
+
+      const attendeeDocRef = await addDoc(attendeesCollectionRef, ticketData)
+      const consistentDocId = attendeeDocRef.id
+
+      // Add to user's ticket history using the same document ID
+      const ticketHistoryRef = doc(db, "TicketHistory", user.uid, "tickets", consistentDocId)
+      await setDoc(ticketHistoryRef, {
+        ...ticketData,
+        eventId: paymentData.eventId,
+        eventName: paymentData.eventName,
+        eventCreatorId: paymentData.eventCreatorId,
+      })
+
+      // Update event stats (increment tickets sold and revenue) AND decrement available tickets
       const eventDocRef = doc(db, "events", paymentData.eventCreatorId, "userEvents", paymentData.eventId)
       const eventDoc = await getDoc(eventDocRef)
       if (eventDoc.exists()) {
-        const eventData = eventDoc.data()
+        const eventDataFromDb = eventDoc.data()
+        const currentTicketsSold = (eventDataFromDb.ticketsSold || 0) + 1
+        const currentTotalRevenue = (eventDataFromDb.totalRevenue || 0) + adjustedTotalAmount
+
+        // Find the specific ticket type and decrement availableTickets
+        const updatedTicketPrices = (eventDataFromDb.ticketPrices || []).map((ticket: any) => {
+          if (ticket.policy === paymentData.ticketType) {
+            // Ensure availableTickets is a number and decrement if not null
+            const currentAvailable = ticket.availableTickets === null ? null : Number(ticket.availableTickets)
+            return {
+              ...ticket,
+              availableTickets: currentAvailable !== null ? Math.max(0, currentAvailable - 1) : null,
+            }
+          }
+          return ticket
+        })
+
         await updateDoc(eventDocRef, {
-          ticketsSold: (eventData.ticketsSold || 0) + 1,
-          totalRevenue: (eventData.totalRevenue || 0) + adjustedTotalAmount,
+          ticketsSold: currentTicketsSold,
+          totalRevenue: currentTotalRevenue,
+          ticketPrices: updatedTicketPrices, // Update the ticketPrices array
         })
       }
 
@@ -642,14 +655,24 @@ const Wallet = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000))
       setStepStatus("success")
 
-      setPaymentResult({
-        success: true,
-        message: isFreeEvent ? "Free ticket acquired successfully" : "Payment successful",
-        ticketId,
-        ticketReference,
-        userData: {
-          fullName: userData.fullName || "",
-          email: userData.email || "",
+      // Navigate to the new ticket page, passing all necessary data
+      navigate("/ticket", {
+        state: {
+          paymentResult: {
+            success: true,
+            message: isFreeEvent ? "Free ticket acquired successfully" : "Payment successful",
+            ticketId,
+            ticketReference,
+            userData: {
+              fullName: userData.fullName || "",
+              email: userData.email || "",
+            },
+          },
+          paymentData: paymentData,
+          eventDetails: eventDetails,
+          isFreeEvent: isFreeEvent,
+          adjustedTransactionFee: adjustedTransactionFee,
+          adjustedTotalAmount: adjustedTotalAmount,
         },
       })
     } catch (error) {
@@ -667,52 +690,6 @@ const Wallet = () => {
     navigate("/home")
   }
 
-  const handleViewTickets = () => {
-    navigate("/ticket-history")
-  }
-
-  const handleShare = () => {
-    setShowShareOptions(!showShareOptions)
-  }
-
-  const shareToSocialMedia = (platform: string) => {
-    const eventName = paymentData?.eventName || "this event"
-    const shareText = `Hey friends! I just got a ticket to ${eventName} from Spotix! Get yours here: `
-
-    let shareUrl = ""
-
-    switch (platform) {
-      case "whatsapp":
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText + window.location.origin + "/event/" + paymentData?.eventCreatorId + "/" + paymentData?.eventId)}`
-        break
-      case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.origin + "/event/" + paymentData?.eventCreatorId + "/" + paymentData?.eventId)}`
-        break
-      case "facebook":
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + "/event/" + paymentData?.eventCreatorId + "/" + paymentData?.eventId)}`
-        break
-      default:
-        break
-    }
-
-    if (shareUrl) {
-      window.open(shareUrl, "_blank")
-    }
-
-    setShowShareOptions(false)
-  }
-
-  const copyShareLink = () => {
-    const eventName = paymentData?.eventName || "this event"
-    const shareText = `Hey friends! I just got a ticket to ${eventName} from Spotix! Get yours here: ${window.location.origin}/event/${paymentData?.eventCreatorId}/${paymentData?.eventId}`
-
-    navigator.clipboard.writeText(shareText).then(() => {
-      setCopySuccess(true)
-      setTimeout(() => setCopySuccess(false), 2000)
-    })
-  }
-
-  // Handle retry for failed transactions
   const handleRetry = () => {
     setPaymentResult(null)
     setPaymentStarted(false)
@@ -821,190 +798,28 @@ const Wallet = () => {
             )}
           </div>
         ) : paymentResult ? (
-          <div className="payment-result">
-            {paymentResult.success ? (
-              <div className="payment-success">
-                <div className="success-icon">
-                  <CheckCircle size={60} className="text-green-500" />
-                </div>
-                <h2>{isFreeEvent ? "Free Ticket Acquired!" : "Payment Successful!"}</h2>
+          <div className="payment-failed">
+            <div className="error-icon">
+              <XCircle size={60} className="text-red-500" />
+            </div>
+            <h2>Payment Failed</h2>
+            <p className="error-message">{paymentResult.message}</p>
 
-                <div className="security-badge-container">
-                  <div className="security-badge">
-                    <div className="security-badge-icon">
-                      <div className="security-shield">
-                        <i className="bx bxs-shield-alt-2"></i>
-                      </div>
-                    </div>
-                    <div className="security-badge-text">
-                      <span>Secured by</span>
-                      <strong>Spotix IWSS</strong>
-                    </div>
-                  </div>
-                </div>
-
-                {emailSent && (
-                  <div className="email-confirmation-message">
-                    <Mail size={18} className="email-icon" />
-                    <p>A confirmation email has been sent to your registered email address.</p>
-                  </div>
-                )}
-
-                <div className="ticket-preview">
-                  <div className="ticket-header">
-                    <img src="/logo.svg" alt="Spotix Logo" className="ticket-logo" />
-                    <h3>SPOTIX</h3>
-                  </div>
-                  <div className="ticket-details">
-                    <div className="ticket-detail-row">
-                      <span>Name:</span>
-                      <span>{paymentResult.userData?.fullName}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Email:</span>
-                      <span>{paymentResult.userData?.email}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Event:</span>
-                      <span>{paymentData.eventName}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Venue:</span>
-                      <span>{eventDetails?.eventVenue || "Not specified"}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Date:</span>
-                      <span>
-                        {eventDetails?.eventDate
-                          ? new Date(eventDetails.eventDate).toLocaleDateString()
-                          : "Not specified"}
-                      </span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Time:</span>
-                      <span>
-                        {eventDetails?.eventStart && eventDetails?.eventEnd
-                          ? `${eventDetails.eventStart} - ${eventDetails.eventEnd}`
-                          : "Not specified"}
-                      </span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Ticket Type:</span>
-                      <span>{paymentData.ticketType}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Ticket ID:</span>
-                      <span className="ticket-id">{paymentResult.ticketId}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Reference:</span>
-                      <span>{paymentResult.ticketReference}</span>
-                    </div>
-                    {paymentData.appliedDiscount && (
-                      <div className="ticket-detail-row">
-                        <span>Discount Applied:</span>
-                        <span>{paymentData.appliedDiscount.code}</span>
-                      </div>
-                    )}
-                    <div className="ticket-detail-row">
-                      <span>Ticket Price:</span>
-                      <span>NGN {formatNumber(paymentData.finalPrice)}</span>
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Transaction Fee:</span>
-                      {isFreeEvent ? (
-                        <span>
-                          <span style={{ textDecoration: "line-through", color: "#999" }}>NGN {formatNumber(150)}</span>
-                          <span style={{ color: "#28a745", marginLeft: "8px", fontSize: "0.85rem" }}>Waived</span>
-                        </span>
-                      ) : (
-                        <span>NGN {formatNumber(adjustedTransactionFee)}</span>
-                      )}
-                    </div>
-                    <div className="ticket-detail-row">
-                      <span>Amount Paid:</span>
-                      <span>NGN {formatNumber(adjustedTotalAmount)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Social Share Section */}
-                <div className="social-share-container">
-                  <h3>Share Your Ticket</h3>
-                  <p>Let your friends know about this event!</p>
-
-                  <div className="share-buttons">
-                    <button className="share-button" onClick={handleShare}>
-                      <Share2 size={18} />
-                      Share
-                    </button>
-
-                    {showShareOptions && (
-                      <div className="share-options">
-                        <button className="share-option whatsapp" onClick={() => shareToSocialMedia("whatsapp")}>
-                          <i className="bx bxl-whatsapp"></i>
-                          WhatsApp
-                        </button>
-                        <button className="share-option twitter" onClick={() => shareToSocialMedia("twitter")}>
-                          <i className="bx bxl-twitter"></i>
-                          Twitter
-                        </button>
-                        <button className="share-option facebook" onClick={() => shareToSocialMedia("facebook")}>
-                          <i className="bx bxl-facebook"></i>
-                          Facebook
-                        </button>
-                        <button className={`share-option copy ${copySuccess ? "success" : ""}`} onClick={copyShareLink}>
-                          {copySuccess ? (
-                            <>
-                              <CheckCircle size={16} />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <i className="bx bx-link"></i>
-                              Copy Link
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="success-actions">
-                  <button className="view-tickets-btn" onClick={handleViewTickets}>
-                    View My Tickets
-                  </button>
-                  <button className="home-btn" onClick={handleGoHome}>
-                    Go to Home
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="payment-failed">
-                <div className="error-icon">
-                  <XCircle size={60} className="text-red-500" />
-                </div>
-                <h2>Payment Failed</h2>
-                <p className="error-message">{paymentResult.message}</p>
-
-                {errorDetails && (
-                  <div className="error-details">
-                    <AlertTriangle size={16} className="error-details-icon" />
-                    <p>{errorDetails}</p>
-                  </div>
-                )}
-
-                <div className="failed-actions">
-                  <button className="retry-btn" onClick={handleRetry}>
-                    Retry Payment
-                  </button>
-                  <button className="close-dialog-btn" onClick={handleGoHome}>
-                    Back to Home
-                  </button>
-                </div>
+            {errorDetails && (
+              <div className="error-details">
+                <AlertTriangle size={16} className="error-details-icon" />
+                <p>{errorDetails}</p>
               </div>
             )}
+
+            <div className="failed-actions">
+              <button className="retry-btn" onClick={handleRetry}>
+                Retry Payment
+              </button>
+              <button className="close-dialog-btn" onClick={handleGoHome}>
+                Back to Home
+              </button>
+            </div>
           </div>
         ) : (
           <div className="payment-processing">

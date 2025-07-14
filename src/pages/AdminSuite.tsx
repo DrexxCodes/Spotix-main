@@ -4,13 +4,14 @@ import { useState, useEffect, Suspense, lazy } from "react"
 import { auth } from "../services/firebase"
 import { checkCurrentUserIsAdmin } from "../services/admin"
 import Footer from "../components/footer"
-import { Shield, UserCheck, DollarSign, Menu, X } from "lucide-react"
+import { Shield, UserCheck, DollarSign, Menu, X, UserPlus } from "lucide-react"
 import Preloader from "../components/preloader"
 
 // Lazy load tab components
 const AddNewAdminTab = lazy(() => import("../components/add-new-admin-tab"))
 const VerifyBookersTab = lazy(() => import("../components/verify-bookers-tab"))
 const CreatePayoutsTab = lazy(() => import("../components/create-payouts-tab"))
+const AddAttendeeTab = lazy(() => import("../components/addattendeetab"))
 
 // Loading skeleton components
 const AddNewAdminTabSkeleton = () => (
@@ -73,7 +74,28 @@ const CreatePayoutsTabSkeleton = () => (
   </div>
 )
 
-type TabType = "addAdmin" | "verifyBookers" | "createPayouts"
+const AddAttendeeTabSkeleton = () => (
+  <div className="admin-section">
+    <div className="skeleton-text skeleton-title"></div>
+    <div className="skeleton-form">
+      <div className="skeleton-text skeleton-subtitle"></div>
+      <div className="form-row">
+        <div className="skeleton-input"></div>
+        <div className="skeleton-input"></div>
+        <div className="skeleton-button"></div>
+      </div>
+    </div>
+    <div className="skeleton-table">
+      <div className="skeleton-text skeleton-subtitle"></div>
+      <div className="skeleton-table-header"></div>
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="skeleton-table-row"></div>
+      ))}
+    </div>
+  </div>
+)
+
+type TabType = "addAdmin" | "verifyBookers" | "createPayouts" | "addAttendee"
 
 const AdminSuite = () => {
   const [loading, setLoading] = useState(true)
@@ -166,6 +188,15 @@ const AdminSuite = () => {
           <CreatePayoutsTabSkeleton />
         )
 
+      case "addAttendee":
+        return loadedTabs.has("addAttendee") ? (
+          <Suspense fallback={<AddAttendeeTabSkeleton />}>
+            <AddAttendeeTab {...tabProps} />
+          </Suspense>
+        ) : (
+          <AddAttendeeTabSkeleton />
+        )
+
       default:
         return <AddNewAdminTabSkeleton />
     }
@@ -212,6 +243,13 @@ const AdminSuite = () => {
             >
               <DollarSign size={18} />
               Create Payouts
+            </button>
+            <button
+              className={`admin-tab ${activeTab === "addAttendee" ? "active" : ""}`}
+              onClick={() => handleTabSwitch("addAttendee")}
+            >
+              <UserPlus size={18} />
+              Add Attendee
             </button>
 
             {/* Admin permissions button - only show if user is root admin */}

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
@@ -10,14 +9,17 @@ import UserHeader from "../components/UserHeader"
 import Search from "../components/search"
 import Footer from "../components/footer"
 import { Helmet } from "react-helmet"
-import { ArrowLeft, User, Ticket, Info, X, Wallet } from "lucide-react"
-import ShareBtn from "../components/shareBtn"
+import { ArrowLeft, User, Ticket, Info, X, Wallet, MapPin, MessageSquare } from "lucide-react"
 import LoginButton from "../components/loginBtn"
-import EventReviews from "../components/event-reviews-section"
+import EventDetailsTab from "../components/event-details-tab"
+import LocationTab from "../components/location-tab"
+import BuyTicketTab from "../components/buy-ticket-tab"
+import BookerDetailsTab from "../components/booker-details-tab"
+import ReviewsTab from "../components/reviews-tab"
 import "boxicons/css/boxicons.min.css"
 import "../responsive.css"
 import "./event.css"
-import Review from "../components/review"
+import { formatNumber } from "../utils/formatters"
 
 interface EventType {
   id: string
@@ -49,52 +51,6 @@ interface EventType {
   allowAgents?: boolean
 }
 
-// Network speed detection
-const getNetworkSpeed = (): "slow" | "medium" | "fast" => {
-  // @ts-ignore
-  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
-
-  if (connection) {
-    const effectiveType = connection.effectiveType
-    if (effectiveType === "slow-2g" || effectiveType === "2g") return "slow"
-    if (effectiveType === "3g") return "medium"
-    return "fast"
-  }
-
-  // Fallback: detect based on device type
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  return isMobile ? "medium" : "fast"
-}
-
-// Lazy loading hook
-const useLazyLoading = (ref: React.RefObject<HTMLElement | null>, threshold = 0.1) => {
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    const currentRef = ref.current
-
-    if (!currentRef) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold },
-    )
-
-    observer.observe(currentRef)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [ref, threshold])
-
-  return isVisible
-}
-
 // Lazy Image Component
 const LazyImage: React.FC<{
   src: string
@@ -104,36 +60,31 @@ const LazyImage: React.FC<{
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
   const imgRef = useRef<HTMLDivElement>(null)
-  const isVisible = useLazyLoading(imgRef)
 
   return (
     <div ref={imgRef} className={`lazy-image-container ${className || ""}`}>
-      {isVisible && (
-        <>
-          {!isLoaded && !hasError && (
-            <div className="image-placeholder">
-              <div className="image-skeleton"></div>
-            </div>
-          )}
-          <img
-            src={src || "/placeholder.svg"}
-            alt={alt}
-            onLoad={() => setIsLoaded(true)}
-            onError={() => {
-              setHasError(true)
-              setIsLoaded(true)
-            }}
-            style={{
-              opacity: isLoaded ? 1 : 0,
-              transition: "opacity 0.3s ease-in-out",
-            }}
-          />
-          {hasError && (
-            <div className="image-error">
-              <span>Failed to load image</span>
-            </div>
-          )}
-        </>
+      {!isLoaded && !hasError && (
+        <div className="image-placeholder">
+          <div className="image-skeleton"></div>
+        </div>
+      )}
+      <img
+        src={src || "/placeholder.svg"}
+        alt={alt}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          setHasError(true)
+          setIsLoaded(true)
+        }}
+        style={{
+          opacity: isLoaded ? 1 : 0,
+          transition: "opacity 0.3s ease-in-out",
+        }}
+      />
+      {hasError && (
+        <div className="image-error">
+          <span>Failed to load image</span>
+        </div>
       )}
     </div>
   )
@@ -147,32 +98,14 @@ const EventSkeleton = () => (
         <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
         <div className="h-8 w-32 bg-gray-200 rounded-md"></div>
       </div>
-
       <div className="h-64 w-full bg-gray-200 rounded-md mb-4"></div>
-
       <div className="flex space-x-2 mb-4">
-        <div className="h-10 w-1/3 bg-gray-200 rounded-md"></div>
-        <div className="h-10 w-1/3 bg-gray-200 rounded-md"></div>
-        <div className="h-10 w-1/3 bg-gray-200 rounded-md"></div>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-10 w-1/5 bg-gray-200 rounded-md"></div>
+        ))}
       </div>
-
       <div className="space-y-4 p-4">
         <div className="h-8 w-3/4 bg-gray-200 rounded-md"></div>
-
-        <div className="flex justify-between items-center">
-          <div className="h-6 w-24 bg-gray-200 rounded-md"></div>
-          <div className="h-6 w-24 bg-gray-200 rounded-md"></div>
-        </div>
-
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-6 w-1/3 bg-gray-200 rounded-md"></div>
-              <div className="h-6 w-1/2 bg-gray-200 rounded-md"></div>
-            </div>
-          ))}
-        </div>
-
         <div className="h-32 w-full bg-gray-200 rounded-md"></div>
       </div>
     </div>
@@ -183,7 +116,7 @@ const Event = () => {
   const { uid, id } = useParams<{ uid: string; id: string }>()
   const [eventData, setEventData] = useState<EventType | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<"details" | "tickets" | "booker">("details")
+  const [activeTab, setActiveTab] = useState<"details" | "location" | "tickets" | "booker" | "reviews">("details")
   const [walletBalance, setWalletBalance] = useState<number>(0)
   const [isSoldOut, setIsSoldOut] = useState(false)
   const [isSaleEnded, setIsSaleEnded] = useState(false)
@@ -209,19 +142,6 @@ const Event = () => {
   // Use sessionStorage for caching
   const cacheKey = `event_${id}_${uid}`
   const cacheDuration = 5 * 60 * 1000 // 5 minutes in milliseconds
-
-  // Format number with commas
-  const formatNumber = useCallback((num: number): string => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  }, [])
-
-  // Format currency with commas
-  const formatCurrency = useCallback(
-    (amount: number): string => {
-      return `₦${formatNumber(Number.parseFloat(amount.toFixed(2)))}`
-    },
-    [formatNumber],
-  )
 
   // Check if event has ended
   const hasEventEnded = useCallback(() => {
@@ -427,7 +347,6 @@ const Event = () => {
       const user = auth.currentUser
       if (!user || !eventData) {
         // Redirect to login if user is not authenticated
-        // Store current path for redirect after login
         sessionStorage.setItem("redirectAfterLogin", location.pathname)
         navigate("/login")
         return
@@ -506,7 +425,6 @@ const Event = () => {
 
     // Check if user is authenticated
     if (!auth.currentUser) {
-      // Store current path for redirect after login
       sessionStorage.setItem("redirectAfterLogin", location.pathname)
       navigate("/login")
       return
@@ -535,6 +453,10 @@ const Event = () => {
     setShowPassedDialog(false)
   }
 
+  const handleShowPassedDialog = () => {
+    setShowPassedDialog(true)
+  }
+
   if (loading) {
     return (
       <>
@@ -560,7 +482,7 @@ const Event = () => {
 
   return (
     <>
-      <Search></Search>
+      <Search />
       <Helmet>
         <title>{eventData.eventName} - Event Details</title>
         <meta name="description" content={`Details about the event: ${eventData.eventName}`} />
@@ -617,273 +539,88 @@ const Event = () => {
               onClick={() => setActiveTab("details")}
             >
               <Info size={16} />
-              Event Details
+              Details
+            </button>
+            <button
+              className={`tab-button ${activeTab === "location" ? "active" : ""}`}
+              onClick={() => setActiveTab("location")}
+            >
+              <MapPin size={16} />
+              Location
             </button>
             <button
               className={`tab-button ${activeTab === "tickets" ? "active" : ""}`}
               onClick={() => setActiveTab("tickets")}
             >
               <Ticket size={16} />
-              Buy Ticket
+              Tickets
             </button>
             <button
               className={`tab-button ${activeTab === "booker" ? "active" : ""}`}
               onClick={() => setActiveTab("booker")}
             >
               <User size={16} />
-              Booker Details
+              Organizer
+            </button>
+            <button
+              className={`tab-button ${activeTab === "reviews" ? "active" : ""}`}
+              onClick={() => setActiveTab("reviews")}
+            >
+              <MessageSquare size={16} />
+              Reviews
             </button>
           </div>
 
           <div className="tab-content-wrapper">
             <div className="tab-content">
               {activeTab === "details" && (
-                <div className="event-details-tab">
-                  <h1 className="event-title">{eventData.eventName}</h1>
+                <EventDetailsTab
+                  eventData={eventData}
+                  eventUrl={eventUrl}
+                  isLiked={isLiked}
+                  likeCount={likeCount}
+                  isLiking={isLiking}
+                  isSoldOut={isSoldOut}
+                  onToggleLike={handleToggleLike}
+                />
+              )}
 
-                  <div className="event-actions-container">
-                    <div className="event-share-container">
-                      <ShareBtn url={eventUrl} title={`Join me at ${eventData.eventName}`} />
-                    </div>
-
-                    <div className="event-like-container">
-                      <button
-                        className={`event-like-button ${isLiked ? "liked" : ""}`}
-                        onClick={handleToggleLike}
-                        disabled={isLiking}
-                      >
-                        {isLiked ? (
-                          <i className="bx bxs-heart like-icon"></i>
-                        ) : (
-                          <i className="bx bx-heart like-icon"></i>
-                        )}
-                        <span className="like-count">{formatNumber(likeCount)}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">Event Type:</span>
-                    <span className="detail-value">{eventData.eventType}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">Start Date:</span>
-                    <span className="detail-value">
-                      {new Date(eventData.eventDate).toLocaleDateString("en-US", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">Start Time:</span>
-                    <span className="detail-value">{eventData.eventStart || "Not specified"}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">End Date:</span>
-                    <span className="detail-value">
-                      {eventData.eventEndDate
-                        ? new Date(eventData.eventEndDate).toLocaleDateString("en-US", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                        : "Not specified"}
-                    </span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">End Time:</span>
-                    <span className="detail-value">{eventData.eventEnd || "Not specified"}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">Venue:</span>
-                    <span className="detail-value">{eventData.eventVenue}</span>
-                  </div>
-
-                  {eventData.enableMaxSize && eventData.maxSize && (
-                    <div className="detail-row">
-                      <span className="detail-label">Maximum Attendees:</span>
-                      <span className="detail-value">
-                        {formatNumber(eventData.ticketsSold || 0)} / {formatNumber(Number.parseInt(eventData.maxSize))}
-                        {isSoldOut && <span className="sold-out-badge">SOLD OUT</span>}
-                      </span>
-                    </div>
-                  )}
-
-                  {eventData.enableColorCode && eventData.colorCode && (
-                    <div className="detail-row">
-                      <span className="detail-label">Event Color:</span>
-                      <span className="detail-value">
-                        <span className="color-preview" style={{ backgroundColor: eventData.colorCode }}></span>
-                        {eventData.colorCode}
-                      </span>
-                    </div>
-                  )}
-
-                  {eventData.eventDescription && (
-                    <div className="event-description">
-                      <h3>Description</h3>
-                      <p>{eventData.eventDescription}</p>
-                      <div className="detail-row">
-                        <span className="detail-label">Agent Activity:</span>
-                        <span className="detail-value">
-                          {eventData.allowAgents ? (
-                            <span className="agent-status enabled">
-                              Enabled - Agents can sell tickets for this event
-                            </span>
-                          ) : (
-                            <span className="agent-status disabled">Disabled - Only organizer can sell tickets</span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {activeTab === "location" && (
+                <LocationTab eventVenue={eventData.eventVenue} eventName={eventData.eventName} />
               )}
 
               {activeTab === "tickets" && (
-                <div className="tickets-tab">
-                  <h2>Ticket Information</h2>
-
-                  {isEventToday && !isEventPassed && (
-                    <div className="event-today-message">Event is happening today! Grab your tickets now</div>
-                  )}
-
-                  {isSoldOut && (
-                    <div className="sold-out-message">This event is sold out! No more tickets are available.</div>
-                  )}
-
-                  {isSaleEnded && <div className="sale-ended-message">Ticket sales have ended for this event.</div>}
-
-                  {isEventPassed && <div className="event-passed-message">This event has already taken place.</div>}
-
-                  {eventData.enableStopDate && eventData.stopDate && !isSaleEnded && (
-                    <div className="ticket-sale-info">
-                      <p>Ticket sales end on: {new Date(eventData.stopDate).toLocaleString()}</p>
-                    </div>
-                  )}
-
-                  {eventData.isFree ? (
-                    <div className="free-event-section">
-                      <p className="free-tag">This is a free event</p>
-                      {isEventPassed ? (
-                        <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
-                          Passed
-                        </button>
-                      ) : (
-                        <button
-                          className="get-ticket-btn"
-                          onClick={() => handleBuyTicket("Free Admission", 0)}
-                          disabled={isSoldOut || isSaleEnded}
-                        >
-                          {isEventToday ? "Get Tickets Today" : "Get Free Ticket"}
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="ticket-prices">
-                      <h3>Available Tickets:</h3>
-                      {Array.isArray(eventData.ticketPrices) && eventData.ticketPrices.length > 0 ? (
-                        <ul>
-                          {eventData.ticketPrices.map((ticket, index) => (
-                            <li key={index}>
-                              <div className="ticket-info">
-                                <span className="policy">{ticket.policy}</span>
-                                <span className="price">{formatCurrency(Number.parseFloat(String(ticket.price)))}</span>
-                              </div>
-                              {isEventPassed ? (
-                                <button className="passed-btn" onClick={() => setShowPassedDialog(true)}>
-                                  Passed
-                                </button>
-                              ) : (
-                                <button
-                                  className="buy-ticket-btn"
-                                  onClick={() => handleBuyTicket(ticket.policy, ticket.price)}
-                                  disabled={isSoldOut || isSaleEnded}
-                                >
-                                  {isEventToday ? "Get Tickets Today" : "Buy"}
-                                </button>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>No ticket pricing information available for this event.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <BuyTicketTab
+                  eventData={eventData}
+                  isEventToday={isEventToday}
+                  isEventPassed={isEventPassed}
+                  isSoldOut={isSoldOut}
+                  isSaleEnded={isSaleEnded}
+                  onBuyTicket={handleBuyTicket}
+                  onShowPassedDialog={handleShowPassedDialog}
+                />
               )}
 
               {activeTab === "booker" && (
-                <div className="booker-tab">
-                  <h2>Event Organizer</h2>
+                <BookerDetailsTab
+                  bookerDetails={bookerDetails}
+                  bookerName={eventData.bookerName}
+                  creatorId={eventData.createdBy}
+                />
+              )}
 
-                  {bookerDetails ? (
-                    <div className="booker-details">
-                      <div className="detail-row">
-                        <span className="detail-label">Organizer:</span>
-                        <span className="detail-value">
-                          {bookerDetails.username}
-                          {bookerDetails.isVerified && (
-                            <span className="verified-badge" title="Verified Organizer">
-                              ✓
-                            </span>
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="detail-row">
-                        <span className="detail-label">Email:</span>
-                        <span className="detail-value">{bookerDetails.email}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <span className="detail-label">Phone:</span>
-                        <span className="detail-value">{bookerDetails.phone}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <span className="detail-label">Verification Status:</span>
-                        <span className="detail-value">
-                          {bookerDetails.isVerified ? (
-                            <span className="verification-status verified">Verified</span>
-                          ) : (
-                            <span className="verification-status unverified">Unverified</span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p>Loading organizer details...</p>
-                  )}
-                </div>
+              {activeTab === "reviews" && (
+                <ReviewsTab
+                  eventId={id || ""}
+                  eventName={eventData.eventName}
+                  eventEndDate={eventData.eventEndDate}
+                  eventEnd={eventData.eventEnd}
+                  hasEventEnded={hasEventEnded()}
+                  isAuthenticated={isAuthenticated}
+                />
               )}
             </div>
           </div>
-
-          {/* Event Reviews Section */}
-          {eventData && (
-            <EventReviews
-              eventId={id || ""}
-              eventName={eventData.eventName}
-              eventEndDate={eventData.eventEndDate}
-              eventEnd={eventData.eventEnd}
-              hasEventEnded={hasEventEnded()}
-              isAuthenticated={isAuthenticated}
-            />
-          )}
-
-          {/* Review Call-to-Action */}
-          {eventData && hasEventEnded() && <Review eventId={id || ""} eventName={eventData.eventName} />}
 
           {/* Passed Event Dialog */}
           {showPassedDialog && (
@@ -907,63 +644,180 @@ const Event = () => {
       </div>
       <Footer />
 
-      {/* Additional styles for lazy loading */}
+      {/* Additional styles */}
       <style>{`
-        .lazy-image-container {
-          position: relative;
+        .location-tab {
+          padding: 1rem 0;
+        }
+
+        .location-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .location-icon {
+          color: #6b2fa5;
+        }
+
+        .venue-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 1.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .venue-info h3 {
+          margin-bottom: 0.5rem;
+          color: #1f2937;
+        }
+
+        .venue-address {
+          font-size: 1.1rem;
+          color: #4b5563;
+          margin-bottom: 1rem;
+        }
+
+        .maps-button {
+          background: #6b2fa5;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 0.75rem 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .maps-button:hover {
+          background: #5a2589;
+        }
+
+        .location-note {
+          background: #fef3c7;
+          border: 1px solid #f59e0b;
+          border-radius: 6px;
+          padding: 1rem;
+        }
+
+        .suggested-events-section {
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .suggested-events-section h3 {
+          margin-bottom: 1rem;
+          color: #1f2937;
+        }
+
+        .suggested-events-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1rem;
+        }
+
+        .suggested-event-card {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .suggested-event-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-image-container {
           width: 100%;
-          height: 100%;
+          height: 120px;
           overflow: hidden;
         }
 
-        .lazy-image-container img {
+        .event-image {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: opacity 0.3s ease-in-out;
         }
 
-        .image-placeholder {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
+        .event-info {
+          padding: 1rem;
+        }
+
+        .event-name {
+          font-size: 0.9rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: #1f2937;
+        }
+
+        .event-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .meta-item {
           display: flex;
           align-items: center;
-          justify-content: center;
-          background: #f0f0f0;
+          gap: 0.25rem;
+          font-size: 0.75rem;
+          color: #6b7280;
         }
 
-        .image-skeleton {
+        .suggestions-skeleton {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1rem;
+        }
+
+        .suggestion-skeleton-card {
+          background: #f3f4f6;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .skeleton-image {
           width: 100%;
-          height: 100%;
+          height: 120px;
           background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
           background-size: 200% 100%;
           animation: loading 1.5s infinite;
         }
 
-        .image-error {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 0, 0, 0.1);
-          color: #666;
-          font-size: 14px;
+        .skeleton-content {
+          padding: 1rem;
         }
 
-        .event-image-container {
-          width: 100%;
-          height: 300px;
-          overflow: hidden;
-          position: relative;
-          border-radius: 8px;
-          margin-bottom: 1rem;
+        .skeleton-title {
+          height: 1rem;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+          margin-bottom: 0.5rem;
+          border-radius: 4px;
+        }
+
+        .skeleton-text {
+          height: 0.75rem;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+          margin-bottom: 0.25rem;
+          border-radius: 4px;
+        }
+
+        .no-suggestions {
+          text-align: center;
+          padding: 2rem;
+          color: #6b7280;
         }
 
         @keyframes loading {
@@ -975,18 +829,22 @@ const Event = () => {
           }
         }
 
-        /* Wallet display styling */
-        .wallet-display {
-          display: flex;
-          align-items: center;
-        }
+        @media (max-width: 768px) {
+          .event-tabs {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 0.5rem;
+          }
 
-        /* Reduce motion for users who prefer it */
-        @media (prefers-reduced-motion: reduce) {
-          .lazy-image-container img,
-          .image-skeleton {
-            animation: none;
-            transition: none;
+          .tab-button {
+            flex-shrink: 0;
+            min-width: auto;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .suggested-events-grid {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>

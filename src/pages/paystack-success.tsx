@@ -5,23 +5,72 @@ import { useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc, collection, addDoc, updateDoc, getDocs, setDoc } from "firebase/firestore"
-import { CheckCircle, XCircle, Share2, Mail } from "lucide-react"
+import { XCircle, Loader2 } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import "boxicons/css/boxicons.min.css"
 import "../styles/payment-override.css"
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
+// Define comprehensive interfaces for better type safety
+interface PaymentDataFromLocalStorage {
+  eventId: string
+  eventName: string
+  ticketType: string
+  ticketPrice: number // This is the final price paid
+  eventCreatorId: string
+  originalPrice?: number // Original price before discount
+  discountApplied?: boolean
+  discountCode?: string
+  eventVenue?: string
+  eventType?: string
+  eventDate?: string
+  eventEndDate?: string
+  eventStart?: string
+  eventEnd?: string
+  stopDate?: string
+  enableStopDate?: boolean
+  bookerName?: string
+  bookerEmail?: string
+  // Add transactionFee and totalAmount if they are part of Paystack flow
+  transactionFee?: number
+  totalAmount?: number
+}
+
+interface TicketResultData {
+  success: boolean
+  message: string
+  ticketId: string
+  ticketReference: string
+  userData: {
+    fullName: string
+    email: string
+  }
+  finalPrice: number // This is the ticketPrice from paymentData
+  discountApplied: boolean
+}
+
+interface EventDetails {
+  eventVenue: string
+  eventType: string
+  eventDate: string
+  eventEndDate: string
+  eventStart: string
+  eventEnd: string
+  stopDate?: string
+  enableStopDate?: boolean
+  bookerName?: string
+  bookerEmail?: string
+}
 
 const PaystackSuccess = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [paymentResult, setPaymentResult] = useState<any>(null)
-  const [eventData, setEventData] = useState<any>(null)
-  const [showShareOptions, setShowShareOptions] = useState(false)
-  const [copySuccess, setCopySuccess] = useState(false)
+  const [eventData, setEventData] = useState<PaymentDataFromLocalStorage | null>(null) // Renamed to eventData for clarity
   const [emailSent, setEmailSent] = useState(false)
   const [emailSending, setEmailSending] = useState(false)
 
@@ -51,7 +100,7 @@ const PaystackSuccess = () => {
           return
         }
 
-        const paymentData = JSON.parse(paymentDataStr)
+        const paymentData: PaymentDataFromLocalStorage = JSON.parse(paymentDataStr)
         setEventData(paymentData)
 
         // Verify payment on the server
@@ -92,6 +141,8 @@ const PaystackSuccess = () => {
             paymentMethod: "Paystack",
             originalPrice: paymentData.originalPrice || paymentData.ticketPrice,
             ticketPrice: paymentData.ticketPrice,
+            transactionFee: paymentData.transactionFee || 0, // Assuming 0 if not explicitly passed
+            totalAmount: paymentData.totalAmount || paymentData.ticketPrice, // Assuming ticketPrice is total if not explicitly passed
             discountApplied: paymentData.discountApplied || false,
             discountCode: paymentData.discountCode || null,
             // Add event details with null checks to avoid undefined values
@@ -132,10 +183,22 @@ const PaystackSuccess = () => {
 
           const eventDoc = await getDoc(eventDocRef)
           if (eventDoc.exists()) {
-            const eventData = eventDoc.data()
+            const eventDataFromDb = eventDoc.data()
             await updateDoc(eventDocRef, {
-              ticketsSold: (eventData.ticketsSold || 0) + 1,
-              totalRevenue: (eventData.totalRevenue || 0) + Number(paymentData.ticketPrice),
+              ticketsSold: (eventDataFromDb.ticketsSold || 0) + 1,
+              totalRevenue: (eventDataFromDb.totalRevenue || 0) + Number(paymentData.ticketPrice),
+            })
+
+            // Update availableTickets for the specific ticket type
+            const pricing = eventDataFromDb.pricing || []
+            const updatedPricing = pricing.map((ticket: any) => {
+              if (ticket.ticketType === paymentData.ticketType && ticket.availableTickets > 0) {
+                return { ...ticket, availableTickets: ticket.availableTickets - 1 }
+              }
+              return ticket
+            })
+            await updateDoc(eventDocRef, {
+              pricing: updatedPricing,
             })
           }
 
@@ -172,7 +235,8 @@ const PaystackSuccess = () => {
           // Send confirmation email
           await sendConfirmationEmail(ticketId, ticketReference, userData, paymentData)
 
-          setPaymentResult({
+          // Prepare data for ticket.tsx
+          const ticketPagePaymentResult: TicketResultData = {
             success: true,
             message: "Payment successful",
             ticketId,
@@ -183,17 +247,62 @@ const PaystackSuccess = () => {
             },
             finalPrice: paymentData.ticketPrice,
             discountApplied: paymentData.discountApplied || false,
+          }
+
+          const ticketPageEventDetails: EventDetails = {
+            eventVenue: paymentData.eventVenue || "",
+            eventType: paymentData.eventType || "",
+            eventDate: paymentData.eventDate || "",
+            eventEndDate: paymentData.eventEndDate || "",
+            eventStart: paymentData.eventStart || "",
+            eventEnd: paymentData.eventEnd || "",
+            stopDate: paymentData.stopDate,
+            enableStopDate: paymentData.enableStopDate,
+            bookerName: paymentData.bookerName,
+            bookerEmail: paymentData.bookerEmail,
+          }
+
+          // Clear the payment data from localStorage
+          localStorage.removeItem("paystack_payment_data")
+
+          // Navigate to ticket page
+          navigate("/ticket", {
+            state: {
+              paymentResult: ticketPagePaymentResult,
+              paymentData: {
+                eventId: paymentData.eventId,
+                eventName: paymentData.eventName,
+                ticketType: paymentData.ticketType,
+                ticketPrice: paymentData.originalPrice || paymentData.ticketPrice, // Use originalPrice if available
+                eventCreatorId: paymentData.eventCreatorId,
+                finalPrice: paymentData.ticketPrice, // Final price after discount
+                transactionFee: paymentData.transactionFee || 0,
+                totalAmount: paymentData.totalAmount || paymentData.ticketPrice,
+                appliedDiscount: paymentData.discountApplied
+                  ? {
+                      code: paymentData.discountCode || "",
+                      type: "flat", // Assuming flat for simplicity, adjust if type is stored
+                      value: 0, // Discount value not directly available here, might need to fetch or store
+                      maxUses: 0,
+                      usedCount: 0,
+                      active: true,
+                    }
+                  : null,
+              },
+              eventDetails: ticketPageEventDetails,
+              isFreeEvent: false, // Paystack is for paid events
+              adjustedTransactionFee: paymentData.transactionFee || 0,
+              adjustedTotalAmount: paymentData.totalAmount || paymentData.ticketPrice,
+            },
           })
         } else {
           setPaymentResult({
             success: false,
             message: "Payment verification failed",
           })
+          setLoading(false)
+          localStorage.removeItem("paystack_payment_data")
         }
-
-        // Clear the payment data from localStorage
-        localStorage.removeItem("paystack_payment_data")
-        setLoading(false)
       } catch (error) {
         console.error("Error verifying payment:", error)
         setPaymentResult({
@@ -201,6 +310,7 @@ const PaystackSuccess = () => {
           message: "An error occurred during payment verification",
         })
         setLoading(false)
+        localStorage.removeItem("paystack_payment_data")
       }
     }
 
@@ -230,6 +340,13 @@ const PaystackSuccess = () => {
           booker_email: paymentData.bookerEmail || "support@spotix.com.ng",
           ticket_price: paymentData.ticketPrice.toFixed(2),
           payment_method: "Paystack",
+          event_venue: paymentData.eventVenue || "Not specified",
+          event_date: paymentData.eventDate || "Not specified",
+          event_start: paymentData.eventStart || "Not specified",
+          event_end: paymentData.eventEnd || "Not specified",
+          transaction_id: ticketReference, // Using Paystack reference as transaction ID
+          transaction_date: new Date().toLocaleDateString(),
+          transaction_time: new Date().toLocaleTimeString(),
         }),
       })
 
@@ -268,181 +385,16 @@ const PaystackSuccess = () => {
     navigate("/ticket-history")
   }
 
-  const handleShare = () => {
-    setShowShareOptions(!showShareOptions)
-  }
-
-  const shareToSocialMedia = (platform: string) => {
-    const eventName = eventData?.eventName || "this event"
-    const shareText = `Hey friends! I just got a ticket to ${eventName} from Spotix! Get yours here: `
-
-    let shareUrl = ""
-
-    switch (platform) {
-      case "whatsapp":
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText + window.location.origin + "/event/" + eventData?.eventCreatorId + "/" + eventData?.eventId)}`
-        break
-      case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.origin + "/event/" + eventData?.eventCreatorId + "/" + eventData?.eventId)}`
-        break
-      case "facebook":
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + "/event/" + eventData?.eventCreatorId + "/" + eventData?.eventId)}`
-        break
-      default:
-        break
-    }
-
-    if (shareUrl) {
-      window.open(shareUrl, "_blank")
-    }
-
-    setShowShareOptions(false)
-  }
-
-  const copyShareLink = () => {
-    const eventName = eventData?.eventName || "this event"
-    const shareText = `Hey friends! I just got a ticket to ${eventName} from Spotix! Get yours here: ${window.location.origin}/event/${eventData?.eventCreatorId}/${eventData?.eventId}`
-
-    navigator.clipboard.writeText(shareText).then(() => {
-      setCopySuccess(true)
-      setTimeout(() => setCopySuccess(false), 2000)
-    })
-  }
-
   if (loading) {
     return <Preloader loading={true} />
   }
 
-  return (
-    <>
-      <UserHeader />
-      <div className="payment-result">
-        {paymentResult?.success ? (
-          <div className="payment-success">
-            <div className="success-icon">
-              <CheckCircle size={60} className="text-green-500" />
-            </div>
-            <h2>Payment Successful!</h2>
-
-            <img src="/paystack-200.svg" alt="Paystack Success" className="mx-auto my-4 w-32 h-32" />
-
-            <p className="text-center text-gray-700 mb-6">
-              Congratulations! Your payment has been completed successfully. A receipt has been sent to your email.
-            </p>
-
-            {emailSent && (
-              <div className="email-confirmation-message">
-                <Mail size={18} className="email-icon" />
-                <p>A confirmation email has been sent to your registered email address.</p>
-              </div>
-            )}
-
-            <div className="ticket-preview">
-              <div className="ticket-header">
-                <img src="/logo.svg" alt="Spotix Logo" className="ticket-logo" />
-                <h3>SPOTIX</h3>
-              </div>
-              <div className="ticket-details">
-                <div className="ticket-detail-row">
-                  <span>Name:</span>
-                  <span>{paymentResult.userData?.fullName}</span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Email:</span>
-                  <span>{paymentResult.userData?.email}</span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Event:</span>
-                  <span>{eventData?.eventName}</span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Venue:</span>
-                  <span>{eventData?.eventVenue || "Not specified"}</span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Date:</span>
-                  <span>
-                    {eventData?.eventDate ? new Date(eventData.eventDate).toLocaleDateString() : "Not specified"}
-                  </span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Ticket Type:</span>
-                  <span>{eventData?.ticketType}</span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Ticket ID:</span>
-                  <span className="ticket-id">{paymentResult.ticketId}</span>
-                </div>
-                <div className="ticket-detail-row">
-                  <span>Reference:</span>
-                  <span>{paymentResult.ticketReference}</span>
-                </div>
-                {paymentResult.discountApplied && (
-                  <div className="ticket-detail-row">
-                    <span>Discount Applied:</span>
-                    <span>{eventData?.discountCode}</span>
-                  </div>
-                )}
-                <div className="ticket-detail-row">
-                  <span>Amount Paid:</span>
-                  <span>₦{paymentResult.finalPrice?.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Social Share Section */}
-            <div className="social-share-container">
-              <h3>Share Your Ticket</h3>
-              <p>Let your friends know about this event!</p>
-
-              <div className="share-buttons">
-                <button className="share-button" onClick={handleShare}>
-                  <Share2 size={18} />
-                  Share
-                </button>
-
-                {showShareOptions && (
-                  <div className="share-options">
-                    <button className="share-option whatsapp" onClick={() => shareToSocialMedia("whatsapp")}>
-                      <i className="bx bxl-whatsapp"></i>
-                      WhatsApp
-                    </button>
-                    <button className="share-option twitter" onClick={() => shareToSocialMedia("twitter")}>
-                      <i className="bx bxl-twitter"></i>
-                      Twitter
-                    </button>
-                    <button className="share-option facebook" onClick={() => shareToSocialMedia("facebook")}>
-                      <i className="bx bxl-facebook"></i>
-                      Facebook
-                    </button>
-                    <button className={`share-option copy ${copySuccess ? "success" : ""}`} onClick={copyShareLink}>
-                      {copySuccess ? (
-                        <>
-                          <CheckCircle size={16} />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <i className="bx bx-link"></i>
-                          Copy Link
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="success-actions">
-              <button className="view-tickets-btn" onClick={handleViewTickets}>
-                View My Tickets
-              </button>
-              <button className="home-btn" onClick={handleGoHome}>
-                Go to Home
-              </button>
-            </div>
-          </div>
-        ) : (
+  // If payment failed, display the error message
+  if (paymentResult && !paymentResult.success) {
+    return (
+      <>
+        <UserHeader />
+        <div className="payment-result">
           <div className="payment-failed">
             <div className="error-icon">
               <XCircle size={60} className="text-red-500" />
@@ -453,7 +405,23 @@ const PaystackSuccess = () => {
               Back to Home
             </button>
           </div>
-        )}
+        </div>
+        <Footer />
+      </>
+    )
+  }
+
+  // This component should ideally not render anything if successful, as it navigates away.
+  // However, for development/debugging, you might keep a minimal message.
+  return (
+    <>
+      <UserHeader />
+      <div className="payment-result">
+        <div className="payment-processing">
+          <h2>Redirecting to Ticket...</h2>
+          <p>Your payment was successful. Please wait while we prepare your ticket details.</p>
+          <Loader2 className="animate-spin text-6xl text-green-500 mx-auto my-8" />
+        </div>
       </div>
       <Footer />
     </>

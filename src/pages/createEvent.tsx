@@ -8,7 +8,6 @@ import { Helmet } from "react-helmet"
 import { collection, addDoc, doc, getDoc, setDoc, getDocs } from "firebase/firestore"
 import { useNavigate } from "react-router-dom"
 import {
-  Plus,
   HelpCircle,
   Wand2,
   Check,
@@ -27,6 +26,7 @@ import Preloader from "../components/preloader"
 import BookersHeader from "../components/BookersHeader"
 import { uploadImage } from "../utils/imageUploader"
 import "../styles/create.css"
+import AddPricing from "../components/addPricing"
 
 interface EventCollection {
   id: string
@@ -35,7 +35,14 @@ interface EventCollection {
   description: string
 }
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
+interface TicketType {
+  policy: string
+  price: string
+  description: string
+  availableTickets: string
+}
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 const CreateEvent = () => {
   const [currentDateTime, setCurrentDateTime] = useState("")
   const [activeTab, setActiveTab] = useState<"one-time" | "recurring">("one-time")
@@ -92,7 +99,9 @@ const CreateEvent = () => {
   const cancelRecurringUploadRef = useRef<(() => void) | null>(null)
 
   const [enablePricing, setEnablePricing] = useState(false)
-  const [ticketPrices, setTicketPrices] = useState([{ policy: "", price: "" }])
+  const [ticketPrices, setTicketPrices] = useState<TicketType[]>([
+    { policy: "", price: "", description: "", availableTickets: "" },
+  ])
 
   const [enableStopDate, setEnableStopDate] = useState(false)
   const [stopDate, setStopDate] = useState("")
@@ -212,10 +221,6 @@ const CreateEvent = () => {
       }
     }
   }, [])
-
-  const addPricingRow = () => {
-    setTicketPrices([...ticketPrices, { policy: "", price: "" }])
-  }
 
   const generateUniqueId = () => {
     return {
@@ -637,7 +642,53 @@ const CreateEvent = () => {
       if (!user) throw new Error("User not authenticated")
 
       const { payId } = generateUniqueId()
-      const isFree = !enablePricing
+
+      // Process ticket prices and availability
+      const finalTicketPrices: {
+        policy: string
+        price: number
+        description?: string
+        availableTickets?: number | null
+      }[] = []
+      if (enablePricing) {
+        let freeTicketCount = 0
+        for (const ticket of ticketPrices) {
+          if (!ticket.policy.trim()) {
+            continue 
+          }
+
+          const price = ticket.price === "" ? 0 : Number.parseFloat(ticket.price)
+          if (isNaN(price)) {
+            throw new Error(`Invalid price for ticket type "${ticket.policy}". Please enter a valid number.`)
+          }
+
+          const availableTickets = ticket.availableTickets === "" ? null : Number.parseInt(ticket.availableTickets)
+          if (ticket.availableTickets !== "" && availableTickets !== null && isNaN(availableTickets)) {
+            throw new Error(`Invalid available tickets for "${ticket.policy}". Please enter a valid number.`)
+          }
+          if (ticket.availableTickets !== "" && availableTickets !== null && availableTickets <= 0) {
+            throw new Error(`Available tickets for "${ticket.policy}" must be a positive number.`)
+          }
+
+          if (price === 0) {
+            freeTicketCount++
+          }
+
+          finalTicketPrices.push({
+            policy: ticket.policy,
+            price: price,
+            description: ticket.description,
+            availableTickets: availableTickets,
+          })
+        }
+
+        if (finalTicketPrices.length === 0) {
+          throw new Error("Please add at least one ticket type or disable pricing.")
+        }
+        if (freeTicketCount > 1) {
+          throw new Error("Only one ticket type can be set as free when pricing is enabled.")
+        }
+      }
 
       // Use the already uploaded image URL if available, otherwise use verified URL
       let imageUrl = uploadedImageUrl || (isUrlVerified ? imageUrlInput : null)
@@ -713,14 +764,14 @@ const CreateEvent = () => {
         eventType,
         eventImage: imageUrl,
         imageProvider: provider,
-        ticketPrices: isFree ? [] : ticketPrices,
+        ticketPrices: finalTicketPrices, // Use the processed prices
         enableStopDate,
         stopDate: enableStopDate ? stopDate : null,
         enableColorCode,
         colorCode: enableColorCode ? colorCode : null,
         enableMaxSize,
         maxSize: enableMaxSize ? maxSize : null,
-        isFree,
+        isFree: !enablePricing, // isFree should reflect enablePricing
         payId,
         createdBy: user.uid,
         bookerName,
@@ -762,7 +813,9 @@ const CreateEvent = () => {
             eventStartDate: eventDate,
             eventName: eventName,
             freeOrPaid:
-              enablePricing && ticketPrices.length > 0 && ticketPrices.some((ticket) => ticket.policy && ticket.price),
+              enablePricing &&
+              finalTicketPrices.length > 0 &&
+              finalTicketPrices.some((ticket) => ticket.policy && ticket.price),
             timestamp: new Date(),
             creatorID: user.uid,
             eventId: eventId,
@@ -802,8 +855,8 @@ const CreateEvent = () => {
             eventDate: eventDate,
             eventVenue: eventVenue,
             eventType: eventType,
-            isFree: isFree,
-            ticketPrices: eventData.ticketPrices,
+            isFree: !enablePricing, // Use the derived isFree
+            ticketPrices: finalTicketPrices, // Use the processed prices
             createdAt: new Date(),
             collectionName: selectedEventCollection.name,
             eventCollectionTheme: eventName,
@@ -1132,53 +1185,12 @@ const CreateEvent = () => {
             </div>
 
             <div className="event-section">
-              <h3>Pricing</h3>
-              <div className="option-with-help switch-container">
-                <label>
-                  Enable Pricing
-                  <div className="switch">
-                    <input type="checkbox" checked={enablePricing} onChange={() => setEnablePricing(!enablePricing)} />
-                    <span className="slider round"></span>
-                  </div>
-                </label>
-                <span title="This part is for adding ticket policy and prices">
-                  <HelpCircle size={16} />
-                </span>
-              </div>
-
-              {enablePricing && (
-                <>
-                  {ticketPrices.map((ticket, index) => (
-                    <div key={index} className="ticket-pricing-row">
-                      <input
-                        type="text"
-                        placeholder="Ticket Type"
-                        value={ticket.policy}
-                        onChange={(e) => {
-                          const newTickets = [...ticketPrices]
-                          newTickets[index].policy = e.target.value
-                          setTicketPrices(newTickets)
-                        }}
-                        required={enablePricing}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Price"
-                        value={ticket.price}
-                        onChange={(e) => {
-                          const newTickets = [...ticketPrices]
-                          newTickets[index].price = e.target.value
-                          setTicketPrices(newTickets)
-                        }}
-                        required={enablePricing}
-                      />
-                    </div>
-                  ))}
-                  <button type="button" className="add-price-button" onClick={addPricingRow}>
-                    <Plus size={16} /> Add Ticket Type
-                  </button>
-                </>
-              )}
+              <AddPricing
+                enablePricing={enablePricing}
+                setEnablePricing={setEnablePricing}
+                ticketPrices={ticketPrices}
+                setTicketPrices={setTicketPrices}
+              />
             </div>
 
             <div className="event-section">
