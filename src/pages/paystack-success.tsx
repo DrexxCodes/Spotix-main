@@ -19,9 +19,9 @@ interface PaymentDataFromLocalStorage {
   eventId: string
   eventName: string
   ticketType: string
-  ticketPrice: number // This is the final price paid
+  ticketPrice: number 
   eventCreatorId: string
-  originalPrice?: number // Original price before discount
+  originalPrice?: number 
   discountApplied?: boolean
   discountCode?: string
   eventVenue?: string
@@ -34,7 +34,6 @@ interface PaymentDataFromLocalStorage {
   enableStopDate?: boolean
   bookerName?: string
   bookerEmail?: string
-  // Add transactionFee and totalAmount if they are part of Paystack flow
   transactionFee?: number
   totalAmount?: number
 }
@@ -48,7 +47,7 @@ interface TicketResultData {
     fullName: string
     email: string
   }
-  finalPrice: number // This is the ticketPrice from paymentData
+  finalPrice: number 
   discountApplied: boolean
 }
 
@@ -70,7 +69,7 @@ const PaystackSuccess = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [paymentResult, setPaymentResult] = useState<any>(null)
-  const [eventData, setEventData] = useState<PaymentDataFromLocalStorage | null>(null) // Renamed to eventData for clarity
+  const [eventData, setEventData] = useState<PaymentDataFromLocalStorage | null>(null) 
   const [emailSent, setEmailSent] = useState(false)
   const [emailSending, setEmailSending] = useState(false)
 
@@ -108,11 +107,9 @@ const PaystackSuccess = () => {
         const data = response.data
 
         if (data.status && data.data && data.data.status === "success") {
-          // Generate ticket ID and reference
           const ticketId = generateTicketId()
           const ticketReference = reference
 
-          // Get current date and time
           const now = new Date()
           const purchaseDate = now.toLocaleDateString()
           const purchaseTime = now.toLocaleTimeString()
@@ -127,7 +124,7 @@ const PaystackSuccess = () => {
 
           const userData = userDoc.data()
 
-          // Prepare ticket data with discount information and event details
+
           const ticketData = {
             uid: user.uid,
             fullName: userData.fullName || "",
@@ -156,7 +153,7 @@ const PaystackSuccess = () => {
             ...(paymentData.stopDate ? { stopDate: paymentData.stopDate } : {}),
           }
 
-          // Add to attendees collection for the event first and get the document ID
+   
           const attendeesCollectionRef = collection(
             db,
             "events",
@@ -169,7 +166,6 @@ const PaystackSuccess = () => {
           const attendeeDocRef = await addDoc(attendeesCollectionRef, ticketData)
           const consistentDocId = attendeeDocRef.id
 
-          // Add to user's ticket history using the same document ID
           const ticketHistoryRef = doc(db, "TicketHistory", user.uid, "tickets", consistentDocId)
           await setDoc(ticketHistoryRef, {
             ...ticketData,
@@ -178,7 +174,6 @@ const PaystackSuccess = () => {
             eventCreatorId: paymentData.eventCreatorId,
           })
 
-          // Update event stats (increment tickets sold and revenue)
           const eventDocRef = doc(db, "events", paymentData.eventCreatorId, "userEvents", paymentData.eventId)
 
           const eventDoc = await getDoc(eventDocRef)
@@ -189,8 +184,7 @@ const PaystackSuccess = () => {
               totalRevenue: (eventDataFromDb.totalRevenue || 0) + Number(paymentData.ticketPrice),
             })
 
-            // Update availableTickets for the specific ticket type
-            const pricing = eventDataFromDb.pricing || []
+           const pricing = eventDataFromDb.pricing || []
             const updatedPricing = pricing.map((ticket: any) => {
               if (ticket.ticketType === paymentData.ticketType && ticket.availableTickets > 0) {
                 return { ...ticket, availableTickets: ticket.availableTickets - 1 }
@@ -202,10 +196,8 @@ const PaystackSuccess = () => {
             })
           }
 
-          // If a discount was applied, update its usage count
-          if (paymentData.discountApplied && paymentData.discountCode) {
+           if (paymentData.discountApplied && paymentData.discountCode) {
             try {
-              // Find the discount document
               const discountsCollectionRef = collection(
                 db,
                 "events",
@@ -215,13 +207,11 @@ const PaystackSuccess = () => {
                 "discounts",
               )
 
-              // Get all discounts to find the one to update
               const discountsSnapshot = await getDocs(discountsCollectionRef)
 
               discountsSnapshot.forEach(async (doc) => {
                 const data = doc.data()
                 if (data.code === paymentData.discountCode) {
-                  // Update the used count
                   await updateDoc(doc.ref, {
                     usedCount: (data.usedCount || 0) + 1,
                   })
@@ -235,7 +225,7 @@ const PaystackSuccess = () => {
           // Send confirmation email
           await sendConfirmationEmail(ticketId, ticketReference, userData, paymentData)
 
-          // Prepare data for ticket.tsx
+          // Prepare ticket
           const ticketPagePaymentResult: TicketResultData = {
             success: true,
             message: "Payment successful",
@@ -262,10 +252,9 @@ const PaystackSuccess = () => {
             bookerEmail: paymentData.bookerEmail,
           }
 
-          // Clear the payment data from localStorage
           localStorage.removeItem("paystack_payment_data")
 
-          // Navigate to ticket page
+          // Navigate to ticket with data in state 
           navigate("/ticket", {
             state: {
               paymentResult: ticketPagePaymentResult,
@@ -290,7 +279,7 @@ const PaystackSuccess = () => {
                   : null,
               },
               eventDetails: ticketPageEventDetails,
-              isFreeEvent: false, // Paystack is for paid events
+              isFreeEvent: false, 
               adjustedTransactionFee: paymentData.transactionFee || 0,
               adjustedTotalAmount: paymentData.totalAmount || paymentData.ticketPrice,
             },
@@ -317,7 +306,6 @@ const PaystackSuccess = () => {
     verifyPayment()
   }, [location, navigate])
 
-  // Send confirmation email
   const sendConfirmationEmail = async (ticketId: string, ticketReference: string, userData: any, paymentData: any) => {
     if (!paymentData) return
 
@@ -366,7 +354,7 @@ const PaystackSuccess = () => {
     const randomNumbers = Math.floor(10000000 + Math.random() * 90000000).toString()
     const randomLetters = Math.random().toString(36).substring(2, 4).toUpperCase()
 
-    // Insert the random letters at random positions in the numbers
+    
     const pos1 = Math.floor(Math.random() * 8)
     const pos2 = Math.floor(Math.random() * 7) + pos1 + 1
 
@@ -412,7 +400,7 @@ const PaystackSuccess = () => {
   }
 
   // This component should ideally not render anything if successful, as it navigates away.
-  // However, for development/debugging, you might keep a minimal message.
+  // However, for development/debugging, I will keep a light message cos why not?.
   return (
     <>
       <UserHeader />

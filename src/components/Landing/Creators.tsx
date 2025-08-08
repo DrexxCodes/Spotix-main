@@ -43,7 +43,7 @@ const Creators = () => {
         <h2 className="section-title animate-on-scroll">Meet The Founder</h2>
 
         <div className="creators-grid animate-on-scroll">
-          {/* <div className="creator-card">
+          <div className="creator-card">
             <div className="creator-image-container">
               <img src="/bryan.png?height=300&width=300" alt="Ezene Chidebere Bryan" className="creator-image" />
             </div>
@@ -53,7 +53,7 @@ const Creators = () => {
               </h3>
               <p className="creator-title">CEO / Founder</p>
             </div>
-          </div> */}
+          </div>
 
           <div className="creator-card">
             <div className="creator-image-container">
@@ -67,7 +67,7 @@ const Creators = () => {
               <h3 className="creator-name">
                 <span className="animated-text">Onyekwelu Michael (Drexx)</span>
               </h3>
-              <p className="creator-title">Founder/ Snr Engineer</p>
+              <p className="creator-title">Co-Founder/ Snr Engineer</p>
             </div>
           </div>
         </div>

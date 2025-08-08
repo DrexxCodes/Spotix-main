@@ -123,7 +123,7 @@ const RefundTrack = () => {
           className: "status-requested",
           text: "Requested",
           icon: <Clock size={16} />,
-          description: "Your refund request is pending review",
+          description: "Your refund request is pending review. Please check back later",
         }
       case "processing":
         return {

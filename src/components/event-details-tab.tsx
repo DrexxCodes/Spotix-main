@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { formatNumber } from "../utils/formatters"
-import ShareBtn from "./shareBtn" // Declare the ShareBtn variable
+import ShareBtn from "./shareBtn"
+import "../pages/event.css"
 
 interface EventDetailsTabProps {
   eventData: {

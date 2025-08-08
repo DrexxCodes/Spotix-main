@@ -154,7 +154,6 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
     setIsLookingUp(true)
 
     try {
-      // First, get event data
       const eventDocRef = doc(db, "events", bookerID, "userEvents", eventID)
       const eventDoc = await getDoc(eventDocRef)
 
@@ -169,7 +168,6 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
       const eventInfo = eventDoc.data() as EventData
       setEventData(eventInfo)
 
-      // Get booker details
       const bookerDocRef = doc(db, "users", bookerID)
       const bookerDoc = await getDoc(bookerDocRef)
 
@@ -213,7 +211,7 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
     }
   }
 
-  // Reset dialog form
+
   const resetDialogForm = () => {
     setAttendeeName("")
     setAttendeeEmail("")
@@ -223,7 +221,7 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
     setSendEmailConfirmation(true)
   }
 
-  // Open add attendee dialog
+
   const handleAddAttendee = () => {
     if (!eventData) {
       setMessage({ text: "Please lookup an event first", type: "error" })
@@ -232,7 +230,6 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
     setShowDialog(true)
   }
 
-  // Close dialog
   const handleCloseDialog = () => {
     setShowDialog(false)
     resetDialogForm()
@@ -351,20 +348,19 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
       const currentTicketsSold = eventData.ticketsSold || 0
       const currentTotalRevenue = eventData.totalRevenue || 0
 
-      // Calculate revenue (ticket price minus 150 fee, but don't go below 0)
-      const revenueToAdd = Math.max(0, ticketPrice - 150)
 
+      const revenueToAdd = Math.max(0, ticketPrice - 150)
       await updateDoc(eventDocRef, {
         ticketsSold: currentTicketsSold + 1,
         totalRevenue: currentTotalRevenue + revenueToAdd,
       })
 
-      // Generate QR code using document ID
+
       const qrCodeUrl = await generateQRCode(documentId)
       setQrCodeDataUrl(qrCodeUrl)
       setCreatedTicketId(documentId)
 
-      // After generating QR code and before showing ticket result, add:
+
       setCreatedTicketInfo({
         name: attendeeName,
         email: attendeeEmail,
@@ -372,7 +368,7 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
         ticketReference: ticketReference,
       })
 
-      // Send confirmation email if enabled (using form input email)
+
       if (sendEmailConfirmation) {
         await sendConfirmationEmail(ticketId, ticketReference)
       }
@@ -400,8 +396,8 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
   return (
     <div className="add-attendee-tab">
       <div className="add-attendee-header">
-        <h3>Add Attendee</h3>
-        <p>Manually add attendees to events</p>
+        <h3>Event Attendee Console (EAC)</h3>
+        <p>E.A.C version 1.0 maintained by Spotix Nigeria</p>
       </div>
 
       {/* Lookup Section */}
@@ -540,7 +536,7 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
               <div className="form-group">
                 <label htmlFor="attendeeName">
                   <User size={16} />
-                  Attendee Full Name *
+                  Attendee's Full Name *
                 </label>
                 <input
                   type="text"
@@ -555,7 +551,7 @@ const AddAttendeeTab: React.FC<AddAttendeeTabProps> = ({ setMessage, setLoading 
               <div className="form-group">
                 <label htmlFor="attendeeEmail">
                   <Mail size={16} />
-                  Email *
+                 Attendee's Email *
                 </label>
                 <input
                   type="email"

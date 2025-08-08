@@ -15,6 +15,7 @@ const LandingPage = lazy(() => import("./pages/Landing"))
 const Login = lazy(() => import("./pages/login"))
 const Signup = lazy(() => import("./pages/signup"))
 const Home = lazy(() => import("./pages/home"))
+const Discover = lazy(() => import("./pages/discover"))
 const ForgotPassword = lazy(() => import("./pages/forgot-password"))
 const AdminPermissions = lazy(() => import("./pages/AdminPermissions"))
 const AdminSuite = lazy(() => import("./pages/AdminSuite"))
@@ -131,6 +132,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/event/:uid/:id" element={<Event />} />
             <Route path="/event-group/:uid/:id" element={<EventGroup />} />
+            <Route path="/discover/:eventSlug" element={<Discover />} />  
 
             {/* Protected routes - require authentication */}
             <Route path="/bookerRole" element={user ? <BookerRole /> : <Navigate to="/login" />} />

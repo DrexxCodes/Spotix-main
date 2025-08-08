@@ -38,12 +38,12 @@ const formatJoinDate = (joinedAt: any): string => {
   try {
     if (!joinedAt) return "Recently"
 
-    // Check if it's a Firestore Timestamp (has toDate method)
+    // Checks if it's a Firestore Timestamp (has toDate method)
     if (joinedAt && typeof joinedAt.toDate === "function") {
       return new Date(joinedAt.toDate()).toLocaleDateString()
     }
 
-    // Check if it's an ISO string
+    // Checks if it's an ISO string
     if (typeof joinedAt === "string") {
       return new Date(joinedAt).toLocaleDateString()
     }
@@ -131,7 +131,7 @@ const Referrals = () => {
         username: userData.username,
         email: userData.email,
         refGain: 0,
-        totalWithdrawn: 0, // Initialize totalWithdrawn
+        totalWithdrawn: 0, 
         createdAt: serverTimestamp(),
         referredUsers: [],
       })

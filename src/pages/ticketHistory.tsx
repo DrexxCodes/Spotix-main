@@ -160,8 +160,8 @@ const TicketHistory = () => {
   }
 
   return (
+        
     <div className="flex flex-col min-h-screen bg-gray-50">
-        <Search></Search>
       <Helmet>
         <title>Spotix Ticket History</title>
         <meta
@@ -188,6 +188,7 @@ const TicketHistory = () => {
         <meta name="twitter:image" content="/meta.png" />
       </Helmet>
       <UserHeader />
+      <Search></Search>
 
       {/* Fixed header section */}
       <div className="w-full bg-white shadow-sm ticket-history-container">
