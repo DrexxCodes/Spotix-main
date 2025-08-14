@@ -1,0 +1,328 @@
+/* Ticket History Page Styles */
+.ticket-history-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+/* Real Ticket Styling */
+.ticket-card {
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(107, 47, 165, 0.1);
+}
+
+.ticket-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6b2fa5, #8b5fbf, #a855f7);
+  z-index: 1;
+}
+
+.ticket-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 0 1px rgba(107, 47, 165, 0.1);
+}
+
+.ticket-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: rgba(107, 47, 165, 0.2);
+}
+
+.ticket-card:hover::before {
+  background: linear-gradient(90deg, #6b2fa5, #8b5fbf, #a855f7, #c084fc);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Ticket perforation effect */
+.ticket-card-content {
+  position: relative;
+  background: radial-gradient(circle at 0% 50%, transparent 8px, white 8px),
+    radial-gradient(circle at 100% 50%, transparent 8px, white 8px);
+  background-size: 16px 100%;
+  background-position: left center, right center;
+  background-repeat: no-repeat;
+}
+
+/* Ticket corner fold effect */
+.ticket-corner-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-top: 20px solid rgba(107, 47, 165, 0.1);
+}
+
+/* Ticket stub effect */
+.ticket-card .ticket-date-time {
+  position: relative;
+}
+
+.ticket-card .ticket-date-time::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 16px 0 0 #f1f5f9, 32px 0 0 #f1f5f9, 48px 0 0 #f1f5f9;
+}
+
+/* Enhanced ticket details styling */
+.ticket-details {
+  position: relative;
+  z-index: 2;
+}
+
+.ticket-event-name {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.ticket-type {
+  background: rgba(107, 47, 165, 0.1);
+  color: #6b2fa5;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.ticket-price {
+  font-weight: 700;
+  font-size: 18px;
+  background: linear-gradient(135deg, #6b2fa5 0%, #8b5fbf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ticket-icon {
+  background: linear-gradient(135deg, #6b2fa5 0%, #8b5fbf 100%);
+  color: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(107, 47, 165, 0.3);
+}
+
+/* Date and time section styling */
+.ticket-card .bg-gray-50 {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 1px dashed rgba(107, 47, 165, 0.2);
+  position: relative;
+}
+
+.ticket-card .bg-gray-50::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 0 1px rgba(107, 47, 165, 0.1);
+}
+
+.ticket-card .bg-gray-50::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 0 1px rgba(107, 47, 165, 0.1);
+}
+
+/* Ticket reference styling */
+.ticket-card .text-xs.text-gray-500 {
+  font-family: "Courier New", monospace;
+  background: rgba(107, 47, 165, 0.05);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #6b2fa5;
+  border: 1px solid rgba(107, 47, 165, 0.1);
+}
+
+/* Grid layout improvements */
+.tickets-grid {
+  gap: 24px;
+  padding: 20px 0;
+}
+
+/* Empty state styling */
+.tickets-grid .flex.flex-col.items-center {
+  background: white;
+  border-radius: 20px;
+  padding: 60px 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(107, 47, 165, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.tickets-grid .bg-gray-100 {
+  background: linear-gradient(135deg, rgba(107, 47, 165, 0.1) 0%, rgba(107, 47, 165, 0.05) 100%);
+  border: 2px solid rgba(107, 47, 165, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ticket-card {
+    margin-bottom: 16px;
+  }
+
+  .ticket-card::after,
+  .ticket-card .bg-gray-50::before,
+  .ticket-card .bg-gray-50::after {
+    display: none;
+  }
+
+  .tickets-grid {
+    gap: 16px;
+    padding: 16px 0;
+  }
+
+  .ticket-corner-fold {
+    border-left-width: 15px;
+    border-top-width: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ticket-card {
+    border-radius: 12px;
+  }
+
+  .ticket-card-content {
+    background: white;
+  }
+
+  .ticket-event-name {
+    font-size: 16px;
+  }
+
+  .ticket-price {
+    font-size: 16px;
+  }
+}
+
+/* Animation for ticket loading */
+@keyframes ticketSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ticket-card {
+  animation: ticketSlideIn 0.5s ease-out;
+}
+
+.ticket-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.ticket-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.ticket-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.ticket-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .ticket-card,
+  .ticket-card:hover {
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+
+  .ticket-card:hover::before {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .ticket-card {
+    border: 2px solid #000;
+    background: #fff;
+  }
+
+  .ticket-card::before {
+    background: #000;
+  }
+
+  .ticket-event-name,
+  .ticket-price {
+    -webkit-text-fill-color: #000;
+    color: #000;
+  }
+}
+
+/* Print styles */
+@media print {
+  .ticket-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .ticket-card::before {
+    background: #000;
+  }
+
+  .ticket-card:hover {
+    transform: none;
+  }
+}

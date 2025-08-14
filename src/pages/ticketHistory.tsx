@@ -9,10 +9,10 @@ import UserHeader from "../components/UserHeader"
 import Search from "../components/search"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
-import {Ticket, Calendar, Clock, CheckCircle, XCircle, RefreshCw, AlertTriangle } from "lucide-react"
+import { Ticket, Calendar, Clock, RefreshCw, AlertTriangle } from "lucide-react"
 import { getWithExpiry, setWithExpiry } from "../utils/cacheUtils"
-import { ReviewCTA } from '../components/ReviewCTA';
-
+import { ReviewCTA } from "../components/ReviewCTA"
+import "./history.css"
 
 interface TicketHistoryItem {
   id: string
@@ -24,7 +24,6 @@ interface TicketHistoryItem {
   ticketReference: string
   purchaseDate: string
   purchaseTime: string
-  verified: boolean
   paymentMethod: string
 }
 
@@ -104,7 +103,6 @@ const TicketHistory = () => {
             ticketReference: data.ticketReference || "",
             purchaseDate: purchaseDate,
             purchaseTime: purchaseTime,
-            verified: data.verified || false,
             paymentMethod: data.paymentMethod || "Wallet",
           })
         })
@@ -144,7 +142,7 @@ const TicketHistory = () => {
   }
 
   const handleTicketClick = (ticketId: string) => {
-    navigate(`/ticket-Info/${ticketId}`)
+    navigate("/ticket-Info", { state: { ticketId } })
   }
 
   const handleRequestRefund = () => {
@@ -160,7 +158,6 @@ const TicketHistory = () => {
   }
 
   return (
-        
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Helmet>
         <title>Spotix Ticket History</title>
@@ -168,7 +165,6 @@ const TicketHistory = () => {
           name="description"
           content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix."
         />
-        {/* Open Graph for social media */}
         <meta property="og:title" content="Spotix | Discover and Book Campus Events" />
         <meta
           property="og:description"
@@ -177,8 +173,6 @@ const TicketHistory = () => {
         <meta property="og:image" content="/meta.png" />
         <meta property="og:url" content="https://spotix.com.ng" />
         <meta property="og:type" content="website" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
         <meta
@@ -221,8 +215,6 @@ const TicketHistory = () => {
                 </div>
               </div>
             </div>
-
-            
 
             {/* Info Banner */}
             <div className="info-banner bg-gradient-to-r from-[#6b2fa5]/5 to-[#6b2fa5]/10 border border-[#6b2fa5]/20 rounded-lg p-4">
@@ -285,26 +277,13 @@ const TicketHistory = () => {
                   </div>
                 </div>
 
-                {/* Ticket Footer */}
                 <div className="px-4 py-3 flex items-center justify-between bg-white border-t border-gray-100">
-                  <div className="flex items-center space-x-1">
-                    {ticket.verified ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium text-green-500">Verified</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium text-red-500">Not Verified</span>
-                      </>
-                    )}
-                  </div>
                   <div className="text-xs text-gray-500">Ref: {ticket.ticketReference}</div>
+                  <div className="ticket-corner-fold"></div>
                 </div>
               </div>
             ))}
-                  <ReviewCTA onReviewClick={undefined} />
+            <ReviewCTA onReviewClick={undefined} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -335,11 +314,8 @@ const TicketHistory = () => {
             </div>
           </div>
         )}
-      </div>
 
-      <Footer />
-
-      {/* Custom Styles */}
+{/* Custom Styles */}
       <style>{`
         .refund-buttons-container {
           display: flex;
@@ -524,6 +500,10 @@ const TicketHistory = () => {
           }
         }
       `}</style>
+
+      </div>
+
+      <Footer />
     </div>
   )
 }

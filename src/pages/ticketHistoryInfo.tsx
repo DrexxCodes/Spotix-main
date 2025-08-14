@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import UserHeader from "../components/UserHeader"
@@ -10,7 +10,7 @@ import { Helmet } from "react-helmet"
 import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import DownloadButton from "../components/DownloadButton"
-import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, MapPin, QrCode, Sparkles } from "lucide-react"
+import { ArrowLeft, Calendar, Clock, MapPin, QrCode, Sparkles } from "lucide-react"
 import html2pdf from "html2pdf.js"
 import QRCode from "react-qr-code"
 import "boxicons/css/boxicons.min.css"
@@ -26,7 +26,6 @@ interface TicketDetails {
   ticketReference: string
   purchaseDate: string
   purchaseTime: string
-  verified: boolean
   paymentMethod: string
   eventCreatorId?: string
   eventDate?: string
@@ -58,8 +57,10 @@ interface EventDetails {
 }
 
 const TicketHistoryInfo = () => {
-  const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
+  const ticketId = location.state?.ticketId
+
   const [loading, setLoading] = useState(true)
   const [ticketDetails, setTicketDetails] = useState<TicketDetails | null>(null)
   const [eventDetails, setEventDetails] = useState<EventDetails | null>(null)
@@ -72,10 +73,6 @@ const TicketHistoryInfo = () => {
   const ticketRef = useRef<HTMLDivElement>(null)
   const [showSecurityDialog, setShowSecurityDialog] = useState(false)
   const [isEventDay, setIsEventDay] = useState(false)
-
-  // Remove the old cacheKey definition and replace with:
-  // Cache key is now based on the ticket ID parameter
-  const cacheKey = `ticket_${id}`
 
   // Format date for display
   const formatDisplayDate = (dateString: string) => {
@@ -137,7 +134,7 @@ const TicketHistoryInfo = () => {
   useEffect(() => {
     const fetchTicketDetails = async () => {
       try {
-        if (!id) {
+        if (!ticketId) {
           setError("Ticket ID not found")
           setLoading(false)
           return
@@ -150,7 +147,7 @@ const TicketHistoryInfo = () => {
         }
 
         // Use ticket ID directly as the cache key and document ID
-        const cacheKey = `ticket_${id}`
+        const cacheKey = `ticket_${ticketId}`
 
         // Try to get from cache first
         const cachedData = sessionStorage.getItem(cacheKey)
@@ -165,12 +162,12 @@ const TicketHistoryInfo = () => {
 
           setLoading(false)
           // Still fetch in background to update cache
-          fetchFromFirestore(user.uid, id)
+          fetchFromFirestore(user.uid, ticketId)
           return
         }
 
         // No cache, fetch from Firestore using ticket ID as document ID
-        await fetchFromFirestore(user.uid, id)
+        await fetchFromFirestore(user.uid, ticketId)
       } catch (error) {
         console.error("Error fetching ticket details:", error)
         setError("Failed to load ticket details")
@@ -234,7 +231,7 @@ const TicketHistoryInfo = () => {
 
           // Initialize ticket data with basic info
           const ticketData: TicketDetails = {
-            id: ticketId, // Use the document ID from URL as the ticket ID
+            id: ticketId, // Use the document ID from state as the ticket ID
             eventId: data.eventId || "",
             eventName: data.eventName || "Unknown Event",
             eventType: data.eventType || "Unknown",
@@ -243,7 +240,6 @@ const TicketHistoryInfo = () => {
             ticketReference: data.ticketReference || "",
             purchaseDate: purchaseDate,
             purchaseTime: purchaseTime,
-            verified: data.verified || false,
             paymentMethod: data.paymentMethod || "Wallet",
             eventCreatorId: data.eventCreatorId || "",
           }
@@ -291,7 +287,7 @@ const TicketHistoryInfo = () => {
     }
 
     fetchTicketDetails()
-  }, [id, navigate])
+  }, [ticketId, navigate])
 
   // Check if today is the event day
   useEffect(() => {
@@ -335,21 +331,11 @@ const TicketHistoryInfo = () => {
       // Clone the element to modify it for PDF
       const element = ticketRef.current.cloneNode(true) as HTMLElement
 
-      // Create a container for verification status and footer
+      // Create a container for footer only (no verification status)
       const pdfExtras = document.createElement("div")
       pdfExtras.className = "pdf-extras"
 
-      // Add verification status
-      const verificationStatus = document.createElement("div")
-      verificationStatus.className = "pdf-verification-status"
-      if (ticketDetails.verified) {
-        verificationStatus.innerHTML = '<div class="verified-status pdf-status"><span>✓ Verified</span></div>'
-      } else {
-        verificationStatus.innerHTML = '<div class="unverified-status pdf-status"><span>✗ Not Verified</span></div>'
-      }
-      pdfExtras.appendChild(verificationStatus)
-
-      // Add "Powered by Spotix" footer
+      // Add "Powered by Spotix" footer only
       const footer = document.createElement("div")
       footer.className = "pdf-footer"
       footer.textContent = "Powered by Spotix"
@@ -378,29 +364,9 @@ const TicketHistoryInfo = () => {
           font-weight: bold;
           width: 150px;
         }
-        .ticket-info-status {
-          margin-bottom: 20px;
-        }
         .pdf-extras {
           margin-top: 20px;
           text-align: center;
-        }
-        .pdf-verification-status {
-          margin-bottom: 15px;
-        }
-        .pdf-status {
-          display: inline-block;
-          padding: 8px 15px;
-          border-radius: 20px;
-          font-weight: bold;
-        }
-        .verified-status.pdf-status {
-          background-color: #d4edda;
-          color: #28a745;
-        }
-        .unverified-status.pdf-status {
-          background-color: #f8d7da;
-          color: #dc3545;
         }
         .pdf-footer {
           margin-top: 30px;
@@ -463,15 +429,6 @@ const TicketHistoryInfo = () => {
       const eventEndDate = ticketDetails.eventEndDate || eventDetails?.eventEndDate || ""
       const eventStart = ticketDetails.eventStart || eventDetails?.eventStart || ""
       const eventEnd = ticketDetails.eventEnd || eventDetails?.eventEnd || ""
-
-      console.log("Calendar data:", {
-        eventName,
-        eventVenue,
-        eventDate,
-        eventEndDate,
-        eventStart,
-        eventEnd,
-      })
 
       if (!eventDate) {
         alert("Event details not available for calendar")
@@ -553,7 +510,7 @@ const TicketHistoryInfo = () => {
   if (error || !ticketDetails) {
     return (
       <>
-      <Search></Search>
+        <Search></Search>
         <UserHeader />
         <div className="error-container">
           <h2>{error || "An error occurred"}</h2>
@@ -568,15 +525,15 @@ const TicketHistoryInfo = () => {
 
   return (
     <>
-    <Search></Search>
+      <Search></Search>
       <UserHeader />
       <Helmet>
         <title>{ticketDetails.eventName} Ticket Details | Spotix</title>
         <meta name="description" content="View your ticket details" />
-        <link rel="canonical" href={`/ticket-history/${id}`} />
+        <link rel="canonical" href={`/ticket-history/${ticketId}`} />
         <meta property="og:title" content="Ticket Details | Spotix" />
         <meta property="og:description" content="View your ticket details" />
-        <meta property="og:url" content={`/ticket-history/${id}`} />
+        <meta property="og:url" content={`/ticket-history/${ticketId}`} />
         <meta property="og:image" content="/logo.svg" />
         <meta property="og:image:alt" content="Spotix Logo" />
         <meta property="og:type" content="website" />
@@ -596,20 +553,6 @@ const TicketHistoryInfo = () => {
           <div className="ticket-info-title">
             <img src="/logo.svg" alt="Spotix Logo" className="ticket-logo" />
             <h1>Ticket Details</h1>
-          </div>
-
-          <div className="ticket-info-status">
-            {ticketDetails.verified ? (
-              <div className="verified-status">
-                <CheckCircle size={24} />
-                <span>Verified</span>
-              </div>
-            ) : (
-              <div className="unverified-status">
-                <XCircle size={24} />
-                <span>Not Verified</span>
-              </div>
-            )}
           </div>
 
           <div className="ticket-info-content">
@@ -702,7 +645,7 @@ const TicketHistoryInfo = () => {
               <h2>Ticket Information</h2>
               <div className="info-row">
                 <div className="info-label">Ticket ID</div>
-                <div className="info-value ticket-id">{isEventDay ? id : "Shown on event day"}</div>
+                <div className="info-value ticket-id">{isEventDay ? ticketId : "Shown on event day"}</div>
               </div>
               <div className="info-row">
                 <div className="info-label">Reference</div>
@@ -761,15 +704,11 @@ const TicketHistoryInfo = () => {
                   {qrCodeGenerated && isEventDay && (
                     <div className="ticket-qr-code">
                       <div className="qr-code-container">
-                        <QRCode
-                            values={id}
-                            size={200}
-                            level="H"
-                            fgColor="#6b2fa5"
-                            bgColor="#ffffff" value={""}                        />
+                        <QRCode value={ticketId} size={200} level="H" fgColor="#6b2fa5" bgColor="#ffffff" />
                       </div>
                       <p className="qr-code-label">
-                        No Spotix Staff or Event planner will ever ask you for your ID: {id}. Present this only to the event's check-in staff.
+                        No Spotix Staff or Event planner will ever ask you for your ID: {ticketId}. Present this only to
+                        the event's check-in staff.
                       </p>
                       <button className="regenerate-qr-button" onClick={() => setQrCodeGenerated(false)}>
                         <QrCode size={16} />

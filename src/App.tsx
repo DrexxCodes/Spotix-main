@@ -145,7 +145,7 @@ function App() {
             <Route path="/wallet-history" element={user ? <WalletHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket" element={user ? <Ticket /> : <Navigate to="/login" />} />
             <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
-            <Route path="/ticket-info/:id" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
+            <Route path="/ticket-info/" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
             <Route path="/agent" element={user ? <Agent /> : <Navigate to="/login" />} />
             <Route path="/referrals" element={user ? <Referrals /> : <Navigate to="/login" />} />
             <Route path="/agent-v-auth" element={user ? <AgentVAuth /> : <Navigate to="/login" />} />
