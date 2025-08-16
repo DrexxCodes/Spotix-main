@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { auth, db } from "../services/firebase"
 import { Helmet } from "react-helmet"
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore"
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc } from "firebase/firestore"
 import { CheckCircle, Loader2, AlertCircle, Tag } from "lucide-react"
 import UserHeader from "../components/UserHeader"
 import Footer from "../components/footer"
@@ -40,6 +40,25 @@ interface EventDetails {
   enableStopDate?: boolean
   bookerName?: string
   bookerEmail?: string
+}
+
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (config: {
+        key: string
+        email: string
+        amount: number
+        currency: string
+        ref: string
+        metadata?: any
+        callback: (response: { reference: string }) => void
+        onClose: () => void
+      }) => {
+        openIframe: () => void
+      }
+    }
+  }
 }
 
 const Payment = () => {
@@ -389,7 +408,7 @@ const Payment = () => {
 
       const userDocRef = doc(db, "users", user.uid)
       getDoc(userDocRef)
-        .then((userDoc) => {
+        .then(async (userDoc) => {
           if (!userDoc.exists()) {
             setPaystackError("User data not found")
             setPaystackMounting(false)
@@ -400,6 +419,50 @@ const Payment = () => {
 
           // Add transaction fee to the final price
           const totalWithFee = finalPrice + 150
+
+          // Generate reference for this transaction
+          const transactionReference = generateReference()
+
+          try {
+            const now = new Date()
+            const referenceData = {
+              reference: transactionReference,
+              eventId: paymentData.eventId,
+              eventName: paymentData.eventName,
+              ticketType: paymentData.ticketType,
+              ticketPrice: finalPrice,
+              transactionFee: 150,
+              totalAmount: totalWithFee,
+              eventCreatorId: paymentData.eventCreatorId,
+              originalPrice: paymentData.ticketPrice,
+              discountApplied: appliedDiscount ? true : false,
+              discountCode: appliedDiscount ? appliedDiscount.code : null,
+              // Add event details
+              eventVenue: eventDetails.eventVenue || null,
+              eventType: eventDetails.eventType || null,
+              eventDate: eventDetails.eventDate || null,
+              eventEndDate: eventDetails.eventEndDate || null,
+              eventStart: eventDetails.eventStart || null,
+              eventEnd: eventDetails.eventEnd || null,
+              stopDate: eventDetails.stopDate || null,
+              bookerName: eventDetails.bookerName || null,
+              bookerEmail: eventDetails.bookerEmail || null,
+              userFullName: userData.fullName || userData.username || "Valued Customer",
+              userEmail: userData.email,
+              createdAt: now.toLocaleDateString(),
+              createdTime: now.toLocaleTimeString(),
+              settled: false,
+            }
+
+            // Store in references collection
+            const referenceDocRef = doc(db, "references", user.uid, "userReferences", transactionReference)
+            await setDoc(referenceDocRef, referenceData)
+
+            console.log("✅ Reference data stored in Firestore:", transactionReference)
+          } catch (error) {
+            console.error("❌ Error storing reference data:", error)
+            // Continue with payment even if reference storage fails
+          }
 
           // Prepare payment metadata with discount information and event details
           const paymentMetadata = {
@@ -428,6 +491,8 @@ const Payment = () => {
             bookerEmail: eventDetails.bookerEmail,
             userFullName: userData.fullName || userData.username || "Valued Customer",
             userEmail: userData.email,
+            // Only include stopDate if it exists
+            ...(eventDetails.stopDate ? { stopDate: eventDetails.stopDate } : {}),
           }
 
           // Save payment data for the callback
@@ -466,7 +531,7 @@ const Payment = () => {
             email: userData.email,
             amount: amountInKobo, // Convert to kobo
             currency: "NGN", // Nigerian Naira
-            ref: generateReference(),
+            ref: transactionReference,
             metadata: paymentMetadata,
             callback: (response) => {
               // Handle success - this must be a regular function, not an arrow function
@@ -825,6 +890,22 @@ const Payment = () => {
                 {paystackMounting ? "Preparing..." : "Proceed to Payment"}
               </button>
             </div>
+
+            {/* Failed Payment Help Container */}
+            <div className="failed-payment-container">
+              <div className="failed-payment-header">
+                <AlertCircle size={20} className="failed-payment-icon" />
+                <h3>Failed Payment?</h3>
+              </div>
+              <p className="failed-payment-text">
+                Did you pay with Paystack already and didn't get ticket? Use the button below to find and settle the
+                transaction. Contact us with the chat button at the bottom right of the screen if your payment still
+                isn't completed.
+              </p>
+              <button className="find-payment-btn" onClick={() => navigate("/references")}>
+                Find My Payment
+              </button>
+            </div>
           </div>
         ) : (
           <div className="payment-processing">
@@ -893,6 +974,82 @@ const Payment = () => {
           flex-shrink: 0;
         }
 
+        /* Styles for failed payment container */
+        .failed-payment-container {
+          margin-top: 2rem;
+          padding: 1.5rem;
+          background: linear-gradient(135deg, rgba(139, 69, 19, 0.05) 0%, rgba(160, 82, 45, 0.08) 100%);
+          border: 1px solid rgba(139, 69, 19, 0.2);
+          border-radius: 12px;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .failed-payment-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #8B4513, #A0522D, #CD853F);
+        }
+
+        .failed-payment-header {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .failed-payment-header h3 {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #8B4513;
+        }
+
+        .failed-payment-icon {
+          color: #A0522D;
+          flex-shrink: 0;
+        }
+
+        .failed-payment-text {
+          color: #5D4037;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          margin: 0 0 1.5rem 0;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .find-payment-btn {
+          background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+          color: white;
+          border: none;
+          padding: 0.75rem 2rem;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
+        }
+
+        .find-payment-btn:hover {
+          background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+        }
+
+        .find-payment-btn:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 6px rgba(139, 69, 19, 0.2);
+        }
+
         @keyframes slideIn {
           from {
             opacity: 0;
@@ -901,42 +1058,6 @@ const Payment = () => {
           to {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-
-        /* Optimize button states */
-        .proceed-payment-btn {
-          position: relative;
-          transition: all 0.2s ease;
-        }
-
-        .proceed-payment-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .proceed-payment-btn.loading {
-          color: transparent;
-        }
-
-        .proceed-payment-btn.loading::after {
-          content: "";
-          position: absolute;
-          width: 16px;
-          height: 16px;
-          top: 50%;
-          left: 50%;
-          margin-left: -8px;
-          margin-top: -8px;
-          border: 2px solid #ffffff;
-          border-radius: 50%;
-          border-top-color: transparent;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
           }
         }
       `}</style>

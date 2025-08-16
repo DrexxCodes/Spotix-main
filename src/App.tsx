@@ -43,6 +43,7 @@ const Payment = lazy(() => import("./pages/Payment"))
 const Wallet = lazy(() => import("./pages/wallet"))
 const WalletHistory = lazy(() => import("./pages/wallet-history"))
 const PaystackSuccess = lazy(() => import("./pages/paystack-success"))
+const References = lazy(() => import("./pages/References"))
 const Ticket = lazy(() => import("./pages/ticket"))
 const UserProfile = lazy(() => import("./pages/Profile"))
 const BookerConfirm = lazy(() => import("./pages/bookerConfirm"))
@@ -144,6 +145,7 @@ function App() {
             <Route path="/wallet" element={user ? <Wallet /> : <Navigate to="/login" />} />
             <Route path="/wallet-history" element={user ? <WalletHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket" element={user ? <Ticket /> : <Navigate to="/login" />} />
+            <Route path="References" element={user ? <References /> : <Navigate to="/login" />} />
             <Route path="/ticket-history" element={user ? <TicketHistory /> : <Navigate to="/login" />} />
             <Route path="/ticket-info/" element={user ? <TicketHistoryInfo /> : <Navigate to="/login" />} />
             <Route path="/agent" element={user ? <Agent /> : <Navigate to="/login" />} />

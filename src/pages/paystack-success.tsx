@@ -19,9 +19,9 @@ interface PaymentDataFromLocalStorage {
   eventId: string
   eventName: string
   ticketType: string
-  ticketPrice: number 
+  ticketPrice: number
   eventCreatorId: string
-  originalPrice?: number 
+  originalPrice?: number
   discountApplied?: boolean
   discountCode?: string
   eventVenue?: string
@@ -47,7 +47,7 @@ interface TicketResultData {
     fullName: string
     email: string
   }
-  finalPrice: number 
+  finalPrice: number
   discountApplied: boolean
 }
 
@@ -69,7 +69,7 @@ const PaystackSuccess = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [paymentResult, setPaymentResult] = useState<any>(null)
-  const [eventData, setEventData] = useState<PaymentDataFromLocalStorage | null>(null) 
+  const [eventData, setEventData] = useState<PaymentDataFromLocalStorage | null>(null)
   const [emailSent, setEmailSent] = useState(false)
   const [emailSending, setEmailSending] = useState(false)
 
@@ -124,7 +124,6 @@ const PaystackSuccess = () => {
 
           const userData = userDoc.data()
 
-
           const ticketData = {
             uid: user.uid,
             fullName: userData.fullName || "",
@@ -153,7 +152,6 @@ const PaystackSuccess = () => {
             ...(paymentData.stopDate ? { stopDate: paymentData.stopDate } : {}),
           }
 
-   
           const attendeesCollectionRef = collection(
             db,
             "events",
@@ -184,7 +182,7 @@ const PaystackSuccess = () => {
               totalRevenue: (eventDataFromDb.totalRevenue || 0) + Number(paymentData.ticketPrice),
             })
 
-           const pricing = eventDataFromDb.pricing || []
+            const pricing = eventDataFromDb.pricing || []
             const updatedPricing = pricing.map((ticket: any) => {
               if (ticket.ticketType === paymentData.ticketType && ticket.availableTickets > 0) {
                 return { ...ticket, availableTickets: ticket.availableTickets - 1 }
@@ -196,7 +194,7 @@ const PaystackSuccess = () => {
             })
           }
 
-           if (paymentData.discountApplied && paymentData.discountCode) {
+          if (paymentData.discountApplied && paymentData.discountCode) {
             try {
               const discountsCollectionRef = collection(
                 db,
@@ -220,6 +218,25 @@ const PaystackSuccess = () => {
             } catch (error) {
               console.error("Error updating discount usage:", error)
             }
+          }
+
+          try {
+            const referenceDocRef = doc(db, "references", user.uid, "userReferences", reference)
+            const referenceDoc = await getDoc(referenceDocRef)
+
+            if (referenceDoc.exists()) {
+              await updateDoc(referenceDocRef, {
+                settled: true,
+                settledAt: now.toLocaleDateString(),
+                settledTime: now.toLocaleTimeString(),
+              })
+              console.log("✅ Reference marked as settled:", reference)
+            } else {
+              console.log("⚠️ Reference document not found:", reference)
+            }
+          } catch (error) {
+            console.error("❌ Error marking reference as settled:", error)
+            // Continue with ticket creation even if reference update fails
           }
 
           // Send confirmation email
@@ -254,7 +271,7 @@ const PaystackSuccess = () => {
 
           localStorage.removeItem("paystack_payment_data")
 
-          // Navigate to ticket with data in state 
+          // Navigate to ticket with data in state
           navigate("/ticket", {
             state: {
               paymentResult: ticketPagePaymentResult,
@@ -279,7 +296,7 @@ const PaystackSuccess = () => {
                   : null,
               },
               eventDetails: ticketPageEventDetails,
-              isFreeEvent: false, 
+              isFreeEvent: false,
               adjustedTransactionFee: paymentData.transactionFee || 0,
               adjustedTotalAmount: paymentData.totalAmount || paymentData.ticketPrice,
             },
@@ -354,7 +371,6 @@ const PaystackSuccess = () => {
     const randomNumbers = Math.floor(10000000 + Math.random() * 90000000).toString()
     const randomLetters = Math.random().toString(36).substring(2, 4).toUpperCase()
 
-    
     const pos1 = Math.floor(Math.random() * 8)
     const pos2 = Math.floor(Math.random() * 7) + pos1 + 1
 
