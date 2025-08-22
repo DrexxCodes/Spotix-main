@@ -10,7 +10,7 @@ export default defineConfig({
 
   server: {
     host: true,
-    allowedHosts: ['944aaaac1057e16b46ec15356a89feca.serveo.net'],
+    allowedHosts: ['04f3643f64a2.ngrok-free.app'],
     hmr: true,
     proxy: {
       // Proxy API requests to the Fastify server
