@@ -266,6 +266,26 @@ const References = () => {
         settledTime: now.toLocaleTimeString(),
       })
 
+      try {
+        await axios.post(`${BACKEND_URL}/api/mail/payment-confirmation`, {
+          email: referenceData.userEmail,
+          fullName: referenceData.userFullName,
+          eventName: referenceData.eventName,
+          ticketId,
+          ticketType: referenceData.ticketType,
+          eventDate: referenceData.eventDate,
+          eventVenue: referenceData.eventVenue,
+          totalAmount: referenceData.totalAmount,
+          paymentReference: referenceData.reference,
+          purchaseDate,
+          purchaseTime,
+        })
+        console.log("Confirmation email sent successfully")
+      } catch (emailError) {
+        console.error("Failed to send confirmation email:", emailError)
+        // Don't throw error here - ticket creation was successful, email is secondary
+      }
+
       navigate("/ticket", {
         state: {
           paymentResult: {

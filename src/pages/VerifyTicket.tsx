@@ -11,7 +11,7 @@ import Footer from "../components/footer"
 import Preloader from "../components/preloader"
 import { CheckCircle, XCircle, AlertTriangle, Camera } from "lucide-react"
 import { Html5Qrcode } from "html5-qrcode"
-// import "../styles/verify.css"
+import { BrowserMultiFormatReader } from "@zxing/library"
 
 interface TicketData {
   id: string
@@ -45,63 +45,77 @@ const VerifyTicket = () => {
   const [initialLoading, setInitialLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [isScanning, setIsScanning] = useState(false)
+  const [scannerLibrary, setScannerLibrary] = useState<"html5qrcode" | "zxing">("html5qrcode")
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const zxingScannerRef = useRef<BrowserMultiFormatReader | null>(null)
   const scannerContainerRef = useRef<HTMLDivElement>(null)
 
+  const isIOSDevice = () => {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    )
+  }
+
   useEffect(() => {
-    const fetchBookerEvents = async () => {
-      try {
-        const user = auth.currentUser
-        if (!user) return
+    const library = isIOSDevice() ? "zxing" : "html5qrcode"
+    setScannerLibrary(library)
+  }, [])
 
-        // Fetch events from the user's events collection
-        const eventsCollectionRef = collection(db, "events", user.uid, "userEvents")
-        const eventsSnapshot = await getDocs(eventsCollectionRef)
-
-        const events: EventOption[] = []
-        eventsSnapshot.forEach((doc) => {
-          const data = doc.data()
-          events.push({
-            id: doc.id,
-            name: data.eventName || "Unnamed Event",
-          })
-        })
-
-        setBookerEvents(events)
-
-        // If we have an event name from location state, find and select that event
-        if (location.state?.eventName) {
-          const matchingEvent = events.find((event) => event.name === location.state.eventName)
-          if (matchingEvent) {
-            setSelectedEventId(matchingEvent.id)
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching booker events:", error)
-      } finally {
-        setInitialLoading(false)
-      }
-    }
-
-    fetchBookerEvents()
-  }, [location.state])
-
-  // Clean up scanner when component unmounts
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
         scannerRef.current.stop().catch((error) => {
-          console.log("Scanner was already stopped when unmounting")
+          console.log("HTML5QRCode scanner was already stopped when unmounting")
         })
         scannerRef.current = null
+      }
+      if (zxingScannerRef.current) {
+        zxingScannerRef.current.reset()
+        zxingScannerRef.current = null
       }
     }
   }, [])
 
+  const fetchBookerEvents = async () => {
+    try {
+      const user = auth.currentUser
+      if (!user) return
+
+      const eventsCollectionRef = collection(db, "events", user.uid, "userEvents")
+      const eventsSnapshot = await getDocs(eventsCollectionRef)
+
+      const events: EventOption[] = []
+      eventsSnapshot.forEach((doc) => {
+        const data = doc.data()
+        events.push({
+          id: doc.id,
+          name: data.eventName || "Unnamed Event",
+        })
+      })
+
+      setBookerEvents(events)
+
+      if (location.state?.eventName) {
+        const matchingEvent = events.find((event) => event.name === location.state.eventName)
+        if (matchingEvent) {
+          setSelectedEventId(matchingEvent.id)
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching booker events:", error)
+    } finally {
+      setInitialLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchBookerEvents()
+  }, [location.state])
+
   const handleTicketIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTicketId(e.target.value)
-    // Reset verification status when ticket ID changes
     setVerificationStatus("idle")
     setTicketData(null)
     setErrorMessage("")
@@ -125,19 +139,16 @@ const VerifyTicket = () => {
       const user = auth.currentUser
       if (!user) throw new Error("User not authenticated")
 
-      // Step 1: Direct lookup using ticket ID as document ID in attendees collection
       const attendeeDocRef = doc(db, "events", user.uid, "userEvents", selectedEventId, "attendees", scannedTicketId)
       const attendeeDoc = await getDoc(attendeeDocRef)
 
       if (!attendeeDoc.exists()) {
-        // Ticket not found for this event
         setVerificationStatus("not-found")
         setErrorMessage("This ticket ID is not associated with this event.")
         setLoading(false)
         return
       }
 
-      // Step 2: Get attendee data including uid
       const attendeeData = attendeeDoc.data()
       const attendeeUid = attendeeData.uid
 
@@ -148,9 +159,7 @@ const VerifyTicket = () => {
         return
       }
 
-      // Step 3: Check verification status
       if (attendeeData.verified) {
-        // Ticket is already verified
         setTicketData({
           id: scannedTicketId,
           eventId: selectedEventId,
@@ -168,7 +177,6 @@ const VerifyTicket = () => {
         return
       }
 
-      // Step 4: Verify ticket in user's ticket history using the same ticket ID
       const ticketHistoryDocRef = doc(db, "TicketHistory", attendeeUid, "tickets", scannedTicketId)
       const ticketHistoryDoc = await getDoc(ticketHistoryDocRef)
 
@@ -179,7 +187,6 @@ const VerifyTicket = () => {
         return
       }
 
-      // Step 5: Update verification status in both collections simultaneously
       const currentTime = new Date()
       const verificationData = {
         verified: true,
@@ -188,13 +195,9 @@ const VerifyTicket = () => {
         verifiedBy: user.uid,
       }
 
-      // Update attendee collection
       await updateDoc(attendeeDocRef, verificationData)
-
-      // Update ticket history collection
       await updateDoc(ticketHistoryDocRef, verificationData)
 
-      // Step 6: Set success state
       setTicketData({
         id: scannedTicketId,
         eventId: selectedEventId,
@@ -204,7 +207,7 @@ const VerifyTicket = () => {
         ticketType: attendeeData.ticketType || "Standard",
         purchaseDate: attendeeData.purchaseDate || "Unknown",
         purchaseTime: attendeeData.purchaseTime || "Unknown",
-        isVerified: false, // It was false before we updated it
+        isVerified: false,
         ticketReference: attendeeData.ticketReference || "",
       })
       setVerificationStatus("success")
@@ -236,62 +239,89 @@ const VerifyTicket = () => {
 
     setIsScanning(true)
 
-    // Initialize scanner in the next tick to ensure DOM is ready
     setTimeout(() => {
       if (scannerContainerRef.current) {
-        // Make sure we don't have an existing scanner
         if (scannerRef.current) {
           try {
-            // Only try to stop if it's running
             scannerRef.current.stop().catch((err) => {
-              console.log("Scanner was already stopped or not initialized")
+              console.log("HTML5QRCode scanner was already stopped or not initialized")
             })
             scannerRef.current = null
           } catch (err) {
-            console.log("Error handling existing scanner:", err)
+            console.log("Error handling existing HTML5QRCode scanner:", err)
           }
         }
 
-        // Create a new scanner instance
-        const html5QrCode = new Html5Qrcode("scanner-container")
-        scannerRef.current = html5QrCode
+        if (zxingScannerRef.current) {
+          try {
+            zxingScannerRef.current.reset()
+            zxingScannerRef.current = null
+          } catch (err) {
+            console.log("Error handling existing ZXing scanner:", err)
+          }
+        }
 
-        html5QrCode
-          .start(
-            { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 220, height: 220 },
-            },
-            async (decodedText) => {
-              // Success callback
-              console.log(`QR Code detected: ${decodedText}`)
+        if (scannerLibrary === "zxing") {
+          const codeReader = new BrowserMultiFormatReader()
+          zxingScannerRef.current = codeReader
 
-              // Stop the scanner immediately
-              try {
-                await html5QrCode.stop()
-                scannerRef.current = null
+          codeReader
+            .decodeFromVideoDevice(null, "scanner-container", (result, error) => {
+              if (result) {
+                console.log(`QR Code detected with ZXing: ${result.getText()}`)
+
+                codeReader.reset()
+                zxingScannerRef.current = null
                 setIsScanning(false)
 
-                // Set the ticket ID
+                const decodedText = result.getText()
                 setTicketId(decodedText)
-
-                // Verify the ticket directly
                 verifyTicket(decodedText)
-              } catch (err) {
-                console.error("Error in QR code processing:", err)
               }
-            },
-            (errorMessage) => {
-              // Error callback - we don't need to show these to the user
-              console.log(`QR Code scanning error: ${errorMessage}`)
-            },
-          )
-          .catch((err) => {
-            console.error("Error starting scanner:", err)
-            setIsScanning(false)
-            setErrorMessage("Could not access camera. Please check permissions and try again.")
-          })
+              if (error && error.name !== "NotFoundException") {
+                console.log(`ZXing scanning error: ${error}`)
+              }
+            })
+            .catch((err) => {
+              console.error("Error starting ZXing scanner:", err)
+              setIsScanning(false)
+              setErrorMessage("Could not access camera. Please check permissions and try again.")
+            })
+        } else {
+          const html5QrCode = new Html5Qrcode("scanner-container")
+          scannerRef.current = html5QrCode
+
+          html5QrCode
+            .start(
+              { facingMode: "environment" },
+              {
+                fps: 10,
+                qrbox: { width: 220, height: 220 },
+              },
+              async (decodedText) => {
+                console.log(`QR Code detected with HTML5QRCode: ${decodedText}`)
+
+                try {
+                  await html5QrCode.stop()
+                  scannerRef.current = null
+                  setIsScanning(false)
+
+                  setTicketId(decodedText)
+                  verifyTicket(decodedText)
+                } catch (err) {
+                  console.error("Error in QR code processing:", err)
+                }
+              },
+              (errorMessage) => {
+                console.log(`HTML5QRCode scanning error: ${errorMessage}`)
+              },
+            )
+            .catch((err) => {
+              console.error("Error starting HTML5QRCode scanner:", err)
+              setIsScanning(false)
+              setErrorMessage("Could not access camera. Please check permissions and try again.")
+            })
+        }
       }
     }, 100)
   }
@@ -305,10 +335,20 @@ const VerifyTicket = () => {
           setIsScanning(false)
         })
         .catch((err) => {
-          console.log("Scanner was already stopped")
+          console.log("HTML5QRCode scanner was already stopped")
           scannerRef.current = null
           setIsScanning(false)
         })
+    } else if (zxingScannerRef.current) {
+      try {
+        zxingScannerRef.current.reset()
+        zxingScannerRef.current = null
+        setIsScanning(false)
+      } catch (err) {
+        console.log("ZXing scanner was already stopped")
+        zxingScannerRef.current = null
+        setIsScanning(false)
+      }
     } else {
       setIsScanning(false)
     }
@@ -326,7 +366,6 @@ const VerifyTicket = () => {
           name="description"
           content="Find, book, and attend the best events on your campus. Discover concerts, night parties, workshops, religious events, and more on Spotix."
         />
-        {/* Open Graph for social media */}
         <meta property="og:title" content="Spotix | Verify Ticket" />
         <meta
           property="og:description"
@@ -335,8 +374,6 @@ const VerifyTicket = () => {
         <meta property="og:image" content="/meta.png" />
         <meta property="og:url" content="https://spotix.com.ng" />
         <meta property="og:type" content="website" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Spotix | Discover and Book Campus Events" />
         <meta
@@ -421,7 +458,9 @@ const VerifyTicket = () => {
                       <div className="scan-line"></div>
                     </div>
                   </div>
-                  <p className="scanner-instructions">Position the QR code within the frame to scan</p>
+                  <p className="scanner-instructions">
+                    Position the QR code within the frame to scan - Spotix({scannerLibrary})
+                  </p>
                 </div>
               </div>
             )}
