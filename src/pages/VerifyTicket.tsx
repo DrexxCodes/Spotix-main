@@ -12,6 +12,7 @@ import Preloader from "../components/preloader"
 import { CheckCircle, XCircle, AlertTriangle, Camera } from "lucide-react"
 import { Html5Qrcode } from "html5-qrcode"
 import { BrowserMultiFormatReader } from "@zxing/library"
+import "./scanner.css"
 
 interface TicketData {
   id: string
@@ -46,6 +47,7 @@ const VerifyTicket = () => {
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [isScanning, setIsScanning] = useState(false)
   const [scannerLibrary, setScannerLibrary] = useState<"html5qrcode" | "zxing">("html5qrcode")
+  const [showScannerDialog, setShowScannerDialog] = useState(true)
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const zxingScannerRef = useRef<BrowserMultiFormatReader | null>(null)
@@ -57,11 +59,6 @@ const VerifyTicket = () => {
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
     )
   }
-
-  useEffect(() => {
-    const library = isIOSDevice() ? "zxing" : "html5qrcode"
-    setScannerLibrary(library)
-  }, [])
 
   useEffect(() => {
     return () => {
@@ -240,36 +237,43 @@ const VerifyTicket = () => {
     setIsScanning(true)
 
     setTimeout(() => {
-      if (scannerContainerRef.current) {
-        if (scannerRef.current) {
-          try {
-            scannerRef.current.stop().catch((err) => {
-              console.log("HTML5QRCode scanner was already stopped or not initialized")
-            })
-            scannerRef.current = null
-          } catch (err) {
-            console.log("Error handling existing HTML5QRCode scanner:", err)
-          }
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.stop().catch((err) => {
+            console.log("HTML5QRCode scanner was already stopped or not initialized")
+          })
+          scannerRef.current = null
+        } catch (err) {
+          console.log("Error handling existing HTML5QRCode scanner:", err)
+        }
+      }
+
+      if (zxingScannerRef.current) {
+        try {
+          zxingScannerRef.current.reset()
+          zxingScannerRef.current = null
+        } catch (err) {
+          console.log("Error handling existing ZXing scanner:", err)
+        }
+      }
+
+      if (scannerLibrary === "zxing") {
+        const videoElement = document.getElementById("zxing-scanner-video") as HTMLVideoElement
+        if (!videoElement) {
+          console.error("ZXing video element not found")
+          setIsScanning(false)
+          return
         }
 
-        if (zxingScannerRef.current) {
-          try {
-            zxingScannerRef.current.reset()
-            zxingScannerRef.current = null
-          } catch (err) {
-            console.log("Error handling existing ZXing scanner:", err)
-          }
-        }
+        const codeReader = new BrowserMultiFormatReader()
+        zxingScannerRef.current = codeReader
 
-        if (scannerLibrary === "zxing") {
-          const codeReader = new BrowserMultiFormatReader()
-          zxingScannerRef.current = codeReader
+        codeReader
+          .decodeFromVideoDevice(null, "zxing-scanner-video", (result, error) => {
+            if (result) {
+              console.log(`QR Code detected with ZXing: ${result.getText()}`)
 
-          codeReader
-            .decodeFromVideoDevice(null, "scanner-container", (result, error) => {
-              if (result) {
-                console.log(`QR Code detected with ZXing: ${result.getText()}`)
-
+              try {
                 codeReader.reset()
                 zxingScannerRef.current = null
                 setIsScanning(false)
@@ -277,51 +281,54 @@ const VerifyTicket = () => {
                 const decodedText = result.getText()
                 setTicketId(decodedText)
                 verifyTicket(decodedText)
+              } catch (cleanupError) {
+                console.error("Error during zxing cleanup:", cleanupError)
+                setIsScanning(false)
               }
-              if (error && error.name !== "NotFoundException") {
-                console.log(`ZXing scanning error: ${error}`)
+            }
+            if (error && error.name !== "NotFoundException" && error.name !== "ChecksumException") {
+              console.log(`ZXing scanning error: ${error}`)
+            }
+          })
+          .catch((err) => {
+            console.error("Error starting ZXing scanner:", err)
+            setIsScanning(false)
+            setErrorMessage("Could not access camera. Please check permissions and try again.")
+          })
+      } else {
+        const html5QrCode = new Html5Qrcode("html5qrcode-scanner-div")
+        scannerRef.current = html5QrCode
+
+        html5QrCode
+          .start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 220, height: 220 },
+            },
+            async (decodedText) => {
+              console.log(`QR Code detected with HTML5QRCode: ${decodedText}`)
+
+              try {
+                await html5QrCode.stop()
+                scannerRef.current = null
+                setIsScanning(false)
+
+                setTicketId(decodedText)
+                verifyTicket(decodedText)
+              } catch (err) {
+                console.error("Error in QR code processing:", err)
               }
-            })
-            .catch((err) => {
-              console.error("Error starting ZXing scanner:", err)
-              setIsScanning(false)
-              setErrorMessage("Could not access camera. Please check permissions and try again.")
-            })
-        } else {
-          const html5QrCode = new Html5Qrcode("scanner-container")
-          scannerRef.current = html5QrCode
-
-          html5QrCode
-            .start(
-              { facingMode: "environment" },
-              {
-                fps: 10,
-                qrbox: { width: 220, height: 220 },
-              },
-              async (decodedText) => {
-                console.log(`QR Code detected with HTML5QRCode: ${decodedText}`)
-
-                try {
-                  await html5QrCode.stop()
-                  scannerRef.current = null
-                  setIsScanning(false)
-
-                  setTicketId(decodedText)
-                  verifyTicket(decodedText)
-                } catch (err) {
-                  console.error("Error in QR code processing:", err)
-                }
-              },
-              (errorMessage) => {
-                console.log(`HTML5QRCode scanning error: ${errorMessage}`)
-              },
-            )
-            .catch((err) => {
-              console.error("Error starting HTML5QRCode scanner:", err)
-              setIsScanning(false)
-              setErrorMessage("Could not access camera. Please check permissions and try again.")
-            })
-        }
+            },
+            (errorMessage) => {
+              console.log(`HTML5QRCode scanning error: ${errorMessage}`)
+            },
+          )
+          .catch((err) => {
+            console.error("Error starting HTML5QRCode scanner:", err)
+            setIsScanning(false)
+            setErrorMessage("Could not access camera. Please check permissions and try again.")
+          })
       }
     }, 100)
   }
@@ -354,6 +361,11 @@ const VerifyTicket = () => {
     }
   }
 
+  const handleScannerSelection = (library: "html5qrcode" | "zxing") => {
+    setScannerLibrary(library)
+    setShowScannerDialog(false)
+  }
+
   if (initialLoading) {
     return <Preloader />
   }
@@ -383,8 +395,50 @@ const VerifyTicket = () => {
         <meta name="twitter:image" content="/meta.png" />
       </Helmet>
       <BookersHeader />
+
+      {showScannerDialog && (
+        <div className="scanner-selection-overlay">
+          <div className="scanner-selection-modal">
+            <h3>Choose Scanner Library</h3>
+            <p>Select the QR code scanner that works best for your device:</p>
+
+            <div className="scanner-options">
+              <button
+                className="scanner-option-btn html5qrcode-btn"
+                onClick={() => handleScannerSelection("html5qrcode")}
+              >
+                <div className="scanner-option-content">
+                  <h4>Pixel View</h4>
+                  <p>Best for Android devices</p>
+                  <span className="recommended">Recommended for Android</span>
+                </div>
+              </button>
+
+              <button className="scanner-option-btn zxing-btn" onClick={() => handleScannerSelection("zxing")}>
+                <div className="scanner-option-content">
+                  <h4>Tyrex</h4>
+                  <p>Best for iOS devices</p>
+                  <span className="recommended">Recommended for iPhone/iPad</span>
+                </div>
+              </button>
+            </div>
+
+            <p className="scanner-note">You can change this selection later by refreshing the page.</p>
+          </div>
+        </div>
+      )}
+
       <div className="verify-ticket-container">
         <h1>Verify Ticket</h1>
+
+        <div className="current-scanner-info">
+          <p>
+            Current Scanner: <strong>Spotix-{scannerLibrary === "html5qrcode" ? "Pixel View" : "Tyrex"}</strong>
+          </p>
+          <button className="change-scanner-btn" onClick={() => setShowScannerDialog(true)}>
+            Change Scanner
+          </button>
+        </div>
 
         {verificationStatus === "idle" && (
           <div className="verification-form">
@@ -447,7 +501,19 @@ const VerifyTicket = () => {
                     </button>
                   </div>
                   <div className="qr-scanner">
-                    <div id="scanner-container" ref={scannerContainerRef}></div>
+                    {scannerLibrary === "zxing" ? (
+                      <video
+                        id="zxing-scanner-video"
+                        style={{
+                          width: "100%",
+                          height: "300px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    ) : (
+                      <div id="html5qrcode-scanner-div" style={{ width: "100%" }} />
+                    )}
                     <div className="scanner-frame">
                       <div className="scanner-corner scanner-corner-top-left"></div>
                       <div className="scanner-corner scanner-corner-top-right"></div>
@@ -459,7 +525,8 @@ const VerifyTicket = () => {
                     </div>
                   </div>
                   <p className="scanner-instructions">
-                    Position the QR code within the frame to scan - Spotix({scannerLibrary})
+                    Position the QR code within the frame to scan - Spotix 
+                    {scannerLibrary === "html5qrcode" ? "Pixel View" : "Tyrex"}
                   </p>
                 </div>
               </div>

@@ -1,0 +1,168 @@
+/* Scanner Selection Dialog Styles */
+.scanner-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+}
+
+.scanner-selection-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.scanner-selection-modal h3 {
+  color: #6b2fa5;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.scanner-selection-modal p {
+  color: #666;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.scanner-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.scanner-option-btn {
+  flex: 1;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.scanner-option-btn:hover {
+  border-color: #6b2fa5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(107, 47, 165, 0.15);
+}
+
+.html5qrcode-btn:hover {
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: white;
+}
+
+.zxing-btn:hover {
+  background: linear-gradient(135deg, #6b2fa5, #5a2589);
+  color: white;
+}
+
+.scanner-option-content h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: inherit;
+}
+
+.scanner-option-content p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.scanner-option-btn:hover .scanner-option-content p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.recommended {
+  display: inline-block;
+  background: #6b2fa5;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.html5qrcode-btn .recommended {
+  background: #4caf50;
+}
+
+.scanner-note {
+  font-size: 0.85rem;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Current Scanner Info */
+.current-scanner-info {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.current-scanner-info p {
+  margin: 0;
+  color: #495057;
+}
+
+.change-scanner-btn {
+  background: #6b2fa5;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.change-scanner-btn:hover {
+  background: #5a2589;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .scanner-options {
+    flex-direction: column;
+  }
+
+  .scanner-selection-modal {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .current-scanner-info {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+}
