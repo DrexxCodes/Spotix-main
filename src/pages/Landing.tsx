@@ -29,7 +29,6 @@ const Landing = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Snowfall />
       <Navbar />
       <Hero />
       <Events />
@@ -40,6 +39,10 @@ const Landing = () => {
       <Testimonials />
       <FAQ />
       <Footer />
+      <Snowfall
+  color="white"
+  snowflakeCount={200}
+      />
     </div>
   )
 }
