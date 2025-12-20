@@ -35,10 +35,10 @@ const UserHeader: React.FC = () => {
       <HeaderContainer>
         <LogoSection>
           <a href="/">
-            <Logo src="/logo.svg" alt="Spotix Logo" />
+            <Logo src="/xmas.png" alt="Spotix Logo" />
           </a>
           <Title>
-            <a href="/">Spotix</a>
+            <a href="/"></a>
           </Title>
         </LogoSection>
 

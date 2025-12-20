@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect } from "react"
+import Snowfall from 'react-snowfall'
 import Navbar from "../components/Landing/NavBar"
 import Hero from "../components/Landing/Hero"
 import HowItWorks from "../components/Landing/HowItWorks"
 import Features from "../components/Landing/Features"
 import Events from "../components/Landing/Events"
-// import Testimonials from "../components/Landing/Testimonials"
+import Testimonials from "../components/Landing/Testimonials"
 import FAQ from "../components/Landing/FAQ"
 import BookerCTA from "../components/Landing/BookerCTA"
 import Creators from "../components/Landing/Creators"
@@ -28,6 +29,7 @@ const Landing = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Snowfall />
       <Navbar />
       <Hero />
       <Events />
@@ -35,6 +37,7 @@ const Landing = () => {
       <Features />
       <BookerCTA />
       <Creators /> 
+      <Testimonials />
       <FAQ />
       <Footer />
     </div>

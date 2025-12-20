@@ -25,8 +25,8 @@ const Navbar = () => {
     <nav className={`landing-nav ${scrolled ? "scrolled" : ""}`}>
       <div className="nav-container">
         <div className="nav-logo">
-          <a href="/"><img src="/logo.svg" alt="Spotix Logo" className="nav-logo-img" /></a>
-          <span className="nav-logo-text"><a href="/">Spotix</a></span>
+          <a href="/"><img src="/xmas.png" alt="Spotix Logo" className="nav-logo-img" /></a>
+          <span className="nav-logo-text"><a href="/"></a></span>
         </div>
 
         <div className="nav-links-desktop">
